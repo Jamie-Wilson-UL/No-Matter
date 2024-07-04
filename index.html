@@ -43,6 +43,9 @@
         
         faces = [html.IMG(src=img) for img in face_images]
 
+        for img in face_images:
+            print(f"Loading image: {img}")
+
         enemy_size = 50
         rows = 3
         cols = 8
@@ -73,7 +76,8 @@
             ctx.fillRect(0, 0, WIDTH, HEIGHT)
             
             # Draw player
-            ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], player_size, player_size)
+            if not game_over:
+                ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], player_size, player_size)
             
             # Draw enemies
             for enemy in enemies:
@@ -153,4 +157,5 @@
     </script>
 </body>
 </html>
+
 
