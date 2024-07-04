@@ -16,8 +16,7 @@
     <h1 class="title">No Matter Game</h1>
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <script type="text/python">
-        from browser import document, html, window, timer
-        import random
+        from browser import document, html, window
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -36,7 +35,7 @@
         face_images = ["face_0.png", "face_1.png", "face_2.png", "face_3.png"]
         faces = [html.IMG(src=img) for img in face_images]
 
-        enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": random.choice(faces)} for row in range(3) for col in range(8)]
+        enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
 
         bullets = []
 
@@ -95,7 +94,7 @@
                 bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
 
         document.bind("keydown", move_player)
-        timer.set_interval(update, 30)
+        window.setInterval(update, 30)
     </script>
 </body>
 </html>
