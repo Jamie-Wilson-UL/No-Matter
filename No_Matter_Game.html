@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No Matter Band Arcade Game</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
+    <style>
+        body { text-align: center; }
+        canvas { border: 1px solid black; }
+    </style>
+</head>
+<body onload="brython()">
+    <h2>Instructions: Move = Arrow Keys, Shoot = Space</h2>
+    <h3>Score: <span id="score">0</span></h3>
+    <canvas id="game-canvas" width="800" height="600"></canvas>
+    <script type="text/python">
+        from browser import document, html, window
+
+        WIDTH, HEIGHT = 800, 600
+        score = 0
+
+        canvas = document["game-canvas"]
+        ctx = canvas.getContext("2d")
+
+        player_size = 50
+        player_pos = [WIDTH // 2, HEIGHT - 2 * player_size]
+        player_speed = 10
+
+        # Load spaceship image
+        spaceship_img = html.IMG(src="spaceship.png")
+
+        # Load face images
+        face_images = [
+            "face_0.png",
+            "face_1.png",
+            "face_2.png",
+            "face_3.png"
+        ]
+        
+        faces = [html.IMG(src=img) for img in face_images]
+
+        for img in face_images:
+            print(f"Loading image: {img}")
+
+        enemy_size = 50
+        enemies = [{"pos": [int(window.Math.random() * (WIDTH - enemy_size)), 0], "img": faces[int(window.Math.random() * len(faces))]} for _ in range(4)]
+        enemy_speed = 2
+
+        bullets = []
+        bullet_speed = 5
+        bullet_size = 10
+
+        game_over = False
+
+        def draw():
+            # Create gradient background
+            gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT)
+            gradient.addColorStop(0, "#000000")
+            gradient.addColorStop(1, "#003366")
+            ctx.fillStyle = gradient
+            ctx.fillRect(0, 0, WIDTH, HEIGHT)
+            
+            # Draw player
+            ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], player_size, player_size)
+            
+            # Draw enemies
+            for enemy in enemies:
+                ctx.drawImage(enemy["img"], enemy["pos"][0], enemy["pos"][1], enemy_size, enemy_size)
+
+            # Draw bullets
+            ctx.fillStyle = "#FFFF00"
+            for bullet in bullets:
+                ctx.fillRect(bullet[0], bullet[1], bullet_size, bullet_size)
+
+        def update():
+            global game_over, score
+            if game_over:
+                return
+
+            for enemy in enemies:
+                enemy["pos"][1] += enemy_speed
+                if enemy["pos"][1] > HEIGHT:
+                    enemy["pos"][1] = 0
+                    enemy["pos"][0] = int(window.Math.random() * (WIDTH - enemy_size))
+
+            # Update bullets
+            for bullet in bullets[:]:
+                bullet[1] -= bullet_speed
+                if bullet[1] < 0:
+                    bullets.remove(bullet)
+            
+            # Check for collisions between bullets and enemies
+            for enemy in enemies:
+                for bullet in bullets:
+                    if (bullet[0] >= enemy["pos"][0] and bullet[0] < (enemy["pos"][0] + enemy_size)) or (enemy["pos"][0] >= bullet[0] and enemy["pos"][0] < (bullet[0] + bullet_size)):
+                        if (bullet[1] >= enemy["pos"][1] and bullet[1] < (enemy["pos"][1] + enemy_size)) or (enemy["pos"][1] >= bullet[1] and enemy["pos"][1] < (bullet[1] + bullet_size)):
+                            enemies.remove(enemy)
+                            bullets.remove(bullet)
+                            enemies.append({"pos": [int(window.Math.random() * (WIDTH - enemy_size)), 0], "img": faces[int(window.Math.random() * len(faces))]})
+                            score += 1
+                            document["score"].text = str(score)
+
+            draw()
+
+        def move(event):
+            if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
+                player_pos[0] -= player_speed
+            elif event.keyCode == 39 and player_pos[0] < WIDTH - player_size:  # Right arrow
+                player_pos[0] += player_speed
+            elif event.keyCode == 32:  # Space key
+                bullets.append([player_pos[0] + player_size // 2 - bullet_size // 2, player_pos[1]])
+
+        document.bind("keydown", move)
+        window.setInterval(update, 30)
+
+    </script>
+</body>
+</html>
