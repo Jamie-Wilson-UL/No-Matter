@@ -9,19 +9,25 @@
         body { text-align: center; }
         canvas { border: 1px solid black; }
         .title { font-family: 'Press Start 2P', cursive; color: #00FF00; margin: 20px; }
+        .instructions { font-family: 'Press Start 2P', cursive; color: #FFFFFF; position: absolute; left: 10px; top: 150px; text-align: left; }
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
     </style>
 </head>
 <body onload="brython()">
-    <h1 class="title">No Matter Game</h1>
-    <h2>Instructions: Move = Arrow Keys, Shoot = Space</h2>
-    <h3>Score: <span id="score">0</span></h3>
+    <div class="instructions">
+        <p>Instructions:</p>
+        <p>Move = Arrow Keys</p>
+        <p>Shoot = Space</p>
+    </div>
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <script type="text/python">
         from browser import document, html, window
+        import random
 
         WIDTH, HEIGHT = 800, 600
         score = 0
+        level = 1
+        max_level = 5
 
         canvas = document["game-canvas"]
         ctx = canvas.getContext("2d")
@@ -53,19 +59,26 @@
         enemy_offset = 50
         enemies = []
 
-        for row in range(rows):
-            for col in range(cols):
-                x = col * (enemy_size + enemy_padding) + enemy_offset
-                y = row * (enemy_size + enemy_padding) + enemy_offset
-                enemies.append({"pos": [x, y], "img": faces[int(window.Math.random() * len(faces))]})
+        def create_enemies():
+            global enemies
+            enemies = []
+            for row in range(rows):
+                for col in range(cols):
+                    x = col * (enemy_size + enemy_padding) + enemy_offset
+                    y = row * (enemy_size + enemy_padding) + enemy_offset
+                    enemies.append({"pos": [x, y], "img": faces[int(window.Math.random() * len(faces))]})
+
+        create_enemies()
 
         enemy_speed = 2
         direction = 1
         bullets = []
+        enemy_bullets = []
         bullet_speed = 5
         bullet_size = 10
 
         game_over = False
+        game_won = False
 
         def draw():
             # Create gradient background
@@ -75,8 +88,13 @@
             ctx.fillStyle = gradient
             ctx.fillRect(0, 0, WIDTH, HEIGHT)
             
+            # Draw title
+            ctx.fillStyle = "#00FF00"
+            ctx.font = "24px 'Press Start 2P'"
+            ctx.fillText("No Matter Game", WIDTH // 4, 50)
+
             # Draw player
-            if not game_over:
+            if not game_over and not game_won:
                 ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], player_size, player_size)
             
             # Draw enemies
@@ -86,6 +104,11 @@
             # Draw bullets
             ctx.fillStyle = "#FFFF00"
             for bullet in bullets:
+                ctx.fillRect(bullet[0], bullet[1], bullet_size, bullet_size)
+
+            # Draw enemy bullets
+            ctx.fillStyle = "#FF0000"
+            for bullet in enemy_bullets:
                 ctx.fillRect(bullet[0], bullet[1], bullet_size, bullet_size)
 
             # Draw game over screen
@@ -99,9 +122,20 @@
                 ctx.font = "24px 'Press Start 2P'"
                 ctx.fillText(f"Final Score: {score}", WIDTH // 4, HEIGHT // 2 + 50)
 
+            # Draw win screen
+            if game_won:
+                ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
+                ctx.fillRect(0, 0, WIDTH, HEIGHT)
+                ctx.fillStyle = "#00FF00"
+                ctx.font = "48px 'Press Start 2P'"
+                ctx.fillText("YOU WIN!", WIDTH // 4, HEIGHT // 2)
+                ctx.fillStyle = "#FFFFFF"
+                ctx.font = "24px 'Press Start 2P'"
+                ctx.fillText(f"Final Score: {score}", WIDTH // 4, HEIGHT // 2 + 50)
+
         def update():
-            global game_over, score, direction
-            if game_over:
+            global game_over, game_won, score, direction, enemy_speed, level
+            if game_over or game_won:
                 draw()
                 return
 
@@ -117,12 +151,23 @@
                 for enemy in enemies:
                     enemy["pos"][1] += enemy_size // 2
 
+            # Enemies fire bullets occasionally
+            for enemy in enemies:
+                if window.Math.random() < 0.01 * level:
+                    enemy_bullets.append([enemy["pos"][0] + enemy_size // 2, enemy["pos"][1] + enemy_size])
+
             # Update bullets
             for bullet in bullets[:]:
                 bullet[1] -= bullet_speed
                 if bullet[1] < 0:
                     bullets.remove(bullet)
-            
+
+            # Update enemy bullets
+            for bullet in enemy_bullets[:]:
+                bullet[1] += bullet_speed
+                if bullet[1] > HEIGHT:
+                    enemy_bullets.remove(bullet)
+
             # Check for collisions between bullets and enemies
             for enemy in enemies[:]:
                 for bullet in bullets[:]:
@@ -132,6 +177,13 @@
                             bullets.remove(bullet)
                             score += 1
                             document["score"].text = str(score)
+                            break
+
+            # Check for collisions between enemy bullets and player
+            for bullet in enemy_bullets[:]:
+                if (bullet[0] >= player_pos[0] and bullet[0] < (player_pos[0] + player_size)) or (player_pos[0] >= bullet[0] and player_pos[0] < (bullet[0] + bullet_size)):
+                    if (bullet[1] >= player_pos[1] and bullet[1] < (player_pos[1] + player_size)) or (player_pos[1] >= bullet[1] and player_pos[1] < (bullet[1] + bullet_size)):
+                        game_over = True
 
             # Check for collisions between enemies and player
             for enemy in enemies:
@@ -139,10 +191,19 @@
                     if (enemy["pos"][1] >= player_pos[1] and enemy["pos"][1] < (player_pos[1] + player_size)) or (player_pos[1] >= enemy["pos"][1] and player_pos[1] < (enemy["pos"][1] + enemy_size)):
                         game_over = True
 
+            # Check if all enemies are cleared
+            if not enemies:
+                if level < max_level:
+                    level += 1
+                    enemy_speed += 1
+                    create_enemies()
+                else:
+                    game_won = True
+
             draw()
 
         def move(event):
-            if game_over:
+            if game_over or game_won:
                 return
             if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
                 player_pos[0] -= player_speed
@@ -157,4 +218,3 @@
     </script>
 </body>
 </html>
-
