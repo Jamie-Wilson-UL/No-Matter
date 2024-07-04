@@ -126,7 +126,7 @@
                 return
             if event.keyCode == 32 and not game_started:  # Space key to start
                 game_started = True
-            if game_started:
+            elif game_started:
                 if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
                     player_pos[0] -= PLAYER_SPEED
                 elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:  # Right arrow
