@@ -9,18 +9,11 @@
         body { text-align: center; background-color: black; color: white; }
         canvas { border: 1px solid white; display: block; margin: 20px auto; }
         .title { font-family: 'Press Start 2P', cursive; color: #00FF00; margin: 20px; }
-        .instructions { font-family: 'Press Start 2P', cursive; color: #FFFFFF; text-align: left; }
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
     </style>
 </head>
 <body onload="brython()">
     <h1 class="title">No Matter Game</h1>
-    <div class="instructions">
-        <p>Instructions:</p>
-        <p>Move = Arrow Keys</p>
-        <p>Shoot = Space</p>
-        <p>Score: <span id="score">0</span></p>
-    </div>
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <script type="text/python">
         from browser import document, html, window, timer
@@ -77,7 +70,6 @@
                         enemies.remove(enemy)
                         bullets.remove(bullet)
                         score += 1
-                        document["score"].text = str(score)
                         break
 
             move_down = False
@@ -107,6 +99,7 @@
     </script>
 </body>
 </html>
+
 
 
 
