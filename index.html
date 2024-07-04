@@ -6,161 +6,140 @@
     <title>No Matter Game</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
     <style>
-        body { text-align: center; }
-        canvas { border: 1px solid black; }
+        body { text-align: center; margin: 0; padding: 0; background-color: black; color: white; }
+        canvas { border: 1px solid white; background-color: black; display: block; margin: 20px auto; }
         .title { font-family: 'Press Start 2P', cursive; color: #00FF00; margin: 20px; }
         .instructions { font-family: 'Press Start 2P', cursive; color: #FFFFFF; position: absolute; left: 10px; top: 150px; text-align: left; }
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
     </style>
 </head>
 <body onload="brython()">
+    <div class="title">No Matter Game</div>
     <div class="instructions">
         <p>Instructions:</p>
         <p>Move = Arrow Keys</p>
         <p>Shoot = Space</p>
+        <p>Score: <span id="score">0</span></p>
     </div>
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <script type="text/python">
-        from browser import document, html, window
+        from browser import document, html, window, timer
         import random
 
+        # Constants
         WIDTH, HEIGHT = 800, 600
+        PLAYER_SIZE = 50
+        ENEMY_SIZE = 50
+        BULLET_SIZE = 10
+        PLAYER_SPEED = 10
+        BULLET_SPEED = 5
+        ENEMY_BULLET_SPEED = 2
+        ENEMY_SPEED = 2
+
+        # Game variables
         score = 0
+        game_over = False
 
-        canvas = document["game-canvas"]
-        ctx = canvas.getContext("2d")
-
-        player_size = 50
-        player_pos = [WIDTH // 2, HEIGHT - 2 * player_size]
-        player_speed = 10
+        # Player position
+        player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
 
         # Load spaceship image
         spaceship_img = html.IMG(src="spaceship.png")
 
-        # Load face images
-        face_images = [
-            "face_0.png",
-            "face_1.png",
-            "face_2.png",
-            "face_3.png"
-        ]
-
+        # Load enemy images
+        face_images = ["face_0.png", "face_1.png", "face_2.png", "face_3.png"]
         faces = [html.IMG(src=img) for img in face_images]
 
-        enemy_size = 50
-        rows = 3
-        cols = 8
-        enemy_padding = 10
-        enemy_offset = 50
-        enemies = []
+        # Enemy positions
+        enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": random.choice(faces)} for row in range(3) for col in range(8)]
 
-        def create_enemies():
-            global enemies
-            enemies = []
-            for row in range(rows):
-                for col in range(cols):
-                    x = col * (enemy_size + enemy_padding) + enemy_offset
-                    y = row * (enemy_size + enemy_padding) + enemy_offset
-                    enemies.append({"pos": [x, y], "img": faces[int(window.Math.random() * len(faces))]})
-
-        create_enemies()
-
-        enemy_speed = 2
-        direction = 1
+        # Bullets
         bullets = []
         enemy_bullets = []
-        bullet_speed = 5
-        bullet_size = 10
 
-        game_over = False
+        canvas = document["game-canvas"]
+        ctx = canvas.getContext("2d")
 
         def draw():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             # Draw player
-            ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], player_size, player_size)
-            
+            if not game_over:
+                ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], PLAYER_SIZE, PLAYER_SIZE)
             # Draw enemies
             for enemy in enemies:
-                ctx.drawImage(enemy["img"], enemy["pos"][0], enemy["pos"][1], enemy_size, enemy_size)
-
+                ctx.drawImage(enemy["img"], enemy["pos"][0], enemy["pos"][1], ENEMY_SIZE, ENEMY_SIZE)
             # Draw bullets
-            ctx.fillStyle = "#FFFF00"
+            ctx.fillStyle = "yellow"
             for bullet in bullets:
-                ctx.fillRect(bullet[0], bullet[1], bullet_size, bullet_size)
-
+                ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
             # Draw enemy bullets
-            ctx.fillStyle = "#FF0000"
+            ctx.fillStyle = "red"
             for bullet in enemy_bullets:
-                ctx.fillRect(bullet[0], bullet[1], bullet_size, bullet_size)
+                ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
 
         def update():
-            global direction, game_over
+            global game_over, score
+
             if game_over:
                 return
+
+            # Move bullets
+            for bullet in bullets[:]:
+                bullet[1] -= BULLET_SPEED
+                if bullet[1] < 0:
+                    bullets.remove(bullet)
+
+            # Move enemy bullets
+            for bullet in enemy_bullets[:]:
+                bullet[1] += ENEMY_BULLET_SPEED
+                if bullet[1] > HEIGHT:
+                    enemy_bullets.remove(bullet)
+
+            # Check for bullet collisions with enemies
+            for enemy in enemies[:]:
+                for bullet in bullets[:]:
+                    if bullet[0] >= enemy["pos"][0] and bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and bullet[1] >= enemy["pos"][1] and bullet[1] <= enemy["pos"][1] + ENEMY_SIZE:
+                        enemies.remove(enemy)
+                        bullets.remove(bullet)
+                        score += 1
+                        document["score"].text = str(score)
+                        break
+
+            # Check for enemy bullet collisions with player
+            for bullet in enemy_bullets[:]:
+                if bullet[0] >= player_pos[0] and bullet[0] <= player_pos[0] + PLAYER_SIZE and bullet[1] >= player_pos[1] and bullet[1] <= player_pos[1] + PLAYER_SIZE:
+                    game_over = True
 
             # Move enemies
             move_down = False
             for enemy in enemies:
-                enemy["pos"][0] += direction * enemy_speed
-                if enemy["pos"][0] > WIDTH - enemy_size or enemy["pos"][0] < 0:
+                enemy["pos"][0] += ENEMY_SPEED
+                if enemy["pos"][0] > WIDTH - ENEMY_SIZE or enemy["pos"][0] < 0:
                     move_down = True
-
             if move_down:
-                direction *= -1
                 for enemy in enemies:
-                    enemy["pos"][1] += enemy_size // 2
+                    enemy["pos"][1] += ENEMY_SIZE
+                ENEMY_SPEED = -ENEMY_SPEED
 
             # Enemies fire bullets occasionally
             for enemy in enemies:
-                if window.Math.random() < 0.01:
-                    enemy_bullets.append([enemy["pos"][0] + enemy_size // 2, enemy["pos"][1] + enemy_size])
-
-            # Update bullets
-            for bullet in bullets[:]:
-                bullet[1] -= bullet_speed
-                if bullet[1] < 0:
-                    bullets.remove(bullet)
-
-            # Update enemy bullets
-            for bullet in enemy_bullets[:]:
-                bullet[1] += bullet_speed
-                if bullet[1] > HEIGHT:
-                    enemy_bullets.remove(bullet)
-
-            # Check for collisions between bullets and enemies
-            for enemy in enemies[:]:
-                for bullet in bullets[:]:
-                    if (bullet[0] >= enemy["pos"][0] and bullet[0] < (enemy["pos"][0] + enemy_size)) or (enemy["pos"][0] >= bullet[0] and enemy["pos"][0] < (bullet[0] + bullet_size)):
-                        if (bullet[1] >= enemy["pos"][1] and bullet[1] < (enemy["pos"][1] + enemy_size)) or (enemy["pos"][1] >= bullet[1] and enemy["pos"][1] < (bullet[1] + bullet_size)):
-                            enemies.remove(enemy)
-                            bullets.remove(bullet)
-                            score += 1
-                            document["score"].text = str(score)
-                            break
-
-            # Check for collisions between enemy bullets and player
-            for bullet in enemy_bullets[:]:
-                if (bullet[0] >= player_pos[0] and bullet[0] < (player_pos[0] + player_size)) or (player_pos[0] >= bullet[0] and player_pos[0] < (bullet[0] + bullet_size)):
-                    if (bullet[1] >= player_pos[1] and bullet[1] < (player_pos[1] + player_size)) or (player_pos[1] >= bullet[1] and player_pos[1] < (bullet[1] + bullet_size)):
-                        game_over = True
+                if random.random() < 0.01:
+                    enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
 
             draw()
 
-        def move(event):
+        def move_player(event):
             if game_over:
                 return
             if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
-                player_pos[0] -= player_speed
-            elif event.keyCode == 39 and player_pos[0] < WIDTH - player_size:  # Right arrow
-                player_pos[0] += player_speed
+                player_pos[0] -= PLAYER_SPEED
+            elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:  # Right arrow
+                player_pos[0] += PLAYER_SPEED
             elif event.keyCode == 32:  # Space key
-                bullets.append([player_pos[0] + player_size // 2 - bullet_size // 2, player_pos[1]])
+                bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
 
-        document.bind("keydown", move)
-        window.setInterval(update, 30)
-
+        document.bind("keydown", move_player)
+        timer.set_interval(update, 30)
     </script>
 </body>
 </html>
-
-
