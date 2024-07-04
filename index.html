@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>No Matter Band Arcade Game</title>
+    <title>No Matter Game</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
     <style>
         body { text-align: center; }
         canvas { border: 1px solid black; }
+        .title { font-family: 'Press Start 2P', cursive; color: #00FF00; margin: 20px; }
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
     </style>
 </head>
 <body onload="brython()">
+    <h1 class="title">No Matter Game</h1>
     <h2>Instructions: Move = Arrow Keys, Shoot = Space</h2>
     <h3>Score: <span id="score">0</span></h3>
     <canvas id="game-canvas" width="800" height="600"></canvas>
@@ -40,13 +43,21 @@
         
         faces = [html.IMG(src=img) for img in face_images]
 
-        for img in face_images:
-            print(f"Loading image: {img}")
-
         enemy_size = 50
-        enemies = [{"pos": [int(window.Math.random() * (WIDTH - enemy_size)), 0], "img": faces[int(window.Math.random() * len(faces))]} for _ in range(4)]
-        enemy_speed = 2
+        rows = 3
+        cols = 8
+        enemy_padding = 10
+        enemy_offset = 50
+        enemies = []
 
+        for row in range(rows):
+            for col in range(cols):
+                x = col * (enemy_size + enemy_padding) + enemy_offset
+                y = row * (enemy_size + enemy_padding) + enemy_offset
+                enemies.append({"pos": [x, y], "img": faces[int(window.Math.random() * len(faces))]})
+
+        enemy_speed = 2
+        direction = 1
         bullets = []
         bullet_speed = 5
         bullet_size = 10
@@ -73,16 +84,34 @@
             for bullet in bullets:
                 ctx.fillRect(bullet[0], bullet[1], bullet_size, bullet_size)
 
-        def update():
-            global game_over, score
+            # Draw game over screen
             if game_over:
+                ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
+                ctx.fillRect(0, 0, WIDTH, HEIGHT)
+                ctx.fillStyle = "#FF0000"
+                ctx.font = "48px 'Press Start 2P'"
+                ctx.fillText("GAME OVER", WIDTH // 4, HEIGHT // 2)
+                ctx.fillStyle = "#FFFFFF"
+                ctx.font = "24px 'Press Start 2P'"
+                ctx.fillText(f"Final Score: {score}", WIDTH // 4, HEIGHT // 2 + 50)
+
+        def update():
+            global game_over, score, direction
+            if game_over:
+                draw()
                 return
 
+            # Move enemies
+            move_down = False
             for enemy in enemies:
-                enemy["pos"][1] += enemy_speed
-                if enemy["pos"][1] > HEIGHT:
-                    enemy["pos"][1] = 0
-                    enemy["pos"][0] = int(window.Math.random() * (WIDTH - enemy_size))
+                enemy["pos"][0] += direction * enemy_speed
+                if enemy["pos"][0] > WIDTH - enemy_size or enemy["pos"][0] < 0:
+                    move_down = True
+
+            if move_down:
+                direction *= -1
+                for enemy in enemies:
+                    enemy["pos"][1] += enemy_size // 2
 
             # Update bullets
             for bullet in bullets[:]:
@@ -91,19 +120,26 @@
                     bullets.remove(bullet)
             
             # Check for collisions between bullets and enemies
-            for enemy in enemies:
-                for bullet in bullets:
+            for enemy in enemies[:]:
+                for bullet in bullets[:]:
                     if (bullet[0] >= enemy["pos"][0] and bullet[0] < (enemy["pos"][0] + enemy_size)) or (enemy["pos"][0] >= bullet[0] and enemy["pos"][0] < (bullet[0] + bullet_size)):
                         if (bullet[1] >= enemy["pos"][1] and bullet[1] < (enemy["pos"][1] + enemy_size)) or (enemy["pos"][1] >= bullet[1] and enemy["pos"][1] < (bullet[1] + bullet_size)):
                             enemies.remove(enemy)
                             bullets.remove(bullet)
-                            enemies.append({"pos": [int(window.Math.random() * (WIDTH - enemy_size)), 0], "img": faces[int(window.Math.random() * len(faces))]})
                             score += 1
                             document["score"].text = str(score)
+
+            # Check for collisions between enemies and player
+            for enemy in enemies:
+                if (enemy["pos"][0] >= player_pos[0] and enemy["pos"][0] < (player_pos[0] + player_size)) or (player_pos[0] >= enemy["pos"][0] and player_pos[0] < (enemy["pos"][0] + enemy_size)):
+                    if (enemy["pos"][1] >= player_pos[1] and enemy["pos"][1] < (player_pos[1] + player_size)) or (player_pos[1] >= enemy["pos"][1] and player_pos[1] < (enemy["pos"][1] + enemy_size)):
+                        game_over = True
 
             draw()
 
         def move(event):
+            if game_over:
+                return
             if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
                 player_pos[0] -= player_speed
             elif event.keyCode == 39 and player_pos[0] < WIDTH - player_size:  # Right arrow
