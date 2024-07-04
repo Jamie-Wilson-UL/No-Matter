@@ -32,7 +32,6 @@
         BULLET_SIZE = 10
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
-        ENEMY_BULLET_SPEED = 2
         ENEMY_SPEED = 2
 
         score = 0
@@ -47,7 +46,6 @@
         enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": random.choice(faces)} for row in range(3) for col in range(8)]
 
         bullets = []
-        enemy_bullets = []
 
         canvas = document["game-canvas"]
         ctx = canvas.getContext("2d")
@@ -61,9 +59,6 @@
             ctx.fillStyle = "yellow"
             for bullet in bullets:
                 ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
-            ctx.fillStyle = "red"
-            for bullet in enemy_bullets:
-                ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
 
         def update():
             global game_over, score
@@ -76,11 +71,6 @@
                 if bullet[1] < 0:
                     bullets.remove(bullet)
 
-            for bullet in enemy_bullets[:]:
-                bullet[1] += ENEMY_BULLET_SPEED
-                if bullet[1] > HEIGHT:
-                    enemy_bullets.remove(bullet)
-
             for enemy in enemies[:]:
                 for bullet in bullets[:]:
                     if bullet[0] >= enemy["pos"][0] and bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and bullet[1] >= enemy["pos"][1] and bullet[1] <= enemy["pos"][1] + ENEMY_SIZE:
@@ -89,10 +79,6 @@
                         score += 1
                         document["score"].text = str(score)
                         break
-
-            for bullet in enemy_bullets[:]:
-                if bullet[0] >= player_pos[0] and bullet[0] <= player_pos[0] + PLAYER_SIZE and bullet[1] >= player_pos[1] and bullet[1] <= player_pos[1] + PLAYER_SIZE:
-                    game_over = True
 
             move_down = False
             for enemy in enemies:
@@ -103,10 +89,6 @@
                 for enemy in enemies:
                     enemy["pos"][1] += ENEMY_SIZE
                 ENEMY_SPEED = -ENEMY_SPEED
-
-            for enemy in enemies:
-                if random.random() < 0.01:
-                    enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
 
             draw()
 
@@ -125,6 +107,7 @@
     </script>
 </body>
 </html>
+
 
 
 
