@@ -26,8 +26,6 @@
 
         WIDTH, HEIGHT = 800, 600
         score = 0
-        level = 1
-        max_level = 5
 
         canvas = document["game-canvas"]
         ctx = canvas.getContext("2d")
@@ -46,11 +44,8 @@
             "face_2.png",
             "face_3.png"
         ]
-        
-        faces = [html.IMG(src=img) for img in face_images]
 
-        for img in face_images:
-            print(f"Loading image: {img}")
+        faces = [html.IMG(src=img) for img in face_images]
 
         enemy_size = 50
         rows = 3
@@ -78,24 +73,11 @@
         bullet_size = 10
 
         game_over = False
-        game_won = False
 
         def draw():
-            # Create gradient background
-            gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT)
-            gradient.addColorStop(0, "#000000")
-            gradient.addColorStop(1, "#003366")
-            ctx.fillStyle = gradient
-            ctx.fillRect(0, 0, WIDTH, HEIGHT)
-            
-            # Draw title
-            ctx.fillStyle = "#00FF00"
-            ctx.font = "24px 'Press Start 2P'"
-            ctx.fillText("No Matter Game", WIDTH // 4, 50)
-
+            ctx.clearRect(0, 0, WIDTH, HEIGHT)
             # Draw player
-            if not game_over and not game_won:
-                ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], player_size, player_size)
+            ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], player_size, player_size)
             
             # Draw enemies
             for enemy in enemies:
@@ -111,32 +93,9 @@
             for bullet in enemy_bullets:
                 ctx.fillRect(bullet[0], bullet[1], bullet_size, bullet_size)
 
-            # Draw game over screen
-            if game_over:
-                ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
-                ctx.fillRect(0, 0, WIDTH, HEIGHT)
-                ctx.fillStyle = "#FF0000"
-                ctx.font = "48px 'Press Start 2P'"
-                ctx.fillText("GAME OVER", WIDTH // 4, HEIGHT // 2)
-                ctx.fillStyle = "#FFFFFF"
-                ctx.font = "24px 'Press Start 2P'"
-                ctx.fillText(f"Final Score: {score}", WIDTH // 4, HEIGHT // 2 + 50)
-
-            # Draw win screen
-            if game_won:
-                ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
-                ctx.fillRect(0, 0, WIDTH, HEIGHT)
-                ctx.fillStyle = "#00FF00"
-                ctx.font = "48px 'Press Start 2P'"
-                ctx.fillText("YOU WIN!", WIDTH // 4, HEIGHT // 2)
-                ctx.fillStyle = "#FFFFFF"
-                ctx.font = "24px 'Press Start 2P'"
-                ctx.fillText(f"Final Score: {score}", WIDTH // 4, HEIGHT // 2 + 50)
-
         def update():
-            global game_over, game_won, score, direction, enemy_speed, level
-            if game_over or game_won:
-                draw()
+            global direction, game_over
+            if game_over:
                 return
 
             # Move enemies
@@ -153,7 +112,7 @@
 
             # Enemies fire bullets occasionally
             for enemy in enemies:
-                if window.Math.random() < 0.01 * level:
+                if window.Math.random() < 0.01:
                     enemy_bullets.append([enemy["pos"][0] + enemy_size // 2, enemy["pos"][1] + enemy_size])
 
             # Update bullets
@@ -185,25 +144,10 @@
                     if (bullet[1] >= player_pos[1] and bullet[1] < (player_pos[1] + player_size)) or (player_pos[1] >= bullet[1] and player_pos[1] < (bullet[1] + bullet_size)):
                         game_over = True
 
-            # Check for collisions between enemies and player
-            for enemy in enemies:
-                if (enemy["pos"][0] >= player_pos[0] and enemy["pos"][0] < (player_pos[0] + player_size)) or (player_pos[0] >= enemy["pos"][0] and player_pos[0] < (enemy["pos"][0] + enemy_size)):
-                    if (enemy["pos"][1] >= player_pos[1] and enemy["pos"][1] < (player_pos[1] + player_size)) or (player_pos[1] >= enemy["pos"][1] and player_pos[1] < (enemy["pos"][1] + enemy_size)):
-                        game_over = True
-
-            # Check if all enemies are cleared
-            if not enemies:
-                if level < max_level:
-                    level += 1
-                    enemy_speed += 1
-                    create_enemies()
-                else:
-                    game_won = True
-
             draw()
 
         def move(event):
-            if game_over or game_won:
+            if game_over:
                 return
             if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
                 player_pos[0] -= player_speed
