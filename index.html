@@ -37,7 +37,6 @@
 
         score = 0
         game_over = False
-        game_started = False
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
 
@@ -55,30 +54,21 @@
 
         def draw():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
-            if game_started:
-                if not game_over:
-                    ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], PLAYER_SIZE, PLAYER_SIZE)
-                for enemy in enemies:
-                    ctx.drawImage(enemy["img"], enemy["pos"][0], enemy["pos"][1], ENEMY_SIZE, ENEMY_SIZE)
-                ctx.fillStyle = "yellow"
-                for bullet in bullets:
-                    ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
-                ctx.fillStyle = "red"
-                for bullet in enemy_bullets:
-                    ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
-                if game_over:
-                    ctx.fillStyle = "red"
-                    ctx.font = "48px 'Press Start 2P'"
-                    ctx.fillText("GAME OVER", WIDTH // 4, HEIGHT // 2)
-            else:
-                ctx.fillStyle = "white"
-                ctx.font = "24px 'Press Start 2P'"
-                ctx.fillText("Press Space to Play", WIDTH // 4, HEIGHT // 2)
+            if not game_over:
+                ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], PLAYER_SIZE, PLAYER_SIZE)
+            for enemy in enemies:
+                ctx.drawImage(enemy["img"], enemy["pos"][0], enemy["pos"][1], ENEMY_SIZE, ENEMY_SIZE)
+            ctx.fillStyle = "yellow"
+            for bullet in bullets:
+                ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
+            ctx.fillStyle = "red"
+            for bullet in enemy_bullets:
+                ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
 
         def update():
             global game_over, score
 
-            if game_over or not game_started:
+            if game_over:
                 return
 
             for bullet in bullets[:]:
@@ -121,25 +111,20 @@
             draw()
 
         def move_player(event):
-            global game_started
             if game_over:
                 return
-            if event.keyCode == 32 and not game_started:  # Space key to start
-                game_started = True
-            elif game_started:
-                if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
-                    player_pos[0] -= PLAYER_SPEED
-                elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:  # Right arrow
-                    player_pos[0] += PLAYER_SPEED
-                elif event.keyCode == 32:  # Space key to shoot
-                    bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
+            if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
+                player_pos[0] -= PLAYER_SPEED
+            elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:  # Right arrow
+                player_pos[0] += PLAYER_SPEED
+            elif event.keyCode == 32:  # Space key
+                bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
 
         document.bind("keydown", move_player)
         timer.set_interval(update, 30)
-
-        draw()  # Initial draw to show start screen
     </script>
 </body>
 </html>
+
 
 
