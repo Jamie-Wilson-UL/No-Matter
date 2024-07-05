@@ -13,6 +13,7 @@
 </head>
 <body onload="brython()">
     <canvas id="game-canvas" width="800" height="600"></canvas>
+    <audio id="background-audio" src="theme.mp3" loop autoplay></audio>
     <script type="text/python">
         from browser import document, html, window
 
@@ -47,6 +48,7 @@
 
         canvas = document["game-canvas"]
         ctx = canvas.getContext("2d")
+        background_audio = document["background-audio"]
 
         def initialize_game():
             global enemies, bullets, enemy_bullets, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score
@@ -246,6 +248,7 @@
                 window.requestAnimationFrame(lambda x: animate_title_screen())
 
         animate_title_screen()  # Start the animation loop for the title screen
+        background_audio.play()  # Ensure audio starts playing when the page loads
     </script>
 </body>
 </html>
