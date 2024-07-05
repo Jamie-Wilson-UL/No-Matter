@@ -20,11 +20,12 @@
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
         ENEMY_SIZE = 50
-        BOSS_SIZE = 100  # Increased boss size
+        BOSS_SIZE = 150  # Increased boss size
         BULLET_SIZE = 10
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
         ENEMY_BULLET_SPEED = 3
+        LASER_WIDTH = 20
         MAX_LEVELS = 3
         BOSS_HITS_REQUIRED = 10
 
@@ -37,10 +38,13 @@
         flash_text = True
         player_last_shot = 0
         player_shot_cooldown = 500  # Cooldown time in milliseconds
+        boss_last_laser = 0
+        boss_laser_cooldown = 3000  # Cooldown time in milliseconds
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
         boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
         boss_hits = 0
+        boss_direction = 1
 
         spaceship_img = html.IMG(src="spaceship.png")
         title_img = html.IMG(src="title.png")
@@ -51,6 +55,7 @@
         enemies = []
         bullets = []
         enemy_bullets = []
+        laser_beams = []
         stars = [{"x": window.Math.random() * WIDTH, "y": window.Math.random() * HEIGHT, "size": window.Math.random() * 3 + 1} for _ in range(100)]
 
         canvas = document["game-canvas"]
@@ -58,7 +63,7 @@
         background_audio = document["background-audio"]
 
         def initialize_game():
-            global enemies, bullets, enemy_bullets, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits
+            global enemies, bullets, enemy_bullets, laser_beams, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits
             if level <= MAX_LEVELS:
                 enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
             else:
@@ -66,6 +71,7 @@
                 boss_hits = 0
             bullets = []
             enemy_bullets = []
+            laser_beams = []
             showing_level_title = False
             ENEMY_SPEED = 2 + level  # Increase enemy speed with level
             game_over = False
@@ -150,6 +156,9 @@
                 ctx.fillStyle = "red"
                 for bullet in enemy_bullets:
                     ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
+                ctx.fillStyle = "red"
+                for laser in laser_beams:
+                    ctx.fillRect(laser[0], laser[1], LASER_WIDTH, HEIGHT - laser[1])
                 ctx.fillStyle = "white"
                 ctx.font = "24px 'Press Start 2P'"
                 ctx.textAlign = "right"
@@ -173,7 +182,7 @@
             window.setTimeout(reset_game, 3000)
 
         def update():
-            global game_over, score, game_started, showing_level_title, ENEMY_SPEED, boss_hits
+            global game_over, score, game_started, showing_level_title, ENEMY_SPEED, boss_hits, boss_direction
 
             if game_over or not game_started or showing_level_title:
                 return
@@ -206,6 +215,10 @@
                 if bullet[0] >= player_pos[0] and bullet[0] <= player_pos[0] + PLAYER_SIZE and bullet[1] >= player_pos[1] and bullet[1] <= player_pos[1] + PLAYER_SIZE:
                     game_over = True
 
+            for laser in laser_beams[:]:
+                if laser[0] <= player_pos[0] + PLAYER_SIZE and laser[0] + LASER_WIDTH >= player_pos[0] and laser[1] >= player_pos[1]:
+                    game_over = True
+
             if level <= MAX_LEVELS:
                 for enemy in enemies:
                     if (enemy["pos"][0] <= player_pos[0] <= enemy["pos"][0] + ENEMY_SIZE or
@@ -224,15 +237,16 @@
                         enemy["pos"][1] += ENEMY_SIZE
                     ENEMY_SPEED = -ENEMY_SPEED
             else:
-                boss_pos[0] += window.Math.random() * 20 - 10  # Increase movement range
-                boss_pos[1] += window.Math.random() * 5 - 2.5
-                boss_pos[0] = max(0, min(WIDTH - BOSS_SIZE, boss_pos[0]))
+                boss_pos[0] += boss_direction * 5
+                if boss_pos[0] <= 0 or boss_pos[0] >= WIDTH - BOSS_SIZE:
+                    boss_direction *= -1
+                boss_pos[1] += window.Math.random() * 10 - 5
                 boss_pos[1] = max(0, min(HEIGHT // 2, boss_pos[1]))
 
             draw()
 
         def enemy_shoot():
-            global game_over, game_started, showing_level_title
+            global game_over, game_started, showing_level_title, boss_last_laser
             if game_over or not game_started or showing_level_title:
                 return
             if level <= MAX_LEVELS:
@@ -242,6 +256,10 @@
             else:
                 if window.Math.random() < 0.2:  # Increase boss firing frequency
                     enemy_bullets.append([boss_pos[0] + BOSS_SIZE // 2, boss_pos[1] + BOSS_SIZE])
+                current_time = window.Date.new().getTime()
+                if current_time - boss_last_laser > boss_laser_cooldown:
+                    laser_beams.append([boss_pos[0] + BOSS_SIZE // 2 - LASER_WIDTH // 2, boss_pos[1] + BOSS_SIZE])
+                    boss_last_laser = current_time
 
         def level_up():
             global level, showing_level_title
@@ -293,4 +311,5 @@
     </script>
 </body>
 </html>
+
 
