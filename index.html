@@ -3,17 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>No Matter Game</title>
+    <title>No Matter Blaster</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
     <style>
         body { text-align: center; background-color: black; color: white; }
         canvas { border: 1px solid white; display: block; margin: 20px auto; }
-        .title { font-family: 'Press Start 2P', cursive; color: #00FF00; margin: 20px; }
+        .title { 
+            font-family: 'Press Start 2P', cursive; 
+            color: #00FF00; 
+            margin: 20px; 
+            font-size: 36px;
+            text-shadow: 2px 2px #FF0000;
+        }
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
     </style>
 </head>
 <body onload="brython()">
-    <h1 class="title">No Matter Game</h1>
+    <h1 class="title">NO MATTER BLASTER</h1>
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <script type="text/python">
         from browser import document, html, window
