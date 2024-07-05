@@ -6,8 +6,16 @@
     <title>No Matter Blaster</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
     <style>
-        body { text-align: center; background-color: black; color: white; }
-        canvas { border: 1px solid white; display: block; margin: 20px auto; }
+        body {
+            text-align: center;
+            background-color: black;
+            color: white;
+        }
+        canvas {
+            border: 1px solid white;
+            display: block;
+            margin: 20px auto;
+        }
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
     </style>
 </head>
@@ -20,7 +28,7 @@
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
         ENEMY_SIZE = 50
-        BOSS_SIZE = 150  # Increased boss size
+        BOSS_SIZE = 200  # Further increased boss size
         BULLET_SIZE = 10
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
@@ -37,10 +45,11 @@
         showing_level_title = False
         ENEMY_SPEED = 2
         flash_text = True
+        boss_visible = True
         player_last_shot = 0
         player_shot_cooldown = 500  # Cooldown time in milliseconds
         boss_last_laser = 0
-        boss_laser_cooldown = 3000  # Cooldown time in milliseconds
+        boss_laser_cooldown = 5000  # Less frequent lasers
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
         boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
@@ -132,7 +141,7 @@
                     star["x"] = window.Math.random() * WIDTH
 
         def draw():
-            global game_over, game_started, showing_level_title, boss_hits
+            global game_over, game_started, showing_level_title, boss_visible
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
@@ -144,10 +153,8 @@
                 if not game_over:
                     ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], PLAYER_SIZE, PLAYER_SIZE)
                 if level > MAX_LEVELS:
-                    ctx.drawImage(boss_img, boss_pos[0], boss_pos[1], BOSS_SIZE, BOSS_SIZE)
-                    ctx.fillStyle = "white"
-                    ctx.font = "24px 'Press Start 2P'"
-                    ctx.fillText(f"Boss Hits: {boss_hits}", 20, 40)
+                    if boss_visible:
+                        ctx.drawImage(boss_img, boss_pos[0], boss_pos[1], BOSS_SIZE, BOSS_SIZE)
                 else:
                     for enemy in enemies:
                         ctx.drawImage(enemy["img"], enemy["pos"][0], enemy["pos"][1], ENEMY_SIZE, ENEMY_SIZE)
@@ -157,7 +164,7 @@
                 ctx.fillStyle = "red"
                 for bullet in enemy_bullets:
                     ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
-                ctx.fillStyle = "red"
+                ctx.fillStyle = "blue"  # Changed laser color to blue
                 for laser in laser_beams:
                     ctx.fillRect(laser["x"], laser["y"], LASER_WIDTH, HEIGHT - laser["y"])
                 ctx.fillStyle = "white"
@@ -242,10 +249,10 @@
                         enemy["pos"][1] += ENEMY_SIZE
                     ENEMY_SPEED = -ENEMY_SPEED
             else:
-                boss_pos[0] += boss_direction * 5
+                boss_pos[0] += boss_direction * 10  # Increased boss speed
                 if boss_pos[0] <= 0 or boss_pos[0] >= WIDTH - BOSS_SIZE:
                     boss_direction *= -1
-                boss_pos[1] += window.Math.random() * 10 - 5
+                boss_pos[1] += window.Math.random() * 20 - 10  # Increased vertical movement range
                 boss_pos[1] = max(0, min(HEIGHT // 2, boss_pos[1]))
 
             draw()
@@ -259,7 +266,7 @@
                     if window.Math.random() < (0.05 + 0.01 * level):  # Adjust the probability as needed
                         enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
             else:
-                if window.Math.random() < 0.2:  # Increase boss firing frequency
+                if window.Math.random() < 0.1:  # Less frequent boss bullets
                     enemy_bullets.append([boss_pos[0] + BOSS_SIZE // 2, boss_pos[1] + BOSS_SIZE])
                 current_time = window.Date.new().getTime()
                 if current_time - boss_last_laser > boss_laser_cooldown:
@@ -301,10 +308,15 @@
             global flash_text
             flash_text = not flash_text
 
+        def toggle_boss_visibility():
+            global boss_visible
+            boss_visible = not boss_visible
+
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
         window.setInterval(enemy_shoot, 500)  # Enemy attempts to shoot every half-second
         window.setInterval(toggle_flash_text, 1000)  # Toggle the flash text every second
+        window.setInterval(toggle_boss_visibility, 500)  # Toggle boss visibility every half-second
 
         # Continuously draw the start screen to move stars
         def animate_title_screen():
@@ -316,3 +328,4 @@
     </script>
 </body>
 </html>
+
