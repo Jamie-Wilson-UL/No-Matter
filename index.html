@@ -31,6 +31,7 @@
         game_over = False
         game_started = False
         level = 1
+        showing_level_title = False
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
 
@@ -46,13 +47,14 @@
         ctx = canvas.getContext("2d")
 
         def reset_game():
-            global enemies, bullets, enemy_bullets, ENEMY_SPEED, level
+            global enemies, bullets, enemy_bullets, ENEMY_SPEED, showing_level_title
             enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
             bullets = []
             enemy_bullets = []
             ENEMY_SPEED = 2 + (level - 1)
-            enemy_shoot_interval = max(1000 - (level - 1) * 200, 200)
-            window.setInterval(enemy_shoot, enemy_shoot_interval)
+            showing_level_title = True
+            draw_level_title()
+            window.setTimeout(start_level, 1000)  # Show level title for 1 second
 
         def draw_start_screen():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -60,10 +62,18 @@
             ctx.font = "24px 'Press Start 2P'"
             ctx.fillText("Press Space to Play", WIDTH // 4, HEIGHT // 2)
 
+        def draw_level_title():
+            ctx.clearRect(0, 0, WIDTH, HEIGHT)
+            ctx.fillStyle = "white"
+            ctx.font = "48px 'Press Start 2P'"
+            ctx.fillText(f"Level {level}", WIDTH // 2 - 100, HEIGHT // 2)
+
         def draw():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             if not game_started:
                 draw_start_screen()
+            elif showing_level_title:
+                draw_level_title()
             else:
                 if not game_over:
                     ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], PLAYER_SIZE, PLAYER_SIZE)
@@ -89,9 +99,9 @@
                         game_over = True
 
         def update():
-            global game_over, score, ENEMY_SPEED, game_started
+            global game_over, score, ENEMY_SPEED, game_started, showing_level_title
 
-            if game_over or not game_started:
+            if game_over or not game_started or showing_level_title:
                 return
 
             for bullet in bullets[:]:
@@ -129,7 +139,7 @@
             draw()
 
         def enemy_shoot():
-            if game_over or not game_started:
+            if game_over or not game_started or showing_level_title:
                 return
             for enemy in enemies:
                 if window.Math.random() < 0.05:  # Adjust the probability as needed
@@ -140,6 +150,11 @@
             level += 1
             reset_game()
 
+        def start_level():
+            global showing_level_title
+            showing_level_title = False
+            reset_game()
+
         def move_player(event):
             global game_started
             if game_over:
@@ -148,7 +163,7 @@
                 game_started = True
                 reset_game()
                 draw()  # Redraw to clear start screen
-            elif game_started:
+            elif game_started and not showing_level_title:
                 if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
                     player_pos[0] -= PLAYER_SPEED
                 elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:  # Right arrow
@@ -158,6 +173,7 @@
 
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
+        window.setInterval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
 
         draw_start_screen()  # Initial draw to show start screen
     </script>
