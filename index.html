@@ -35,6 +35,7 @@
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
 
         spaceship_img = html.IMG(src="spaceship.png")
+        title_img = html.IMG(src="title.png")
         face_images = ["face_0.png", "face_1.png", "face_2.png", "face_3.png"]
         faces = [html.IMG(src=img) for img in face_images]
 
@@ -68,12 +69,10 @@
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
-            ctx.fillStyle = "#00FF00"
-            ctx.font = "48px 'Press Start 2P'"
-            ctx.textAlign = "center"
-            ctx.fillText("NO MATTER BLASTER", WIDTH // 2, HEIGHT // 3)
+            ctx.drawImage(title_img, WIDTH // 2 - title_img.width // 2, HEIGHT // 3 - title_img.height // 2)
             ctx.fillStyle = "white"
             ctx.font = "24px 'Press Start 2P'"
+            ctx.textAlign = "center"
             ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 2)
 
         def draw_level_title():
