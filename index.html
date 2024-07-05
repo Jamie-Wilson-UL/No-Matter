@@ -25,8 +25,10 @@
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
         ENEMY_BULLET_SPEED = 3
+        MAX_LEVELS = 3
 
         score = 0
+        level = 1
         game_over = False
         game_started = False
         showing_level_title = False
@@ -46,12 +48,12 @@
         ctx = canvas.getContext("2d")
 
         def reset_game():
-            global enemies, bullets, enemy_bullets, showing_level_title, ENEMY_SPEED, game_over
+            global enemies, bullets, enemy_bullets, showing_level_title, ENEMY_SPEED, game_over, level
             enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
             bullets = []
             enemy_bullets = []
             showing_level_title = True
-            ENEMY_SPEED = 2  # Reset enemy speed
+            ENEMY_SPEED = 2 + level  # Increase enemy speed with level
             game_over = False
             draw_level_title()
             window.setTimeout(start_game, 1000)  # Show level title for 1 second
@@ -66,7 +68,7 @@
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             ctx.fillStyle = "white"
             ctx.font = "48px 'Press Start 2P'"
-            ctx.fillText("Level 1", WIDTH // 2 - 100, HEIGHT // 2)
+            ctx.fillText(f"Level {level}", WIDTH // 2 - 100, HEIGHT // 2)
 
         def draw():
             global game_over, game_started, showing_level_title
@@ -91,10 +93,13 @@
                     ctx.font = "48px 'Press Start 2P'"
                     ctx.fillText("GAME OVER", WIDTH // 4, HEIGHT // 2)
                 if len(enemies) == 0 and not game_over:
-                    ctx.fillStyle = "green"
-                    ctx.font = "48px 'Press Start 2P'"
-                    ctx.fillText("YOU WIN!", WIDTH // 4, HEIGHT // 2)
-                    game_over = True
+                    if level < MAX_LEVELS:
+                        level_up()
+                    else:
+                        ctx.fillStyle = "green"
+                        ctx.font = "48px 'Press Start 2P'"
+                        ctx.fillText("YOU WIN!", WIDTH // 4, HEIGHT // 2)
+                        game_over = True
 
         def update():
             global game_over, score, game_started, showing_level_title, ENEMY_SPEED
@@ -151,6 +156,13 @@
                 if window.Math.random() < 0.05:  # Adjust the probability as needed
                     enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
 
+        def level_up():
+            global level, showing_level_title
+            level += 1
+            showing_level_title = True
+            draw_level_title()
+            window.setTimeout(reset_game, 1000)
+
         def start_game():
             global showing_level_title
             showing_level_title = False
@@ -161,6 +173,7 @@
                 return
             if event.keyCode == 32 and not game_started:  # Space key to start
                 game_started = True
+                level = 1  # Reset to level 1
                 reset_game()
             elif game_started and not showing_level_title:
                 if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
@@ -178,7 +191,6 @@
     </script>
 </body>
 </html>
-
 
 
 
