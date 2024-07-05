@@ -16,7 +16,7 @@
     <h1 class="title">No Matter Game</h1>
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <script type="text/python">
-        from browser import document, html, window, timer
+        from browser import document, html, window
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -54,7 +54,7 @@
             ENEMY_SPEED = 2  # Reset enemy speed
             game_over = False
             draw_level_title()
-            timer.set_timeout(start_game, 1000)  # Show level title for 1 second
+            window.setTimeout(start_game, 1000)  # Show level title for 1 second
 
         def draw_start_screen():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -171,13 +171,14 @@
                     bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
 
         document.bind("keydown", move_player)
-        timer.set_interval(update, 30)
-        timer.set_interval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
+        window.setInterval(update, 30)
+        window.setInterval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
 
         draw_start_screen()  # Initial draw to show start screen
     </script>
 </body>
 </html>
+
 
 
 
