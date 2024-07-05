@@ -69,7 +69,7 @@
             ctx.fillText("Level 1", WIDTH // 2 - 100, HEIGHT // 2)
 
         def draw():
-            global game_over
+            global game_over, game_started, showing_level_title
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             if not game_started:
                 draw_start_screen()
@@ -171,13 +171,14 @@
                     bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
 
         document.bind("keydown", move_player)
-        window.setInterval(update, 30)
-        window.setInterval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
+        timer.set_interval(update, 30)
+        timer.set_interval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
 
         draw_start_screen()  # Initial draw to show start screen
     </script>
 </body>
 </html>
+
 
 
 
