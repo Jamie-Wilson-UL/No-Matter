@@ -24,13 +24,13 @@
         BULLET_SIZE = 10
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
-        ENEMY_SPEED = 2
         ENEMY_BULLET_SPEED = 3
 
         score = 0
         game_over = False
         game_started = False
         showing_level_title = False
+        ENEMY_SPEED = 2
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
 
@@ -46,11 +46,12 @@
         ctx = canvas.getContext("2d")
 
         def reset_game():
-            global enemies, bullets, enemy_bullets, showing_level_title
+            global enemies, bullets, enemy_bullets, showing_level_title, ENEMY_SPEED
             enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
             bullets = []
             enemy_bullets = []
             showing_level_title = True
+            ENEMY_SPEED = 2  # Reset enemy speed
             draw_level_title()
             window.set_timeout(start_game, 1000)  # Show level title for 1 second
 
@@ -94,7 +95,7 @@
                     game_over = True
 
         def update():
-            global game_over, score, game_started, showing_level_title
+            global game_over, score, game_started, showing_level_title, ENEMY_SPEED
 
             if game_over or not game_started or showing_level_title:
                 return
@@ -174,6 +175,7 @@
     </script>
 </body>
 </html>
+
 
 
 
