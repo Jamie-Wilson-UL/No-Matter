@@ -33,8 +33,8 @@
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
         ENEMY_BULLET_SPEED = 3
-        LASER_WIDTH = 5  # Made the laser thinner
-        LASER_DURATION = 1000  # Laser duration in milliseconds
+        LASER_WIDTH = 10  # Increased laser thickness
+        LASER_DURATION = 800  # Reduced laser duration
         MAX_LEVELS = 3
         BOSS_HITS_REQUIRED = 10
 
@@ -43,14 +43,14 @@
         game_over = False
         game_started = False
         showing_level_title = False
-        ENEMY_SPEED = 2
+        ENEMY_SPEED = 3  # Increased enemy speed
         flash_text = True
         player_last_shot = 0
         player_shot_cooldown = 500  # Cooldown time in milliseconds
         boss_last_laser = 0
-        boss_laser_cooldown = 5000  # Less frequent lasers
+        boss_laser_cooldown = 4000  # Less frequent lasers
         boss_last_diagonal_shot = 0
-        boss_diagonal_cooldown = 2000  # Cooldown for diagonal shots
+        boss_diagonal_cooldown = 1500  # Increased difficulty for diagonal shots
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
         boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
@@ -86,7 +86,7 @@
             laser_beams = []
             diagonal_shots = []
             showing_level_title = False
-            ENEMY_SPEED = 2 + level  # Increase enemy speed with level
+            ENEMY_SPEED = 3 + level  # Increase enemy speed with level
             game_over = False
             game_started = True
             background_audio.play()
@@ -149,7 +149,7 @@
             move_stars()
             draw_stars()
             # Adding a visual effect for the boss fight
-            ctx.fillStyle = "rgba(255, 0, 0, 0.1)"
+            ctx.fillStyle = "rgba(0, 0, 255, 0.1)"
             ctx.fillRect(0, 0, WIDTH, HEIGHT)
             if not game_started:
                 draw_start_screen()
@@ -170,8 +170,11 @@
                 for bullet in enemy_bullets:
                     ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
                 ctx.fillStyle = "blue"  # Changed laser color to blue
+                ctx.shadowBlur = 20
+                ctx.shadowColor = "blue"
                 for laser in laser_beams:
                     ctx.fillRect(laser["x"], laser["y"], LASER_WIDTH, HEIGHT - laser["y"])
+                ctx.shadowBlur = 0
                 ctx.fillStyle = "purple"  # Color for diagonal shots
                 for shot in diagonal_shots:
                     ctx.fillRect(shot["x"], shot["y"], BULLET_SIZE, BULLET_SIZE)
@@ -270,8 +273,8 @@
                 boss_pos[0] += boss_direction * 10  # Increased boss speed
                 if boss_pos[0] <= 0 or boss_pos[0] >= WIDTH - BOSS_SIZE:
                     boss_direction *= -1
-                boss_pos[1] += window.Math.random() * 20 - 10  # Increased vertical movement range
-                boss_pos[1] = max(0, min(HEIGHT // 2, boss_pos[1]))
+                boss_pos[1] += window.Math.random() * 10 - 5  # Limited vertical movement
+                boss_pos[1] = max(0, min(HEIGHT // 4, boss_pos[1]))  # Ensure the boss does not get too low
 
             draw()
 
@@ -291,8 +294,8 @@
                     laser_beams.append({"x": boss_pos[0] + BOSS_SIZE // 2 - LASER_WIDTH // 2, "y": boss_pos[1] + BOSS_SIZE, "timestamp": current_time})
                     boss_last_laser = current_time
                 if current_time - boss_last_diagonal_shot > boss_diagonal_cooldown:
-                    diagonal_shots.append({"x": boss_pos[0] + BOSS_SIZE // 2, "y": boss_pos[1] + BOSS_SIZE, "dx": 3, "dy": 3})
-                    diagonal_shots.append({"x": boss_pos[0] + BOSS_SIZE // 2, "y": boss_pos[1] + BOSS_SIZE, "dx": -3, "dy": 3})
+                    diagonal_shots.append({"x": boss_pos[0] + BOSS_SIZE // 2, "y": boss_pos[1] + BOSS_SIZE, "dx": 5, "dy": 5})
+                    diagonal_shots.append({"x": boss_pos[0] + BOSS_SIZE // 2, "y": boss_pos[1] + BOSS_SIZE, "dx": -5, "dy": 5})
                     boss_last_diagonal_shot = current_time
 
         def level_up():
