@@ -43,12 +43,16 @@
         canvas = document["game-canvas"]
         ctx = canvas.getContext("2d")
 
+        def draw_start_screen():
+            ctx.clearRect(0, 0, WIDTH, HEIGHT)
+            ctx.fillStyle = "white"
+            ctx.font = "24px 'Press Start 2P'"
+            ctx.fillText("Press Space to Play", WIDTH // 4, HEIGHT // 2)
+
         def draw():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             if not game_started:
-                ctx.fillStyle = "white"
-                ctx.font = "24px 'Press Start 2P'"
-                ctx.fillText("Press Space to Play", WIDTH // 4, HEIGHT // 2)
+                draw_start_screen()
             else:
                 if not game_over:
                     ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], PLAYER_SIZE, PLAYER_SIZE)
@@ -99,6 +103,7 @@
                 return
             if event.keyCode == 32 and not game_started:  # Space key to start
                 game_started = True
+                draw()  # Redraw to clear start screen
             elif game_started:
                 if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
                     player_pos[0] -= PLAYER_SPEED
@@ -110,7 +115,7 @@
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
 
-        draw()  # Initial draw to show start screen
+        draw_start_screen()  # Initial draw to show start screen
     </script>
 </body>
 </html>
