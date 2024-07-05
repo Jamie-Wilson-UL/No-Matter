@@ -24,12 +24,13 @@
         BULLET_SIZE = 10
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
-        ENEMY_SPEED = 2
         ENEMY_BULLET_SPEED = 3
+        MAX_LEVEL = 5
 
         score = 0
         game_over = False
         game_started = False
+        level = 1
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
 
@@ -37,13 +38,21 @@
         face_images = ["face_0.png", "face_1.png", "face_2.png", "face_3.png"]
         faces = [html.IMG(src=img) for img in face_images]
 
-        enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
-
+        enemies = []
         bullets = []
         enemy_bullets = []
 
         canvas = document["game-canvas"]
         ctx = canvas.getContext("2d")
+
+        def reset_game():
+            global enemies, bullets, enemy_bullets, ENEMY_SPEED, level
+            enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
+            bullets = []
+            enemy_bullets = []
+            ENEMY_SPEED = 2 + (level - 1)
+            enemy_shoot_interval = max(1000 - (level - 1) * 200, 200)
+            window.setInterval(enemy_shoot, enemy_shoot_interval)
 
         def draw_start_screen():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -70,6 +79,14 @@
                     ctx.fillStyle = "red"
                     ctx.font = "48px 'Press Start 2P'"
                     ctx.fillText("GAME OVER", WIDTH // 4, HEIGHT // 2)
+                if len(enemies) == 0:
+                    if level < MAX_LEVEL:
+                        level_up()
+                    else:
+                        ctx.fillStyle = "green"
+                        ctx.font = "48px 'Press Start 2P'"
+                        ctx.fillText("YOU WIN!", WIDTH // 4, HEIGHT // 2)
+                        game_over = True
 
         def update():
             global game_over, score, ENEMY_SPEED, game_started
@@ -118,12 +135,18 @@
                 if window.Math.random() < 0.05:  # Adjust the probability as needed
                     enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
 
+        def level_up():
+            global level
+            level += 1
+            reset_game()
+
         def move_player(event):
             global game_started
             if game_over:
                 return
             if event.keyCode == 32 and not game_started:  # Space key to start
                 game_started = True
+                reset_game()
                 draw()  # Redraw to clear start screen
             elif game_started:
                 if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
@@ -135,13 +158,11 @@
 
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
-        window.setInterval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
 
         draw_start_screen()  # Initial draw to show start screen
     </script>
 </body>
 </html>
-
 
 
 
