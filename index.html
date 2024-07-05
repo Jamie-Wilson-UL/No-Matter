@@ -112,13 +112,13 @@
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
-            title_width, title_height = 1655 // 2.5, 134 // 2.5
+            title_width, title_height = int(1655 // 2.3), int(134 // 2.3)  # Slightly larger title image
             ctx.drawImage(title_img, (WIDTH - title_width) // 2, (HEIGHT // 3 - title_height // 2), title_width, title_height)
             if flash_text:
                 ctx.fillStyle = "white"
-                ctx.font = "24px 'Press Start 2P'"
+                ctx.font = "bold 28px 'Press Start 2P'"  # Slightly larger and bold text
                 ctx.textAlign = "center"
-                ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 2)
+                ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 1.8)  # Moved slightly lower
 
         def draw_level_title():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -232,9 +232,9 @@
                 ctx.fillText(credit, WIDTH // 2, credits_y + 50 * (i + 1))
             credits_y -= 1
 
-            if credits_y + 50 * len(credits_list) < 0:
+            if credits_y < -50 * len(credits_list):
                 showing_credits = False
-                animate_title_screen()
+                reset_game()
 
         def animate_credits():
             if showing_credits:
@@ -392,4 +392,3 @@
     </script>
 </body>
 </html>
-
