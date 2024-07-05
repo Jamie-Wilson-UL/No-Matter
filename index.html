@@ -121,6 +121,13 @@
                 if bullet[0] >= player_pos[0] and bullet[0] <= player_pos[0] + PLAYER_SIZE and bullet[1] >= player_pos[1] and bullet[1] <= player_pos[1] + PLAYER_SIZE:
                     game_over = True
 
+            for enemy in enemies:
+                if (enemy["pos"][0] <= player_pos[0] <= enemy["pos"][0] + ENEMY_SIZE or
+                    enemy["pos"][0] <= player_pos[0] + PLAYER_SIZE <= enemy["pos"][0] + ENEMY_SIZE) and \
+                    (enemy["pos"][1] <= player_pos[1] <= enemy["pos"][1] + ENEMY_SIZE or
+                    enemy["pos"][1] <= player_pos[1] + PLAYER_SIZE <= enemy["pos"][1] + ENEMY_SIZE):
+                    game_over = True
+
             move_down = False
             for enemy in enemies:
                 enemy["pos"][0] += ENEMY_SPEED
@@ -151,7 +158,6 @@
             if event.keyCode == 32 and not game_started:  # Space key to start
                 game_started = True
                 reset_game()
-                draw()  # Redraw to clear start screen
             elif game_started and not showing_level_title:
                 if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
                     player_pos[0] -= PLAYER_SPEED
@@ -168,6 +174,7 @@
     </script>
 </body>
 </html>
+
 
 
 
