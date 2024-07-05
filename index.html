@@ -67,9 +67,10 @@
 
         def draw_start_screen():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
+            move_stars()
             draw_stars()
             ctx.fillStyle = "#00FF00"
-            ctx.font = "36px 'Press Start 2P'"
+            ctx.font = "48px 'Press Start 2P'"
             ctx.textAlign = "center"
             ctx.fillText("NO MATTER BLASTER", WIDTH // 2, HEIGHT // 3)
             ctx.fillStyle = "white"
@@ -78,6 +79,7 @@
 
         def draw_level_title():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
+            move_stars()
             draw_stars()
             ctx.fillStyle = "white"
             ctx.font = "48px 'Press Start 2P'"
@@ -85,6 +87,7 @@
 
         def draw_final_score():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
+            move_stars()
             draw_stars()
             ctx.fillStyle = "white"
             ctx.font = "48px 'Press Start 2P'"
@@ -230,11 +233,13 @@
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
         window.setInterval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
+        window.setInterval(draw_start_screen, 30)  # Continuously draw the start screen to move stars
 
         draw_start_screen()  # Initial draw to show start screen
     </script>
 </body>
 </html>
+
 
 
 
