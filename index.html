@@ -69,7 +69,8 @@
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
-            ctx.drawImage(title_img, (WIDTH - 1655 // 10) // 2, (HEIGHT // 3 - 134 // 10 // 2), 1655 // 10, 134 // 10)
+            title_width, title_height = 1655 // 2, 134 // 2
+            ctx.drawImage(title_img, (WIDTH - title_width) // 2, (HEIGHT // 3 - title_height // 2), title_width, title_height)
             ctx.fillStyle = "white"
             ctx.font = "24px 'Press Start 2P'"
             ctx.textAlign = "center"
