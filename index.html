@@ -226,18 +226,20 @@
         def move_player(event):
             global game_started, game_over, player_last_shot
             current_time = window.Date().getTime()
-            if event.keyCode == 32 and not game_started:  # Space key to start
-                if background_audio.paused:
-                    background_audio.play()
-                start_game()
+            if event.keyCode == 32:  # Space key
+                if not game_started:
+                    if background_audio.paused:
+                        background_audio.play()
+                    start_game()
+                elif not showing_level_title and not game_over:
+                    if current_time - player_last_shot > player_shot_cooldown:
+                        bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
+                        player_last_shot = current_time
             elif game_started and not showing_level_title and not game_over:
                 if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
                     player_pos[0] -= PLAYER_SPEED
                 elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:  # Right arrow
                     player_pos[0] += PLAYER_SPEED
-                elif event.keyCode == 32 and current_time - player_last_shot > player_shot_cooldown:  # Space key to shoot
-                    bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
-                    player_last_shot = current_time
 
         def toggle_flash_text():
             global flash_text
@@ -258,6 +260,3 @@
     </script>
 </body>
 </html>
-
-
-
