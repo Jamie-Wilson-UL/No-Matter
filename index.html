@@ -8,18 +8,10 @@
     <style>
         body { text-align: center; background-color: black; color: white; }
         canvas { border: 1px solid white; display: block; margin: 20px auto; }
-        .title { 
-            font-family: 'Press Start 2P', cursive; 
-            color: #00FF00; 
-            margin: 20px; 
-            font-size: 36px;
-            text-shadow: 2px 2px #FF0000;
-        }
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
     </style>
 </head>
 <body onload="brython()">
-    <h1 class="title">NO MATTER BLASTER</h1>
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <script type="text/python">
         from browser import document, html, window
@@ -68,16 +60,20 @@
         def draw_start_screen():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             draw_stars()
+            ctx.fillStyle = "#00FF00"
+            ctx.font = "36px 'Press Start 2P'"
+            ctx.textAlign = "center"
+            ctx.fillText("NO MATTER BLASTER", WIDTH // 2, HEIGHT // 3)
             ctx.fillStyle = "white"
             ctx.font = "24px 'Press Start 2P'"
-            ctx.fillText("Press Space to Play", WIDTH // 4, HEIGHT // 2)
+            ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 2)
 
         def draw_level_title():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             draw_stars()
             ctx.fillStyle = "white"
             ctx.font = "48px 'Press Start 2P'"
-            ctx.fillText(f"Level {level}", WIDTH // 2 - 100, HEIGHT // 2)
+            ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
 
         def draw_stars():
             ctx.fillStyle = "white"
@@ -114,14 +110,14 @@
                 if game_over:
                     ctx.fillStyle = "red"
                     ctx.font = "48px 'Press Start 2P'"
-                    ctx.fillText("GAME OVER", WIDTH // 4, HEIGHT // 2)
+                    ctx.fillText("GAME OVER", WIDTH // 2, HEIGHT // 2)
                 if len(enemies) == 0 and not game_over:
                     if level < MAX_LEVELS:
                         level_up()
                     else:
                         ctx.fillStyle = "green"
                         ctx.font = "48px 'Press Start 2P'"
-                        ctx.fillText("YOU WIN!", WIDTH // 4, HEIGHT // 2)
+                        ctx.fillText("YOU WIN!", WIDTH // 2, HEIGHT // 2)
                         game_over = True
 
         def update():
@@ -214,6 +210,7 @@
     </script>
 </body>
 </html>
+
 
 
 
