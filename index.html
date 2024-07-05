@@ -33,7 +33,7 @@
         BULLET_SIZE = 10
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
-        ENEMY_BULLET_SPEED = 3
+        ENEMY_BULLET_SPEED = 2.5  # Reduced enemy bullet speed
         LASER_WIDTH = 10
         LASER_DURATION = 600
         MAX_LEVELS = 3
@@ -45,7 +45,7 @@
         game_started = False
         showing_level_title = False
         showing_credits = False
-        ENEMY_SPEED = 2
+        ENEMY_SPEED = 1.5  # Reduced enemy speed
         flash_text = True
         player_last_shot = 0
         player_shot_cooldown = 500
@@ -94,7 +94,7 @@
             laser_beams = []
             diagonal_shots = []
             showing_level_title = False
-            ENEMY_SPEED = 2 + level
+            ENEMY_SPEED = 1.5 + level  # Reduced base enemy speed
             game_over = False
             game_started = True
 
@@ -329,7 +329,7 @@
                 return
             if level <= MAX_LEVELS:
                 for enemy in enemies:
-                    if window.Math.random() < (0.05 + 0.01 * level):
+                    if window.Math.random() < (0.03 + 0.01 * level):  # Reduced shooting frequency
                         enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
             else:
                 if window.Math.random() < 0.1:
