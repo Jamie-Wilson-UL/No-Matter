@@ -17,7 +17,6 @@
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <script type="text/python">
         from browser import document, html, window
-        import random
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -44,7 +43,7 @@
         enemies = []
         bullets = []
         enemy_bullets = []
-        stars = [{"x": random.randint(0, WIDTH), "y": random.randint(0, HEIGHT), "size": random.randint(1, 3)} for _ in range(100)]
+        stars = [{"x": window.Math.random() * WIDTH, "y": window.Math.random() * HEIGHT, "size": window.Math.random() * 3 + 1} for _ in range(100)]
 
         canvas = document["game-canvas"]
         ctx = canvas.getContext("2d")
@@ -84,7 +83,7 @@
                 star["y"] += 1
                 if star["y"] > HEIGHT:
                     star["y"] = 0
-                    star["x"] = random.randint(0, WIDTH)
+                    star["x"] = window.Math.random() * WIDTH
 
         def draw():
             global game_over, game_started, showing_level_title
@@ -209,6 +208,7 @@
     </script>
 </body>
 </html>
+
 
 
 
