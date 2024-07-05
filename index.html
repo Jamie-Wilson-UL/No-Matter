@@ -232,7 +232,7 @@
                 elif event.keyCode == 32:  # Space key to shoot
                     bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
 
-        def check_title_loaded():
+        def check_title_loaded(event):
             global title_loaded
             if title_img.complete:
                 title_loaded = True
@@ -254,7 +254,6 @@
     </script>
 </body>
 </html>
-
 
 
 
