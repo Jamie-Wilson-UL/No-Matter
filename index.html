@@ -109,12 +109,14 @@
                     enemy["pos"][1] += ENEMY_SIZE
                 ENEMY_SPEED = -ENEMY_SPEED
 
-            # Enemies fire bullets occasionally
-            for enemy in enemies:
-                if window.Math.random() < 0.01:
-                    enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
-
             draw()
+
+        def enemy_shoot():
+            if game_over or not game_started:
+                return
+            for enemy in enemies:
+                if window.Math.random() < 0.05:  # Adjust the probability as needed
+                    enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
 
         def move_player(event):
             global game_started
@@ -133,11 +135,13 @@
 
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
+        window.setInterval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
 
         draw_start_screen()  # Initial draw to show start screen
     </script>
 </body>
 </html>
+
 
 
 
