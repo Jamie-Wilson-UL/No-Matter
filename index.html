@@ -26,6 +26,7 @@
         BULLET_SPEED = 5
         ENEMY_BULLET_SPEED = 3
         LASER_WIDTH = 20
+        LASER_DURATION = 1000  # Laser duration in milliseconds
         MAX_LEVELS = 3
         BOSS_HITS_REQUIRED = 10
 
@@ -158,7 +159,7 @@
                     ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
                 ctx.fillStyle = "red"
                 for laser in laser_beams:
-                    ctx.fillRect(laser[0], laser[1], LASER_WIDTH, HEIGHT - laser[1])
+                    ctx.fillRect(laser["x"], laser["y"], LASER_WIDTH, HEIGHT - laser["y"])
                 ctx.fillStyle = "white"
                 ctx.font = "24px 'Press Start 2P'"
                 ctx.textAlign = "right"
@@ -197,6 +198,10 @@
                 if bullet[1] > HEIGHT:
                     enemy_bullets.remove(bullet)
 
+            for laser in laser_beams[:]:
+                if window.Date.new().getTime() - laser["timestamp"] > LASER_DURATION:
+                    laser_beams.remove(laser)
+
             if level <= MAX_LEVELS:
                 for enemy in enemies[:]:
                     for bullet in bullets[:]:
@@ -216,7 +221,7 @@
                     game_over = True
 
             for laser in laser_beams[:]:
-                if laser[0] <= player_pos[0] + PLAYER_SIZE and laser[0] + LASER_WIDTH >= player_pos[0] and laser[1] >= player_pos[1]:
+                if laser["x"] <= player_pos[0] + PLAYER_SIZE and laser["x"] + LASER_WIDTH >= player_pos[0] and laser["y"] >= player_pos[1]:
                     game_over = True
 
             if level <= MAX_LEVELS:
@@ -258,7 +263,7 @@
                     enemy_bullets.append([boss_pos[0] + BOSS_SIZE // 2, boss_pos[1] + BOSS_SIZE])
                 current_time = window.Date.new().getTime()
                 if current_time - boss_last_laser > boss_laser_cooldown:
-                    laser_beams.append([boss_pos[0] + BOSS_SIZE // 2 - LASER_WIDTH // 2, boss_pos[1] + BOSS_SIZE])
+                    laser_beams.append({"x": boss_pos[0] + BOSS_SIZE // 2 - LASER_WIDTH // 2, "y": boss_pos[1] + BOSS_SIZE, "timestamp": current_time})
                     boss_last_laser = current_time
 
         def level_up():
@@ -311,5 +316,3 @@
     </script>
 </body>
 </html>
-
-
