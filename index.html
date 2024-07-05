@@ -57,8 +57,9 @@
             game_started = True
 
         def reset_game():
-            global level, game_started
+            global level, game_started, game_over
             level = 1
+            game_over = False
             game_started = False
             draw_start_screen()
 
