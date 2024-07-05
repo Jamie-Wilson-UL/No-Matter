@@ -16,7 +16,7 @@
     <h1 class="title">No Matter Game</h1>
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <script type="text/python">
-        from browser import document, html, window
+        from browser import document, html, window, timer
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -46,14 +46,15 @@
         ctx = canvas.getContext("2d")
 
         def reset_game():
-            global enemies, bullets, enemy_bullets, showing_level_title, ENEMY_SPEED
+            global enemies, bullets, enemy_bullets, showing_level_title, ENEMY_SPEED, game_over
             enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
             bullets = []
             enemy_bullets = []
             showing_level_title = True
             ENEMY_SPEED = 2  # Reset enemy speed
+            game_over = False
             draw_level_title()
-            window.setTimeout(start_game, 1000)  # Show level title for 1 second
+            timer.set_timeout(start_game, 1000)  # Show level title for 1 second
 
         def draw_start_screen():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -68,6 +69,7 @@
             ctx.fillText("Level 1", WIDTH // 2 - 100, HEIGHT // 2)
 
         def draw():
+            global game_over
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             if not game_started:
                 draw_start_screen()
@@ -142,6 +144,7 @@
             draw()
 
         def enemy_shoot():
+            global game_over, game_started, showing_level_title
             if game_over or not game_started or showing_level_title:
                 return
             for enemy in enemies:
@@ -153,7 +156,7 @@
             showing_level_title = False
 
         def move_player(event):
-            global game_started
+            global game_started, game_over
             if game_over:
                 return
             if event.keyCode == 32 and not game_started:  # Space key to start
