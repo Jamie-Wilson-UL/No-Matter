@@ -231,9 +231,14 @@
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
         window.setInterval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
-        window.setInterval(draw_start_screen, 30)  # Continuously draw the start screen to move stars
 
-        draw_start_screen()  # Initial draw to show start screen
+        # Continuously draw the start screen to move stars
+        def animate_title_screen():
+            if not game_started:
+                draw_start_screen()
+                window.requestAnimationFrame(lambda x: animate_title_screen())
+
+        animate_title_screen()  # Start the animation loop for the title screen
     </script>
 </body>
 </html>
