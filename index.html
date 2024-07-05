@@ -22,6 +22,7 @@
 <body onload="brython()">
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <audio id="background-audio" src="theme.mp3" loop></audio>
+    <audio id="boss-audio" src="boss_theme.mp3" loop></audio>
     <script type="text/python">
         from browser import document, html, window
 
@@ -73,14 +74,20 @@
         canvas = document["game-canvas"]
         ctx = canvas.getContext("2d")
         background_audio = document["background-audio"]
+        boss_audio = document["boss-audio"]
 
         def initialize_game():
             global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits
             if level <= MAX_LEVELS:
                 enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
+                if not background_audio.paused:
+                    background_audio.play()
+                boss_audio.pause()
             else:
                 enemies = []
                 boss_hits = 0
+                background_audio.pause()
+                boss_audio.play()
             bullets = []
             enemy_bullets = []
             laser_beams = []
@@ -89,7 +96,6 @@
             ENEMY_SPEED = 3 + level  # Increase enemy speed with level
             game_over = False
             game_started = True
-            background_audio.play()
 
         def reset_game():
             global level, game_started, game_over, score
@@ -97,6 +103,8 @@
             game_over = False
             game_started = False
             score = 0
+            background_audio.play()
+            boss_audio.pause()
             animate_title_screen()
 
         def draw_start_screen():
@@ -149,7 +157,7 @@
             move_stars()
             draw_stars()
             # Adding a visual effect for the boss fight
-            ctx.fillStyle = "rgba(0, 0, 255, 0.3)"  # Increased opacity for better visibility
+            ctx.fillStyle = "rgba(0, 0, 255, 0.1)"  # Reverted to original opacity
             ctx.fillRect(0, 0, WIDTH, HEIGHT)
             if not game_started:
                 draw_start_screen()
@@ -348,4 +356,3 @@
     </script>
 </body>
 </html>
-
