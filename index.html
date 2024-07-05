@@ -225,7 +225,7 @@
 
         def move_player(event):
             global game_started, game_over, player_last_shot
-            current_time = window.Date().getTime()
+            current_time = window.Date.new().getTime()
             if event.keyCode == 32:  # Space key
                 if not game_started:
                     if background_audio.paused:
@@ -260,3 +260,4 @@
     </script>
 </body>
 </html>
+
