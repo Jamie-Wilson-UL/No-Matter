@@ -16,7 +16,6 @@
     <audio id="background-audio" src="theme.mp3" loop></audio>
     <script type="text/python">
         from browser import document, html, window
-        from time import time
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -35,7 +34,7 @@
         ENEMY_SPEED = 2
         flash_text = True
         player_last_shot = 0
-        player_shot_cooldown = 0.5  # Cooldown time in seconds
+        player_shot_cooldown = 500  # Cooldown time in milliseconds
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
 
@@ -226,7 +225,7 @@
 
         def move_player(event):
             global game_started, game_over, player_last_shot
-            current_time = time()
+            current_time = window.Date().getTime()
             if event.keyCode == 32 and not game_started:  # Space key to start
                 if background_audio.paused:
                     background_audio.play()
@@ -259,8 +258,6 @@
     </script>
 </body>
 </html>
-
-
 
 
 
