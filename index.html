@@ -232,11 +232,13 @@
                 elif event.keyCode == 32:  # Space key to shoot
                     bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
 
-        def on_title_img_load(event):
+        def check_title_loaded():
             global title_loaded
-            title_loaded = True
+            if title_img.complete:
+                title_loaded = True
 
-        title_img.bind('load', on_title_img_load)
+        title_img.bind('load', check_title_loaded)
+        window.setInterval(check_title_loaded, 100)
 
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
