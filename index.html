@@ -31,6 +31,7 @@
         game_started = False
         showing_level_title = False
         ENEMY_SPEED = 2
+        flash_text = True
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
 
@@ -63,7 +64,7 @@
             game_over = False
             game_started = False
             score = 0
-            draw_start_screen()
+            animate_title_screen()
 
         def draw_start_screen():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -71,10 +72,11 @@
             draw_stars()
             title_width, title_height = 1655 // 2.5, 134 // 2.5
             ctx.drawImage(title_img, (WIDTH - title_width) // 2, (HEIGHT // 3 - title_height // 2), title_width, title_height)
-            ctx.fillStyle = "white"
-            ctx.font = "24px 'Press Start 2P'"
-            ctx.textAlign = "center"
-            ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 2)
+            if flash_text:
+                ctx.fillStyle = "white"
+                ctx.font = "24px 'Press Start 2P'"
+                ctx.textAlign = "center"
+                ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 2)
 
         def draw_level_title():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -228,9 +230,14 @@
                 elif event.keyCode == 32:  # Space key to shoot
                     bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
 
+        def toggle_flash_text():
+            global flash_text
+            flash_text = not flash_text
+
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
         window.setInterval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
+        window.setInterval(toggle_flash_text, 1000)  # Toggle the flash text every second
 
         # Continuously draw the start screen to move stars
         def animate_title_screen():
@@ -242,6 +249,7 @@
     </script>
 </body>
 </html>
+
 
 
 
