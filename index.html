@@ -55,7 +55,6 @@
             ENEMY_SPEED = 2 + level  # Increase enemy speed with level
             game_over = False
             game_started = True
-            score = 0
 
         def reset_game():
             global level, game_started, game_over, score
@@ -212,17 +211,16 @@
             window.setTimeout(initialize_game, 1000)
 
         def start_game():
-            global showing_level_title
+            global showing_level_title, game_started
             showing_level_title = False
+            game_started = True
             initialize_game()
 
         def move_player(event):
             global game_started, game_over
-            if game_over:
-                return
             if event.keyCode == 32 and not game_started:  # Space key to start
                 start_game()
-            elif game_started and not showing_level_title:
+            elif game_started and not showing_level_title and not game_over:
                 if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
                     player_pos[0] -= PLAYER_SPEED
                 elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:  # Right arrow
