@@ -17,6 +17,7 @@
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <script type="text/python">
         from browser import document, html, window
+        import random
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -43,6 +44,7 @@
         enemies = []
         bullets = []
         enemy_bullets = []
+        stars = [{"x": random.randint(0, WIDTH), "y": random.randint(0, HEIGHT), "size": random.randint(1, 3)} for _ in range(100)]
 
         canvas = document["game-canvas"]
         ctx = canvas.getContext("2d")
@@ -60,19 +62,35 @@
 
         def draw_start_screen():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
+            draw_stars()
             ctx.fillStyle = "white"
             ctx.font = "24px 'Press Start 2P'"
             ctx.fillText("Press Space to Play", WIDTH // 4, HEIGHT // 2)
 
         def draw_level_title():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
+            draw_stars()
             ctx.fillStyle = "white"
             ctx.font = "48px 'Press Start 2P'"
             ctx.fillText(f"Level {level}", WIDTH // 2 - 100, HEIGHT // 2)
 
+        def draw_stars():
+            ctx.fillStyle = "white"
+            for star in stars:
+                ctx.fillRect(star["x"], star["y"], star["size"], star["size"])
+
+        def move_stars():
+            for star in stars:
+                star["y"] += 1
+                if star["y"] > HEIGHT:
+                    star["y"] = 0
+                    star["x"] = random.randint(0, WIDTH)
+
         def draw():
             global game_over, game_started, showing_level_title
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
+            move_stars()
+            draw_stars()
             if not game_started:
                 draw_start_screen()
             elif showing_level_title:
@@ -191,6 +209,7 @@
     </script>
 </body>
 </html>
+
 
 
 
