@@ -13,7 +13,7 @@
 </head>
 <body onload="brython()">
     <canvas id="game-canvas" width="800" height="600"></canvas>
-    <audio id="background-audio" src="theme.mp3" loop autoplay></audio>
+    <audio id="background-audio" src="theme.mp3" loop></audio>
     <script type="text/python">
         from browser import document, html, window
 
@@ -59,6 +59,7 @@
             ENEMY_SPEED = 2 + level  # Increase enemy speed with level
             game_over = False
             game_started = True
+            background_audio.play()
 
         def reset_game():
             global level, game_started, game_over, score
@@ -223,6 +224,8 @@
         def move_player(event):
             global game_started, game_over
             if event.keyCode == 32 and not game_started:  # Space key to start
+                if background_audio.paused:
+                    background_audio.play()
                 start_game()
             elif game_started and not showing_level_title and not game_over:
                 if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
@@ -248,7 +251,6 @@
                 window.requestAnimationFrame(lambda x: animate_title_screen())
 
         animate_title_screen()  # Start the animation loop for the title screen
-        background_audio.play()  # Ensure audio starts playing when the page loads
     </script>
 </body>
 </html>
