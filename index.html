@@ -16,6 +16,7 @@
     <audio id="background-audio" src="theme.mp3" loop></audio>
     <script type="text/python">
         from browser import document, html, window
+        from time import time
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -33,6 +34,8 @@
         showing_level_title = False
         ENEMY_SPEED = 2
         flash_text = True
+        player_last_shot = 0
+        player_shot_cooldown = 0.5  # Cooldown time in seconds
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
 
@@ -205,7 +208,7 @@
             if game_over or not game_started or showing_level_title:
                 return
             for enemy in enemies:
-                if window.Math.random() < 0.05:  # Adjust the probability as needed
+                if window.Math.random() < (0.05 + 0.01 * level):  # Adjust the probability as needed
                     enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
 
         def level_up():
@@ -222,7 +225,8 @@
             initialize_game()
 
         def move_player(event):
-            global game_started, game_over
+            global game_started, game_over, player_last_shot
+            current_time = time()
             if event.keyCode == 32 and not game_started:  # Space key to start
                 if background_audio.paused:
                     background_audio.play()
@@ -232,8 +236,9 @@
                     player_pos[0] -= PLAYER_SPEED
                 elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:  # Right arrow
                     player_pos[0] += PLAYER_SPEED
-                elif event.keyCode == 32:  # Space key to shoot
+                elif event.keyCode == 32 and current_time - player_last_shot > player_shot_cooldown:  # Space key to shoot
                     bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
+                    player_last_shot = current_time
 
         def toggle_flash_text():
             global flash_text
@@ -254,11 +259,6 @@
     </script>
 </body>
 </html>
-
-
-
-
-
 
 
 
