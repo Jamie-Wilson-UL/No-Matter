@@ -47,6 +47,8 @@
         canvas = document["game-canvas"]
         ctx = canvas.getContext("2d")
 
+        title_loaded = False
+
         def initialize_game():
             global enemies, bullets, enemy_bullets, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score
             enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
@@ -69,9 +71,10 @@
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
-            title_width = int(title_img.width)
-            title_height = int(title_img.height)
-            ctx.drawImage(title_img, (WIDTH - title_width) // 2, (HEIGHT // 3 - title_height // 2))
+            if title_loaded:
+                title_width = title_img.width
+                title_height = title_img.height
+                ctx.drawImage(title_img, (WIDTH - title_width) // 2, (HEIGHT // 3 - title_height // 2))
             ctx.fillStyle = "white"
             ctx.font = "24px 'Press Start 2P'"
             ctx.textAlign = "center"
@@ -229,6 +232,12 @@
                 elif event.keyCode == 32:  # Space key to shoot
                     bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
 
+        def on_title_img_load(event):
+            global title_loaded
+            title_loaded = True
+
+        title_img.bind('load', on_title_img_load)
+
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
         window.setInterval(enemy_shoot, 1000)  # Enemy attempts to shoot every second
@@ -243,10 +252,6 @@
     </script>
 </body>
 </html>
-
-
-
-
 
 
 
