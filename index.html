@@ -29,29 +29,31 @@
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
         ENEMY_SIZE = 50
-        BOSS_SIZE = 200  # Further increased boss size
+        BOSS_SIZE = 200
         BULLET_SIZE = 10
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
         ENEMY_BULLET_SPEED = 3
-        LASER_WIDTH = 10  # Increased laser thickness
-        LASER_DURATION = 600  # Further reduced laser duration
+        LASER_WIDTH = 10
+        LASER_DURATION = 600
         MAX_LEVELS = 3
-        BOSS_HITS_REQUIRED = 20  # Increased hits required to defeat the boss
+        BOSS_HITS_REQUIRED = 20
 
         score = 0
-        level = MAX_LEVELS + 1  # Start directly at the boss fight
+        level = 1
         game_over = False
         game_started = False
         showing_level_title = False
-        ENEMY_SPEED = 3  # Increased enemy speed
+        showing_credits = False
+        ENEMY_SPEED = 2
         flash_text = True
         player_last_shot = 0
-        player_shot_cooldown = 500  # Cooldown time in milliseconds
+        player_shot_cooldown = 500
         boss_last_laser = 0
-        boss_laser_cooldown = 4000  # Less frequent lasers
+        boss_laser_cooldown = 4000
         boss_last_diagonal_shot = 0
-        boss_diagonal_cooldown = 1500  # Increased difficulty for diagonal shots
+        boss_diagonal_cooldown = 1500
+        credits_y = HEIGHT
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
         boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
@@ -80,8 +82,7 @@
             global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits
             if level <= MAX_LEVELS:
                 enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
-                if not background_audio.paused:
-                    background_audio.play()
+                background_audio.play()
                 boss_audio.pause()
             else:
                 enemies = []
@@ -93,13 +94,13 @@
             laser_beams = []
             diagonal_shots = []
             showing_level_title = False
-            ENEMY_SPEED = 3 + level  # Increase enemy speed with level
+            ENEMY_SPEED = 2 + level
             game_over = False
             game_started = True
 
         def reset_game():
             global level, game_started, game_over, score
-            level = MAX_LEVELS + 1  # Start directly at the boss fight
+            level = 1
             game_over = False
             game_started = False
             score = 0
@@ -152,14 +153,15 @@
                     star["x"] = window.Math.random() * WIDTH
 
         def draw():
-            global game_over, game_started, showing_level_title
+            global game_over, game_started, showing_level_title, showing_credits, credits_y
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
-            # Adding a visual effect for the boss fight
-            ctx.fillStyle = "rgba(0, 0, 255, 0.1)"  # Reverted to original opacity
+            ctx.fillStyle = "rgba(0, 0, 255, 0.1)"
             ctx.fillRect(0, 0, WIDTH, HEIGHT)
-            if not game_started:
+            if showing_credits:
+                draw_credits()
+            elif not game_started:
                 draw_start_screen()
             elif showing_level_title:
                 draw_level_title()
@@ -177,13 +179,13 @@
                 ctx.fillStyle = "red"
                 for bullet in enemy_bullets:
                     ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
-                ctx.fillStyle = "blue"  # Changed laser color to blue
+                ctx.fillStyle = "blue"
                 ctx.shadowBlur = 20
                 ctx.shadowColor = "blue"
                 for laser in laser_beams:
                     ctx.fillRect(laser["x"], laser["y"], LASER_WIDTH, HEIGHT - laser["y"])
                 ctx.shadowBlur = 0
-                ctx.fillStyle = "purple"  # Color for diagonal shots
+                ctx.fillStyle = "purple"
                 for shot in diagonal_shots:
                     ctx.fillRect(shot["x"], shot["y"], BULLET_SIZE, BULLET_SIZE)
                 ctx.fillStyle = "white"
@@ -202,7 +204,42 @@
                     ctx.font = "48px 'Press Start 2P'"
                     ctx.fillText("YOU WIN!", WIDTH // 2, HEIGHT // 2)
                     game_over = True
-                    window.setTimeout(show_final_score, 3000)
+                    window.setTimeout(show_credits, 3000)
+
+        def show_credits():
+            global showing_credits, credits_y
+            showing_credits = True
+            credits_y = HEIGHT
+            background_audio.pause()
+            boss_audio.pause()
+            window.setTimeout(animate_credits, 1000)
+
+        def draw_credits():
+            global credits_y
+            ctx.clearRect(0, 0, WIDTH, HEIGHT)
+            ctx.fillStyle = "white"
+            ctx.font = "48px 'Press Start 2P'"
+            ctx.textAlign = "center"
+            ctx.fillText("Credits", WIDTH // 2, credits_y)
+            ctx.font = "24px 'Press Start 2P'"
+            credits_list = [
+                "Jamie Wilson: Development",
+                "Caitlin Palmer: Art and Design",
+                "Dan Kennedy: Play Tester",
+                "Jarlath Cowan: Moral Support"
+            ]
+            for i, credit in enumerate(credits_list):
+                ctx.fillText(credit, WIDTH // 2, credits_y + 50 * (i + 1))
+            credits_y -= 1
+
+            if credits_y + 50 * len(credits_list) < 0:
+                showing_credits = False
+                animate_title_screen()
+
+        def animate_credits():
+            if showing_credits:
+                draw_credits()
+                window.requestAnimationFrame(lambda x: animate_credits())
 
         def show_final_score():
             draw_final_score()
@@ -292,10 +329,10 @@
                 return
             if level <= MAX_LEVELS:
                 for enemy in enemies:
-                    if window.Math.random() < (0.05 + 0.01 * level):  # Adjust the probability as needed
+                    if window.Math.random() < (0.05 + 0.01 * level):
                         enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
             else:
-                if window.Math.random() < 0.1:  # Less frequent boss bullets
+                if window.Math.random() < 0.1:
                     enemy_bullets.append([boss_pos[0] + BOSS_SIZE // 2, boss_pos[1] + BOSS_SIZE])
                 current_time = window.Date.new().getTime()
                 if current_time - boss_last_laser > boss_laser_cooldown:
@@ -343,16 +380,16 @@
 
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
-        window.setInterval(enemy_shoot, 500)  # Enemy attempts to shoot every half-second
-        window.setInterval(toggle_flash_text, 1000)  # Toggle the flash text every second
+        window.setInterval(enemy_shoot, 500)
+        window.setInterval(toggle_flash_text, 1000)
 
-        # Continuously draw the start screen to move stars
         def animate_title_screen():
             if not game_started:
                 draw_start_screen()
                 window.requestAnimationFrame(lambda x: animate_title_screen())
 
-        animate_title_screen()  # Start the animation loop for the title screen
+        animate_title_screen()
     </script>
 </body>
 </html>
+
