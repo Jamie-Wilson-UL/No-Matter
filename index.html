@@ -34,7 +34,7 @@
         BULLET_SPEED = 5
         ENEMY_BULLET_SPEED = 3
         LASER_WIDTH = 10  # Increased laser thickness
-        LASER_DURATION = 700  # Slightly reduced laser duration
+        LASER_DURATION = 600  # Further reduced laser duration
         MAX_LEVELS = 3
         BOSS_HITS_REQUIRED = 20  # Increased hits required to defeat the boss
 
@@ -149,7 +149,7 @@
             move_stars()
             draw_stars()
             # Adding a visual effect for the boss fight
-            ctx.fillStyle = "rgba(0, 0, 255, 0.1)"
+            ctx.fillStyle = "rgba(0, 0, 255, 0.3)"  # Increased opacity for better visibility
             ctx.fillRect(0, 0, WIDTH, HEIGHT)
             if not game_started:
                 draw_start_screen()
@@ -348,3 +348,4 @@
     </script>
 </body>
 </html>
+
