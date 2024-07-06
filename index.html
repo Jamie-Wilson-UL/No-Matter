@@ -24,7 +24,7 @@
     <audio id="background-audio" src="theme.mp3" loop></audio>
     <audio id="boss-audio" src="boss_theme.mp3" loop></audio>
     <script type="text/python">
-        from browser import document, html, window
+        from browser import document, html, window, alert, prompt
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -33,7 +33,7 @@
         BULLET_SIZE = 10
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
-        ENEMY_BULLET_SPEED = 2.5  # Reduced enemy bullet speed
+        ENEMY_BULLET_SPEED = 2.5
         LASER_WIDTH = 10
         LASER_DURATION = 600
         MAX_LEVELS = 3
@@ -45,7 +45,8 @@
         game_started = False
         showing_level_title = False
         showing_credits = False
-        ENEMY_SPEED = 1.5  # Reduced enemy speed
+        showing_high_score_prompt = False
+        ENEMY_SPEED = 1.5
         flash_text = True
         player_last_shot = 0
         player_shot_cooldown = 500
@@ -54,6 +55,10 @@
         boss_last_diagonal_shot = 0
         boss_diagonal_cooldown = 1500
         credits_y = HEIGHT
+        level_start_time = 0
+        high_score = 0
+        high_score_name = ""
+        high_score_updated = False
 
         player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
         boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
@@ -79,7 +84,7 @@
         boss_audio = document["boss-audio"]
 
         def initialize_game():
-            global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits
+            global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits, level_start_time
             if level <= MAX_LEVELS:
                 enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
                 background_audio.play()
@@ -94,9 +99,10 @@
             laser_beams = []
             diagonal_shots = []
             showing_level_title = False
-            ENEMY_SPEED = 1.5 + level  # Reduced base enemy speed
+            ENEMY_SPEED = 1.5 + level
             game_over = False
             game_started = True
+            level_start_time = window.Date.new().getTime()
 
         def reset_game():
             global level, game_started, game_over, score
@@ -112,13 +118,16 @@
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
-            title_width, title_height = int(1655 // 2.3), int(134 // 2.3)  # Slightly larger title image
+            title_width, title_height = int(1655 // 2.3), int(134 // 2.3)
             ctx.drawImage(title_img, (WIDTH - title_width) // 2, (HEIGHT // 3 - title_height // 2), title_width, title_height)
             if flash_text:
                 ctx.fillStyle = "white"
-                ctx.font = "bold 28px 'Press Start 2P'"  # Slightly larger and bold text
+                ctx.font = "bold 28px 'Press Start 2P'"
                 ctx.textAlign = "center"
-                ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 1.8)  # Moved slightly lower
+                ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 1.8)
+            if high_score_name:
+                ctx.font = "24px 'Press Start 2P'"
+                ctx.fillText(f"High Score: {high_score_name} - {high_score}", WIDTH // 2, HEIGHT // 1.5)
 
         def draw_level_title():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -139,6 +148,8 @@
             ctx.font = "48px 'Press Start 2P'"
             ctx.textAlign = "center"
             ctx.fillText(f"Final Score: {score}", WIDTH // 2, HEIGHT // 2)
+            if high_score_updated:
+                ctx.fillText("New High Score!", WIDTH // 2, HEIGHT // 1.7)
 
         def draw_stars():
             ctx.fillStyle = "white"
@@ -153,7 +164,7 @@
                     star["x"] = window.Math.random() * WIDTH
 
         def draw():
-            global game_over, game_started, showing_level_title, showing_credits, credits_y
+            global game_over, game_started, showing_level_title, showing_credits, credits_y, showing_high_score_prompt
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
@@ -165,6 +176,8 @@
                 draw_start_screen()
             elif showing_level_title:
                 draw_level_title()
+            elif showing_high_score_prompt:
+                prompt_high_score_name()
             else:
                 if not game_over:
                     ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], PLAYER_SIZE, PLAYER_SIZE)
@@ -242,8 +255,14 @@
                 window.requestAnimationFrame(lambda x: animate_credits())
 
         def show_final_score():
+            global high_score_updated, showing_high_score_prompt
+            high_score_updated = False
+            if score > high_score:
+                high_score_updated = True
+                showing_high_score_prompt = True
             draw_final_score()
-            window.setTimeout(reset_game, 3000)
+            if not high_score_updated:
+                window.setTimeout(reset_game, 3000)
 
         def update():
             global game_over, score, game_started, showing_level_title, ENEMY_SPEED, boss_hits, boss_direction
@@ -315,11 +334,11 @@
                         enemy["pos"][1] += ENEMY_SIZE
                     ENEMY_SPEED = -ENEMY_SPEED
             else:
-                boss_pos[0] += boss_direction * 10  # Increased boss speed
+                boss_pos[0] += boss_direction * 10
                 if boss_pos[0] <= 0 or boss_pos[0] >= WIDTH - BOSS_SIZE:
                     boss_direction *= -1
-                boss_pos[1] += window.Math.random() * 10 - 5  # Limited vertical movement
-                boss_pos[1] = max(0, min(HEIGHT // 4, boss_pos[1]))  # Ensure the boss does not get too low
+                boss_pos[1] += window.Math.random() * 10 - 5
+                boss_pos[1] = max(0, min(HEIGHT // 4, boss_pos[1]))
 
             draw()
 
@@ -329,7 +348,7 @@
                 return
             if level <= MAX_LEVELS:
                 for enemy in enemies:
-                    if window.Math.random() < (0.03 + 0.01 * level):  # Reduced shooting frequency
+                    if window.Math.random() < (0.03 + 0.01 * level):
                         enemy_bullets.append([enemy["pos"][0] + ENEMY_SIZE // 2, enemy["pos"][1] + ENEMY_SIZE])
             else:
                 if window.Math.random() < 0.1:
@@ -344,22 +363,26 @@
                     boss_last_diagonal_shot = current_time
 
         def level_up():
-            global level, showing_level_title
+            global level, showing_level_title, score
             level += 1
+            time_bonus = max(0, int((100000 - (window.Date.new().getTime() - level_start_time)) / 1000))
+            score += time_bonus
             showing_level_title = True
             draw_level_title()
             window.setTimeout(initialize_game, 1000)
 
         def start_game():
-            global showing_level_title, game_started
+            global showing_level_title, game_started, high_score, high_score_name
             showing_level_title = False
             game_started = True
+            high_score = int(window.localStorage.getItem("high_score") or 0)
+            high_score_name = window.localStorage.getItem("high_score_name") or ""
             initialize_game()
 
         def move_player(event):
             global game_started, game_over, player_last_shot
             current_time = window.Date.new().getTime()
-            if event.keyCode == 32:  # Space key
+            if event.keyCode == 32:
                 if not game_started:
                     if background_audio.paused:
                         background_audio.play()
@@ -369,14 +392,24 @@
                         bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
                         player_last_shot = current_time
             elif game_started and not showing_level_title and not game_over:
-                if event.keyCode == 37 and player_pos[0] > 0:  # Left arrow
+                if event.keyCode == 37 and player_pos[0] > 0:
                     player_pos[0] -= PLAYER_SPEED
-                elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:  # Right arrow
+                elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:
                     player_pos[0] += PLAYER_SPEED
 
         def toggle_flash_text():
             global flash_text
             flash_text = not flash_text
+
+        def prompt_high_score_name():
+            global showing_high_score_prompt, high_score, high_score_name
+            showing_high_score_prompt = False
+            player_name = prompt("New High Score! Enter your name:")
+            high_score = score
+            high_score_name = player_name or "Anonymous"
+            window.localStorage.setItem("high_score", str(high_score))
+            window.localStorage.setItem("high_score_name", high_score_name)
+            window.setTimeout(reset_game, 3000)
 
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
