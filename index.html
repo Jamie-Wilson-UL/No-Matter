@@ -124,10 +124,10 @@
                 ctx.fillStyle = "white"
                 ctx.font = "bold 28px 'Press Start 2P'"
                 ctx.textAlign = "center"
-                ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 1.8)
+                ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 1.7)  # Moved slightly lower
             if high_score_name:
                 ctx.font = "24px 'Press Start 2P'"
-                ctx.fillText(f"High Score: {high_score_name} - {high_score}", WIDTH // 2, HEIGHT // 1.5)
+                ctx.fillText(f"High Score: {high_score_name} - {high_score}", WIDTH // 2, HEIGHT // 1.4)
 
         def draw_level_title():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
