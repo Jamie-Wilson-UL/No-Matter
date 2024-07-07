@@ -217,7 +217,7 @@
                     ctx.font = "48px 'Press Start 2P'"
                     ctx.fillText("YOU WIN!", WIDTH // 2, HEIGHT // 2)
                     game_over = True
-                    window.setTimeout(show_credits, 3000)
+                    window.setTimeout(show_final_score, 3000)
 
         def show_credits():
             global showing_credits, credits_y
@@ -266,6 +266,8 @@
             draw_final_score()
             if not high_score_updated:
                 window.setTimeout(reset_game, 3000)
+            else:
+                prompt_high_score_name()
 
         def update():
             global game_over, score, game_started, showing_level_title, ENEMY_SPEED, boss_hits, boss_direction
