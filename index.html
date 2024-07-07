@@ -416,9 +416,16 @@
             global top_scores
             stored_scores = window.localStorage.getItem("top_scores")
             if stored_scores:
-                top_scores = window.JSON.parse(stored_scores)
+                try:
+                    top_scores = window.JSON.parse(stored_scores)
+                except:
+                    top_scores = []
             if not top_scores:
-                top_scores = [{"name": "Player 1", "score": 100}, {"name": "Player 2", "score": 100}, {"name": "Player 3", "score": 100}]
+                top_scores = [
+                    {"name": "Player 1", "score": 100},
+                    {"name": "Player 2", "score": 100},
+                    {"name": "Player 3", "score": 100}
+                ]
                 window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
 
         document.bind("keydown", move_player)
