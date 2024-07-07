@@ -25,6 +25,7 @@
     <audio id="boss-audio" src="boss_theme.mp3" loop></audio>
     <script type="text/python">
         from browser import document, html, window, alert, prompt
+        import json
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -409,17 +410,17 @@
             player_name = player_name or "Anonymous"
             top_scores.append({"name": player_name, "score": score})
             top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
-            window.localStorage.setItem("top_scores", str(top_scores))
+            window.localStorage.setItem("top_scores", json.dumps(top_scores))
             window.setTimeout(reset_game, 3000)
 
         def initialize_high_score():
             global top_scores
             stored_scores = window.localStorage.getItem("top_scores")
             if stored_scores:
-                top_scores = eval(stored_scores)
+                top_scores = json.loads(stored_scores)
             if not top_scores:
                 top_scores = [{"name": "Player 1", "score": 100}, {"name": "Player 2", "score": 100}, {"name": "Player 3", "score": 100}]
-                window.localStorage.setItem("top_scores", str(top_scores))
+                window.localStorage.setItem("top_scores", json.dumps(top_scores))
 
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
