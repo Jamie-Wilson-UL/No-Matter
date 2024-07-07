@@ -421,7 +421,19 @@
                 draw_start_screen()
                 window.requestAnimationFrame(lambda x: animate_title_screen())
 
+        def initialize_high_score():
+            global high_score, high_score_name
+            high_score = int(window.localStorage.getItem("high_score") or 0)
+            high_score_name = window.localStorage.getItem("high_score_name") or ""
+            if high_score == 0:
+                high_score = 1000
+                high_score_name = "Initial"
+                window.localStorage.setItem("high_score", str(high_score))
+                window.localStorage.setItem("high_score_name", high_score_name)
+
+        initialize_high_score()
         animate_title_screen()
     </script>
 </body>
 </html>
+
