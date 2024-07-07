@@ -10,11 +10,14 @@
             text-align: center;
             background-color: black;
             color: white;
+            font-family: 'Press Start 2P', cursive;
         }
         canvas {
-            border: 1px solid white;
+            border: 4px solid white;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
             display: block;
             margin: 20px auto;
+            background-color: #000;
         }
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
     </style>
@@ -30,9 +33,10 @@
         PLAYER_SIZE = 50
         ENEMY_SIZE = 50
         BOSS_SIZE = 200
-        BULLET_SIZE = 10
+        BULLET_WIDTH, BULLET_HEIGHT = 5, 20
         PLAYER_SPEED = 10
         BULLET_SPEED = 5
+        ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT = 5, 15
         ENEMY_BULLET_SPEED = 2.5
         LASER_WIDTH = 10
         LASER_DURATION = 600
@@ -124,10 +128,12 @@
                 ctx.font = "bold 28px 'Press Start 2P'"
                 ctx.textAlign = "center"
                 ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 1.7)
+            ctx.font = "bold 28px 'Press Start 2P'"
+            ctx.fillText("Leaderboard", WIDTH // 2, HEIGHT // 1.3 - 40)
             if top_scores:
                 ctx.font = "24px 'Press Start 2P'"
                 for i, score in enumerate(top_scores):
-                    ctx.fillText(f"{i + 1}. {score['name']} - {score['score']}", WIDTH // 2, HEIGHT // 1.4 + 30 * i)
+                    ctx.fillText(f"{i + 1}. {score['name']} - {score['score']}", WIDTH // 2, HEIGHT // 1.3 + 30 * i)
 
         def draw_level_title():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -188,10 +194,10 @@
                         ctx.drawImage(enemy["img"], enemy["pos"][0], enemy["pos"][1], ENEMY_SIZE, ENEMY_SIZE)
                 ctx.fillStyle = "yellow"
                 for bullet in bullets:
-                    ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
+                    ctx.fillRect(bullet[0], bullet[1], BULLET_WIDTH, BULLET_HEIGHT)
                 ctx.fillStyle = "red"
                 for bullet in enemy_bullets:
-                    ctx.fillRect(bullet[0], bullet[1], BULLET_SIZE, BULLET_SIZE)
+                    ctx.fillRect(bullet[0], bullet[1], ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT)
                 ctx.fillStyle = "blue"
                 ctx.shadowBlur = 20
                 ctx.shadowColor = "blue"
@@ -200,7 +206,7 @@
                 ctx.shadowBlur = 0
                 ctx.fillStyle = "purple"
                 for shot in diagonal_shots:
-                    ctx.fillRect(shot["x"], shot["y"], BULLET_SIZE, BULLET_SIZE)
+                    ctx.fillRect(shot["x"], shot["y"], BULLET_WIDTH, BULLET_HEIGHT)
                 ctx.fillStyle = "white"
                 ctx.font = "24px 'Press Start 2P'"
                 ctx.textAlign = "right"
@@ -318,7 +324,7 @@
                     game_over = True
 
             for shot in diagonal_shots[:]:
-                if shot["x"] <= player_pos[0] + PLAYER_SIZE and shot["x"] + BULLET_SIZE >= player_pos[0] and shot["y"] <= player_pos[1] + PLAYER_SIZE and shot["y"] + BULLET_SIZE >= player_pos[1]:
+                if shot["x"] <= player_pos[0] + PLAYER_SIZE and shot["x"] + BULLET_WIDTH >= player_pos[0] and shot["y"] <= player_pos[1] + BULLET_HEIGHT and shot["y"] + BULLET_HEIGHT >= player_pos[1]:
                     game_over = True
 
             if level <= MAX_LEVELS:
@@ -392,7 +398,7 @@
                     start_game()
                 elif not showing_level_title and not game_over:
                     if current_time - player_last_shot > player_shot_cooldown:
-                        bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_SIZE // 2, player_pos[1]])
+                        bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_WIDTH // 2, player_pos[1]])
                         player_last_shot = current_time
             elif game_started and not showing_level_title and not game_over:
                 if event.keyCode == 37 and player_pos[0] > 0:
@@ -445,3 +451,4 @@
     </script>
 </body>
 </html>
+
