@@ -435,8 +435,11 @@
 
         def prompt_high_score_name():
             global showing_high_score_prompt, top_scores
-            player_name = window.prompt("New High Score! Enter your name:")
-            player_name = player_name or "Anonymous"
+            while True:
+                player_name = window.prompt("New High Score! Enter your name:")
+                if player_name and player_name.strip():
+                    break
+            player_name = player_name.strip()
             top_scores.append({"name": player_name, "score": score})
             top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
             window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
