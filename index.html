@@ -21,12 +21,21 @@
             background-color: #000;
         }
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        @keyframes breathing {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        #title-img {
+            animation: breathing 3s infinite;
+        }
     </style>
 </head>
 <body onload="brython()">
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <audio id="background-audio" src="theme.mp3" loop></audio>
     <audio id="boss-audio" src="boss_theme.mp3" loop></audio>
+    <img id="title-img" src="title.gif" style="display:none">
     <script type="text/python">
         from browser import document, html, window
 
@@ -70,7 +79,7 @@
         boss_direction = 1
 
         spaceship_img = html.IMG(src="spaceship.png")
-        title_img = html.IMG(src="/mnt/data/title.gif")
+        title_img = document["title-img"]
         boss_img = html.IMG(src="boss.png")
         face_images = ["face_0.png", "face_1.png", "face_2.png", "face_3.png"]
         faces = [html.IMG(src=img) for img in face_images]
