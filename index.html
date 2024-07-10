@@ -28,7 +28,7 @@
     <audio id="background-audio" src="theme.mp3" loop></audio>
     <audio id="boss-audio" src="boss_theme.mp3" loop></audio>
     <script type="text/python">
-        from browser import document, html, window, alert, prompt
+        from browser import document, html, window, timer
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -87,6 +87,9 @@
         background_audio = document["background-audio"]
         boss_audio = document["boss-audio"]
 
+        title_frame = 0
+        title_frames = 25
+
         def initialize_game():
             global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits, level_start_time
             if level <= MAX_LEVELS:
@@ -125,8 +128,8 @@
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
-            title_width, title_height = int(1655 // 2.3), int(134 // 2.3)
-            ctx.drawImage(title_img, (WIDTH - title_width) // 2, (HEIGHT // 3 - title_height // 2), title_width, title_height)
+            title_width, title_height = 800, 200
+            ctx.drawImage(title_img, title_frame * title_width, 0, title_width, title_height, (WIDTH - title_width) // 2, (HEIGHT // 3 - title_height // 2), title_width, title_height)
             if flash_text:
                 ctx.fillStyle = "white"
                 ctx.font = "bold 28px 'Press Start 2P'"
@@ -172,6 +175,10 @@
                 if star["y"] > HEIGHT:
                     star["y"] = 0
                     star["x"] = window.Math.random() * WIDTH
+
+        def update_title_frame():
+            global title_frame
+            title_frame = (title_frame + 1) % title_frames
 
         def draw():
             global game_over, game_started, showing_level_title, showing_credits, credits_y, showing_high_score_prompt
@@ -454,6 +461,7 @@
         window.setInterval(update, 30)
         window.setInterval(enemy_shoot, 500)
         window.setInterval(toggle_flash_text, 1000)
+        window.setInterval(update_title_frame, 100)
 
         def animate_title_screen():
             if not game_started:
