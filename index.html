@@ -244,7 +244,7 @@
                     ctx.font = "48px 'Press Start 2P'"
                     ctx.fillText("YOU WIN!", WIDTH // 2, HEIGHT // 2)
                     game_over = True
-                    window.setTimeout(show_credits, 3000)
+                    window.setTimeout(show_final_score, 3000)
 
         def show_credits():
             global showing_credits, credits_y
@@ -291,10 +291,10 @@
                     showing_high_score_prompt = True
                     break
             draw_final_score()
-            if not high_score_updated:
-                window.setTimeout(reset_game, 3000)
-            else:
+            if high_score_updated:
                 prompt_high_score_name()
+            else:
+                window.setTimeout(reset_game, 3000)
 
         def update():
             global game_over, score, game_started, showing_level_title, ENEMY_SPEED, boss_hits, boss_direction
@@ -444,7 +444,10 @@
             top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
             window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
             showing_high_score_prompt = False
-            window.setTimeout(reset_game, 3000)
+            if game_over and level > MAX_LEVELS:
+                window.setTimeout(show_credits, 3000)
+            else:
+                window.setTimeout(reset_game, 3000)
 
         def initialize_high_score():
             global top_scores
