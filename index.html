@@ -13,8 +13,9 @@
             font-family: 'Press Start 2P', cursive;
         }
         canvas {
-            border: 4px solid white;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+            border: 8px solid #00ff00;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00, 0 0 60px #00ff00, 0 0 80px #00ff00;
             display: block;
             margin: 20px auto;
             background-color: #000;
@@ -174,8 +175,12 @@
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
-            ctx.fillStyle = "rgba(0, 0, 255, 0.1)"
-            ctx.fillRect(0, 0, WIDTH, HEIGHT)
+            if level > MAX_LEVELS:
+                ctx.fillStyle = "rgba(255, 0, 0, 0.1)"
+                ctx.fillRect(0, 0, WIDTH, HEIGHT)
+            else:
+                ctx.fillStyle = "rgba(0, 0, 255, 0.1)"
+                ctx.fillRect(0, 0, WIDTH, HEIGHT)
             if showing_credits:
                 draw_credits()
             elif not game_started:
@@ -193,9 +198,13 @@
                     for enemy in enemies:
                         ctx.drawImage(enemy["img"], enemy["pos"][0], enemy["pos"][1], ENEMY_SIZE, ENEMY_SIZE)
                 ctx.fillStyle = "yellow"
+                ctx.shadowBlur = 15
+                ctx.shadowColor = "yellow"
                 for bullet in bullets:
                     ctx.fillRect(bullet[0], bullet[1], BULLET_WIDTH, BULLET_HEIGHT)
                 ctx.fillStyle = "red"
+                ctx.shadowBlur = 15
+                ctx.shadowColor = "red"
                 for bullet in enemy_bullets:
                     ctx.fillRect(bullet[0], bullet[1], ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT)
                 ctx.fillStyle = "blue"
@@ -223,7 +232,7 @@
                     ctx.font = "48px 'Press Start 2P'"
                     ctx.fillText("YOU WIN!", WIDTH // 2, HEIGHT // 2)
                     game_over = True
-                    window.setTimeout(show_final_score, 3000)
+                    window.setTimeout(show_credits, 3000)
 
         def show_credits():
             global showing_credits, credits_y
@@ -451,4 +460,3 @@
     </script>
 </body>
 </html>
-
