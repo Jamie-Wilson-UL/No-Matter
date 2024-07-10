@@ -70,7 +70,7 @@
         boss_direction = 1
 
         spaceship_img = html.IMG(src="spaceship.png")
-        title_img = html.IMG(src="title.png")
+        title_img = html.IMG(src="title.gif")
         boss_img = html.IMG(src="boss.png")
         face_images = ["face_0.png", "face_1.png", "face_2.png", "face_3.png"]
         faces = [html.IMG(src=img) for img in face_images]
@@ -109,11 +109,14 @@
             level_start_time = window.Date.new().getTime()
 
         def reset_game():
-            global level, game_started, game_over, score
+            global level, game_started, game_over, score, showing_level_title, showing_credits, showing_high_score_prompt
             level = 1
             game_over = False
             game_started = False
             score = 0
+            showing_level_title = False
+            showing_credits = False
+            showing_high_score_prompt = False
             background_audio.play()
             boss_audio.pause()
             animate_title_screen()
@@ -140,8 +143,8 @@
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
-            ctx.fillStyle = "white"
-            ctx.font = "48px 'Press Start 2P'"
+            ctx.fillStyle = "yellow"
+            ctx.font = "bold 48px 'Press Start 2P'"
             if level > MAX_LEVELS:
                 ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 2)
             else:
@@ -409,6 +412,8 @@
                     if current_time - player_last_shot > player_shot_cooldown:
                         bullets.append([player_pos[0] + PLAYER_SIZE // 2 - BULLET_WIDTH // 2, player_pos[1]])
                         player_last_shot = current_time
+                elif game_over:
+                    reset_game()
             elif game_started and not showing_level_title and not game_over:
                 if event.keyCode == 37 and player_pos[0] > 0:
                     player_pos[0] -= PLAYER_SPEED
