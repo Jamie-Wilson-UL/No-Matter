@@ -435,12 +435,12 @@
 
         def prompt_high_score_name():
             global showing_high_score_prompt, top_scores
-            showing_high_score_prompt = False
             player_name = prompt("New High Score! Enter your name:")
             player_name = player_name or "Anonymous"
             top_scores.append({"name": player_name, "score": score})
             top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
             window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
+            showing_high_score_prompt = False
             window.setTimeout(reset_game, 3000)
 
         def initialize_high_score():
