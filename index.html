@@ -444,8 +444,8 @@
             top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
             window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
             showing_high_score_prompt = False
-            if game_over and level > MAX_LEVELS:
-                window.setTimeout(show_credits, 3000)
+            if level > MAX_LEVELS:
+                show_credits()
             else:
                 window.setTimeout(reset_game, 3000)
 
