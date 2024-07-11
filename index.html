@@ -182,6 +182,23 @@
         player_name_input = document["player-name"]
         submit_name_button = document["submit-name"]
 
+        assets_loaded = 0
+        total_assets = 6  # spaceship_img, title_img, boss_img, 3 audio files
+
+        def asset_loaded():
+            global assets_loaded
+            assets_loaded += 1
+            progress = (assets_loaded / total_assets) * 100
+            loading_progress.style.width = f"{progress}%"
+            if assets_loaded == total_assets:
+                start_game()
+
+        def start_game():
+            loading_bar_container.style.display = "none"
+            canvas.style.display = "block"
+            initialize_high_score()
+            animate_title_screen()
+
         def initialize_game():
             global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits, level_start_time
             if level <= MAX_LEVELS:
@@ -584,26 +601,17 @@
                 draw_start_screen()
                 window.requestAnimationFrame(lambda x: animate_title_screen())
 
-        initialize_high_score()
-        animate_title_screen()
+        # Load assets and track progress
+        def load_assets():
+            spaceship_img.bind('load', lambda e: asset_loaded())
+            title_img.bind('load', lambda e: asset_loaded())
+            boss_img.bind('load', lambda e: asset_loaded())
+            background_audio.bind('canplaythrough', lambda e: asset_loaded())
+            boss_audio.bind('canplaythrough', lambda e: asset_loaded())
+            laser_audio.bind('canplaythrough', lambda e: asset_loaded())
+            explosion_audio.bind('canplaythrough', lambda e: asset_loaded())
 
-        # Handle form submission
-        def submit_name(event):
-            global top_scores, showing_high_score_prompt, showing_final_score
-            player_name = player_name_input.value.strip()
-            if player_name:
-                top_scores.append({"name": player_name, "score": score})
-                top_scores.sort(key=lambda x: x["score"], reverse=True)
-                top_scores = top_scores[:3]
-                trigger_github_action(player_name, score)
-                hide_high_score_prompt()
-                if level > MAX_LEVELS:
-                    showing_final_score = False
-                    show_credits()
-                else:
-                    window.setTimeout(reset_game, 3000)
-
-        submit_name_button.bind("click", submit_name)
+        load_assets()
     </script>
 </body>
 </html>
