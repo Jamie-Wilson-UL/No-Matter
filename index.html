@@ -596,8 +596,8 @@
             data = {
                 'event_type': 'update-high-scores',
                 'client_payload': {
-                    'name': name,
-                    'score': score
+                    'PLAYER_NAME': name,
+                    'PLAYER_SCORE': score
                 }
             }
             window.fetch('https://api.github.com/repos/Jamie-Wilson-UL/No-Matter/dispatches', {
@@ -632,4 +632,3 @@
     </script>
 </body>
 </html>
-
