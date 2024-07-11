@@ -514,7 +514,7 @@
 
         def initialize_high_score():
             global top_scores
-            window.fetch('https://raw.githubusercontent.com/your-github-username/your-repo-name/main/high_scores.json').then(
+            window.fetch('https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json').then(
                 lambda response: response.json()
             ).then(
                 lambda data: update_high_scores(data)
@@ -527,7 +527,7 @@
             top_scores = data
 
         def trigger_github_action(name, score):
-            token = 'YOUR_GITHUB_PERSONAL_ACCESS_TOKEN'  # Keep this secret!
+            token = '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'  # Keep this secret!
             headers = {
                 'Authorization': f'token {token}',
                 'Accept': 'application/vnd.github.v3+json'
@@ -539,7 +539,7 @@
                     'score': score
                 }
             }
-            window.fetch('https://api.github.com/repos/your-github-username/your-repo-name/dispatches', {
+            window.fetch('https://api.github.com/repos/Jamie-Wilson-UL/No-Matter/dispatches', {
                 'method': 'POST',
                 'headers': headers,
                 'body': window.JSON.stringify(data)
