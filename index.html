@@ -179,29 +179,27 @@
             ctx.textAlign = "center"
             ctx.fillText("Enter your name:", WIDTH // 2, HEIGHT // 1.5)
 
-            input_box = document.createElement("input")
-            input_box.type = "text"
-            input_box.id = "player-name"
-            input_box.style.position = "absolute"
-            input_box.style.left = f"{WIDTH // 2 - 100}px"
-            input_box.style.top = f"{HEIGHT // 1.4}px"
-            input_box.style.width = "200px"
-            input_box.style.height = "30px"
-            input_box.style.fontSize = "20px"
-            input_box.style.fontFamily = "'Press Start 2P', cursive"
-            document.body.appendChild(input_box)
+            input_box = html.INPUT(type="text", Id="player-name", style={
+                "position": "absolute",
+                "left": f"{WIDTH // 2 - 100}px",
+                "top": f"{HEIGHT // 1.4}px",
+                "width": "200px",
+                "height": "30px",
+                "fontSize": "20px",
+                "fontFamily": "'Press Start 2P', cursive"
+            })
+            document <= input_box
 
-            submit_button = document.createElement("button")
-            submit_button.id = "submit-name"
-            submit_button.style.position = "absolute"
-            submit_button.style.left = f"{WIDTH // 2 - 50}px"
-            submit_button.style.top = f"{HEIGHT // 1.3}px"
-            submit_button.style.width = "100px"
-            submit_button.style.height = "30px"
-            submit_button.innerHTML = "Submit"
-            submit_button.style.fontSize = "20px"
-            submit_button.style.fontFamily = "'Press Start 2P', cursive"
-            document.body.appendChild(submit_button)
+            submit_button = html.BUTTON("Submit", Id="submit-name", style={
+                "position": "absolute",
+                "left": f"{WIDTH // 2 - 50}px",
+                "top": f"{HEIGHT // 1.3}px",
+                "width": "100px",
+                "height": "30px",
+                "fontSize": "20px",
+                "fontFamily": "'Press Start 2P', cursive"
+            })
+            document <= submit_button
 
             def submit_name(event):
                 player_name = document["player-name"].value.strip()
@@ -210,8 +208,8 @@
                     top_scores.sort(key=lambda x: x["score"], reverse=True)
                     top_scores = top_scores[:3]
                     window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
-                    document.body.removeChild(input_box)
-                    document.body.removeChild(submit_button)
+                    document["player-name"].remove()
+                    document["submit-name"].remove()
                     showing_high_score_prompt = False
                     show_credits()
 
