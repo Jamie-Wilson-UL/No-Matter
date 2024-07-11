@@ -1,1 +1,40 @@
+name: Update High Scores
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Player Name'
+        required: true
+        default: 'Player'
+      score:
+        description: 'Player Score'
+        required: true
+        default: 0
+
+jobs:
+  update-scores:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository content
+      uses: actions/checkout@v2
+
+    - name: Update high scores
+      id: update_scores
+      run: |
+        name=${{ github.event.inputs.name }}
+        score=${{ github.event.inputs.score }}
+        jq --arg name "$name" --argjson score "$score" '
+          . += [{"name": $name, "score": $score}] | sort_by(.score) | reverse | .[:3]
+        ' high_scores.json > high_scores_tmp.json
+        mv high_scores_tmp.json high_scores.json
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions'
+        git config --global user.email 'github-actions@github.com'
+        git add high_scores.json
+        git commit -m 'Update high scores'
+        git push
 
