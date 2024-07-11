@@ -611,7 +611,16 @@
             canvas.style.display = "none"
             window.setTimeout(start_game, 3000)  # Show loading screen for 3 seconds
 
+        def hide_loading_screen():
+            loading_bar_container.style.display = "none"
+            canvas.style.display = "block"
+            initialize_high_score()
+            animate_title_screen()
+
+        # Start the loading screen and then transition to the game screen
         show_loading_screen()
+        window.setTimeout(hide_loading_screen, 3000)
+
     </script>
 </body>
 </html>
