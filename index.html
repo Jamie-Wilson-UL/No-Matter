@@ -27,6 +27,10 @@
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
+        @keyframes fill {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
         #title-img {
             animation: breathing 3s infinite;
         }
@@ -53,6 +57,7 @@
             height: 100%;
             width: 0;
             background-color: #00ff00;
+            animation: fill 3s linear forwards;
         }
         #loading-text {
             font-size: 24px;
