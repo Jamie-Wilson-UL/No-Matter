@@ -228,8 +228,8 @@
                     top_scores.sort(key=lambda x: x["score"], reverse=True)
                     top_scores = top_scores[:3]
                     window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
-                    form.remove()
-                    showing_high_score_prompt = False
+                    form.remove()  # Remove the form from the DOM
+                    showing_high_score_prompt = False  # Update the state variable
                     if level > MAX_LEVELS:
                         showing_final_score = False
                         show_credits()
