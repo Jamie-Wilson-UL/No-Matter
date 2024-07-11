@@ -11,6 +11,7 @@
             background-color: black;
             color: white;
             font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
         }
         canvas {
             border: 8px solid #00ff00;
@@ -29,36 +30,89 @@
         #title-img {
             animation: breathing 3s infinite;
         }
-        #high-score-form {
+        #loading-bar-container {
             position: absolute;
-            left: calc(50% - 100px);
-            top: calc(70% - 50px);
-            width: 200px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+        }
+        #loading-bar {
+            width: 50%;
+            height: 30px;
+            background-color: white;
+            border: 3px solid #00ff00;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #loading-progress {
+            height: 100%;
+            width: 0;
+            background-color: #00ff00;
+        }
+        #high-score-modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+        }
+        #high-score-modal-content {
+            background-color: black;
+            margin: 15% auto;
+            padding: 20px;
+            border: 3px solid #00ff00;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
         }
         #player-name {
-            width: 200px;
-            height: 30px;
+            width: 80%;
+            height: 40px;
             font-size: 20px;
             font-family: 'Press Start 2P', cursive;
+            margin-bottom: 10px;
         }
         #submit-name {
-            width: 100px;
-            height: 30px;
+            width: 80%;
+            height: 40px;
             font-size: 20px;
             font-family: 'Press Start 2P', cursive;
-            margin-top: 10px;
+            background-color: #00ff00;
+            border: none;
+            cursor: pointer;
         }
     </style>
 </head>
 <body onload="brython()">
-    <canvas id="game-canvas" width="800" height="600"></canvas>
+    <div id="loading-bar-container">
+        <div id="loading-bar">
+            <div id="loading-progress"></div>
+        </div>
+    </div>
+    <canvas id="game-canvas" width="800" height="600" style="display:none;"></canvas>
     <audio id="background-audio" src="theme.mp3" loop></audio>
     <audio id="boss-audio" src="boss_theme.mp3" loop></audio>
     <audio id="laser-audio" src="laser.mp3"></audio>
     <audio id="explosion-audio" src="explosion.mp3"></audio>
     <img id="title-img" src="title.gif" style="display:none">
+    <div id="high-score-modal">
+        <div id="high-score-modal-content">
+            <p>New High Score! Enter your name:</p>
+            <input type="text" id="player-name">
+            <button id="submit-name">Submit</button>
+        </div>
+    </div>
     <script type="text/python">
-        from browser import document, html, window
+        from browser import document, html, window, timer
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -119,6 +173,14 @@
         boss_audio = document["boss-audio"]
         laser_audio = document["laser-audio"]
         explosion_audio = document["explosion-audio"]
+
+        loading_bar_container = document["loading-bar-container"]
+        loading_bar = document["loading-bar"]
+        loading_progress = document["loading-progress"]
+
+        high_score_modal = document["high-score-modal"]
+        player_name_input = document["player-name"]
+        submit_name_button = document["submit-name"]
 
         def initialize_game():
             global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits, level_start_time
@@ -194,50 +256,15 @@
             ctx.fillText(f"Final Score: {score}", WIDTH // 2, HEIGHT // 2)
             if high_score_updated:
                 ctx.fillText("New High Score!", WIDTH // 2, HEIGHT // 1.7)
-                draw_high_score_prompt()
+                show_high_score_prompt()
 
-        def draw_high_score_prompt():
-            ctx.fillStyle = "white"
-            ctx.font = "24px 'Press Start 2P'"
-            ctx.textAlign = "center"
-            ctx.fillText("Enter your name:", WIDTH // 2, HEIGHT // 1.5)
+        def show_high_score_prompt():
+            high_score_modal.style.display = "block"
+            player_name_input.focus()
 
-            form = html.FORM(Id="high-score-form")
-            input_box = html.INPUT(type="text", Id="player-name")
-            input_box.style.width = "200px"
-            input_box.style.height = "30px"
-            input_box.style.fontSize = "20px"
-            input_box.style.fontFamily = "'Press Start 2P', cursive"
-            form <= input_box
-
-            submit_button = html.BUTTON("Submit", Id="submit-name")
-            submit_button.style.width = "100px"
-            submit_button.style.height = "30px"
-            submit_button.style.fontSize = "20px"
-            submit_button.style.fontFamily = "'Press Start 2P', cursive"
-            form <= submit_button
-
-            document <= form
-
-            def submit_name(event):
-                event.preventDefault()
-                global top_scores, showing_high_score_prompt, showing_final_score
-                player_name = input_box.value.strip()
-                if player_name:
-                    top_scores.append({"name": player_name, "score": score})
-                    top_scores.sort(key=lambda x: x["score"], reverse=True)
-                    top_scores = top_scores[:3]
-                    trigger_github_action(player_name, score)
-                    form.remove()  # Remove the form from the DOM
-                    showing_high_score_prompt = False  # Update the state variable
-                    if level > MAX_LEVELS:
-                        showing_final_score = False
-                        show_credits()
-                    else:
-                        window.setTimeout(reset_game, 3000)
-
-            form.bind("submit", submit_name)
-            input_box.focus()
+        def hide_high_score_prompt():
+            high_score_modal.style.display = "none"
+            player_name_input.value = ""
 
         def draw_stars():
             ctx.fillStyle = "white"
@@ -270,8 +297,6 @@
                 draw_level_title()
             elif showing_final_score:
                 draw_final_score()
-            elif showing_high_score_prompt:
-                draw_high_score_prompt()
             else:
                 if not game_over:
                     ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], PLAYER_SIZE, PLAYER_SIZE)
@@ -365,7 +390,7 @@
             draw_final_score()
             if high_score_updated:
                 showing_high_score_prompt = True
-                draw_high_score_prompt()
+                show_high_score_prompt()
             else:
                 if level > MAX_LEVELS:
                     window.setTimeout(show_credits, 3000)
@@ -561,6 +586,24 @@
 
         initialize_high_score()
         animate_title_screen()
+
+        # Handle form submission
+        def submit_name(event):
+            global top_scores, showing_high_score_prompt, showing_final_score
+            player_name = player_name_input.value.strip()
+            if player_name:
+                top_scores.append({"name": player_name, "score": score})
+                top_scores.sort(key=lambda x: x["score"], reverse=True)
+                top_scores = top_scores[:3]
+                trigger_github_action(player_name, score)
+                hide_high_score_prompt()
+                if level > MAX_LEVELS:
+                    showing_final_score = False
+                    show_credits()
+                else:
+                    window.setTimeout(reset_game, 3000)
+
+        submit_name_button.bind("click", submit_name)
     </script>
 </body>
 </html>
