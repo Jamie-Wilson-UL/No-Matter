@@ -519,7 +519,7 @@
             ).then(
                 lambda data: update_high_scores(data)
             ).catch(
-                lambda error: console.error(f"Error fetching high scores: {error}")
+                lambda error: window.console.error(f"Error fetching high scores: {error}")
             )
 
         def update_high_scores(data):
@@ -544,9 +544,9 @@
                 'headers': headers,
                 'body': window.JSON.stringify(data)
             }).then(
-                lambda response: console.log("High score submitted")
+                lambda response: window.console.log("High score submitted")
             ).catch(
-                lambda error: console.error(f"Error saving high scores: {error}")
+                lambda error: window.console.error(f"Error saving high scores: {error}")
             )
 
         document.bind("keydown", move_player)
