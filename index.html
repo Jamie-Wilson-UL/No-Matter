@@ -58,7 +58,7 @@
     <audio id="explosion-audio" src="explosion.mp3"></audio>
     <img id="title-img" src="title.gif" style="display:none">
     <script type="text/python">
-        from browser import document, html, window, ajax
+        from browser import document, html, window, ajax, xmlhttprequest
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
@@ -514,15 +514,15 @@
 
         def initialize_high_score():
             global top_scores
-            req = ajax.ajax()
-            req.bind('complete', on_high_scores_fetched)
+            req = xmlhttprequest.XMLHttpRequest()
+            req.onreadystatechange = lambda event: on_high_scores_fetched(req)
             req.open('GET', 'https://raw.githubusercontent.com/your-github-username/your-repo-name/main/high_scores.json', True)
             req.send()
 
         def on_high_scores_fetched(req):
             global top_scores
-            if req.status == 200 or req.status == 0:
-                top_scores = window.JSON.parse(req.text)
+            if req.readyState == xmlhttprequest.DONE and (req.status == 200 or req.status == 0):
+                top_scores = window.JSON.parse(req.responseText)
             else:
                 console.error(f"Error fetching high scores: {req.status}")
 
@@ -539,15 +539,15 @@
                     'score': score
                 }
             }
-            req = ajax.ajax()
-            req.bind('complete', on_high_scores_saved)
+            req = xmlhttprequest.XMLHttpRequest()
+            req.onreadystatechange = lambda event: on_high_scores_saved(req)
             req.open('POST', 'https://api.github.com/repos/your-github-username/your-repo-name/dispatches', True)
-            req.set_header('Authorization', f'token {token}')
-            req.set_header('Accept', 'application/vnd.github.v3+json')
+            req.setRequestHeader('Authorization', f'token {token}')
+            req.setRequestHeader('Accept', 'application/vnd.github.v3+json')
             req.send(window.JSON.stringify(data))
 
         def on_high_scores_saved(req):
-            if req.status != 200:
+            if req.readyState == xmlhttprequest.DONE and req.status != 200:
                 console.error(f"Error saving high scores: {req.status}")
 
         document.bind("keydown", move_player)
