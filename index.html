@@ -201,9 +201,9 @@
             progress = (assets_loaded / total_assets) * 100
             loading_progress.style.width = f"{progress}%"
             if assets_loaded == total_assets:
-                start_game()
+                show_title_screen()
 
-        def start_game():
+        def show_title_screen():
             loading_bar_container.style.display = "none"
             canvas.style.display = "block"
             initialize_high_score()
@@ -609,18 +609,12 @@
         def show_loading_screen():
             loading_bar_container.style.display = "flex"
             canvas.style.display = "none"
-            window.setTimeout(start_game, 3000)  # Show loading screen for 3 seconds
+            window.setTimeout(show_title_screen, 3000)  # Show loading screen for 3 seconds
 
-        def hide_loading_screen():
-            loading_bar_container.style.display = "none"
-            canvas.style.display = "block"
-            initialize_high_score()
-            animate_title_screen()
-
-        # Start the loading screen and then transition to the game screen
+        # Start the loading screen and then transition to the title screen
         show_loading_screen()
-        window.setTimeout(hide_loading_screen, 3000)
 
     </script>
 </body>
 </html>
+
