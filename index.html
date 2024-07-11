@@ -55,6 +55,7 @@
     <audio id="background-audio" src="theme.mp3" loop></audio>
     <audio id="boss-audio" src="boss_theme.mp3" loop></audio>
     <audio id="laser-audio" src="laser.mp3"></audio>
+    <audio id="explosion-audio" src="explosion.mp3"></audio>
     <img id="title-img" src="title.gif" style="display:none">
     <script type="text/python">
         from browser import document, html, window
@@ -117,6 +118,7 @@
         background_audio = document["background-audio"]
         boss_audio = document["boss-audio"]
         laser_audio = document["laser-audio"]
+        explosion_audio = document["explosion-audio"]
 
         def initialize_game():
             global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits, level_start_time
@@ -219,6 +221,7 @@
 
             def submit_name(event):
                 event.preventDefault()
+                global top_scores
                 player_name = input_box.value.strip()
                 if player_name:
                     top_scores.append({"name": player_name, "score": score})
@@ -398,12 +401,14 @@
                             enemies.remove(enemy)
                             bullets.remove(bullet)
                             score += 1
+                            explosion_audio.play()  # Play explosion sound
                             break
             else:
                 for bullet in bullets[:]:
                     if bullet[0] >= boss_pos[0] and bullet[0] <= boss_pos[0] + BOSS_SIZE and bullet[1] >= boss_pos[1] and bullet[1] <= boss_pos[1] + BOSS_SIZE:
                         bullets.remove(bullet)
                         boss_hits += 1
+                        explosion_audio.play()  # Play explosion sound
 
             for bullet in enemy_bullets[:]:
                 if bullet[0] >= player_pos[0] and bullet[0] <= player_pos[0] + PLAYER_SIZE and bullet[1] >= player_pos[1] and bullet[1] <= player_pos[1] + PLAYER_SIZE:
