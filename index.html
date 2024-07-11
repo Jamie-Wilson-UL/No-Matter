@@ -59,6 +59,7 @@
         game_started = False
         showing_level_title = False
         showing_credits = False
+        showing_final_score = False
         showing_high_score_prompt = False
         ENEMY_SPEED = 1.5
         flash_text = True
@@ -118,13 +119,14 @@
             level_start_time = window.Date.new().getTime()
 
         def reset_game():
-            global level, game_started, game_over, score, showing_level_title, showing_credits, showing_high_score_prompt
+            global level, game_started, game_over, score, showing_level_title, showing_credits, showing_high_score_prompt, showing_final_score
             level = 1
             game_over = False
             game_started = False
             score = 0
             showing_level_title = False
             showing_credits = False
+            showing_final_score = False
             showing_high_score_prompt = False
             background_audio.play()
             boss_audio.pause()
@@ -183,7 +185,7 @@
                     star["x"] = window.Math.random() * WIDTH
 
         def draw():
-            global game_over, game_started, showing_level_title, showing_credits, credits_y, showing_high_score_prompt
+            global game_over, game_started, showing_level_title, showing_credits, credits_y, showing_high_score_prompt, showing_final_score
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
@@ -199,6 +201,8 @@
                 draw_start_screen()
             elif showing_level_title:
                 draw_level_title()
+            elif showing_final_score:
+                draw_final_score()
             elif showing_high_score_prompt:
                 prompt_high_score_name()
             else:
@@ -282,7 +286,7 @@
                 window.requestAnimationFrame(lambda x: animate_credits())
 
         def show_final_score():
-            global high_score_updated, showing_high_score_prompt
+            global high_score_updated, showing_high_score_prompt, showing_final_score
             high_score_updated = False
             # Check if the player achieved a top 3 score
             for i in range(len(top_scores)):
@@ -290,9 +294,10 @@
                     high_score_updated = True
                     showing_high_score_prompt = True
                     break
+            showing_final_score = True
             draw_final_score()
             if high_score_updated:
-                prompt_high_score_name()
+                window.setTimeout(prompt_high_score_name, 2000)
             else:
                 window.setTimeout(reset_game, 3000)
 
@@ -445,7 +450,7 @@
             window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
             showing_high_score_prompt = False
             if level > MAX_LEVELS:
-                show_credits()
+                window.setTimeout(show_credits, 2000)
             else:
                 window.setTimeout(reset_game, 3000)
 
