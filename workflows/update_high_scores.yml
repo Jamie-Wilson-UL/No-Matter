@@ -5,26 +5,26 @@ on:
     types: [update-high-scores]
 
 jobs:
-  update_high_scores:
+  updateHighScores:
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyyaml
+
     - name: Update high scores
       run: |
-        echo ${{ github.event.client_payload.name }} ${{ github.event.client_payload.score }}
-        jq --arg name "${{ github.event.client_payload.name }}" --argjson score "${{ github.event.client_payload.score }}" \
-        '. |= [{name: $name, score: $score}] + . | sort_by(-.score) | .[:3]' high_score.json > tmp.json \
-        && mv tmp.json high_score.json
-
-    - name: Commit and push changes
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add high_score.json
-        git commit -m "Update high scores"
-        git push
+        echo "Updating high scores"
+        python update_high_scores.py
       env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
