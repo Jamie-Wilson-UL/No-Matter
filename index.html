@@ -221,7 +221,7 @@
 
             def submit_name(event):
                 event.preventDefault()
-                global top_scores
+                global top_scores, showing_high_score_prompt
                 player_name = input_box.value.strip()
                 if player_name:
                     top_scores.append({"name": player_name, "score": score})
@@ -230,7 +230,10 @@
                     window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
                     form.remove()
                     showing_high_score_prompt = False
-                    show_credits()
+                    if level > MAX_LEVELS:
+                        show_credits()
+                    else:
+                        window.setTimeout(reset_game, 3000)
 
             form.bind("submit", submit_name)
             input_box.focus()
@@ -539,3 +542,4 @@
     </script>
 </body>
 </html>
+
