@@ -418,6 +418,21 @@
                 else:
                     window.setTimeout(reset_game, 3000)
 
+        def submit_name(event):
+            global top_scores, score
+            player_name = player_name_input.value
+            if player_name:
+                top_scores.append({"name": player_name, "score": score})
+                top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
+                trigger_github_action(player_name, score)
+                hide_high_score_prompt()
+                if level > MAX_LEVELS:
+                    show_credits()
+                else:
+                    reset_game()
+
+        submit_name_button.bind("click", submit_name)
+
         def update():
             global game_over, score, game_started, showing_level_title, ENEMY_SPEED, boss_hits, boss_direction
 
