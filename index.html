@@ -32,7 +32,7 @@
         #high-score-form {
             position: absolute;
             left: calc(50% - 100px);
-            top: calc(70% - 40px);
+            top: calc(70% - 50px);
             width: 200px;
         }
         #player-name {
@@ -40,6 +40,13 @@
             height: 30px;
             font-size: 20px;
             font-family: 'Press Start 2P', cursive;
+        }
+        #submit-name {
+            width: 100px;
+            height: 30px;
+            font-size: 20px;
+            font-family: 'Press Start 2P', cursive;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -200,6 +207,13 @@
             input_box.style.fontSize = "20px"
             input_box.style.fontFamily = "'Press Start 2P', cursive"
             form <= input_box
+
+            submit_button = html.BUTTON("Submit", Id="submit-name")
+            submit_button.style.width = "100px"
+            submit_button.style.height = "30px"
+            submit_button.style.fontSize = "20px"
+            submit_button.style.fontFamily = "'Press Start 2P', cursive"
+            form <= submit_button
 
             document <= form
 
