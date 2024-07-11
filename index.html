@@ -35,6 +35,7 @@
             width: 100%;
             height: 100%;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             background-color: black;
@@ -46,11 +47,15 @@
             border: 3px solid #00ff00;
             border-radius: 5px;
             overflow: hidden;
+            margin-top: 20px;
         }
         #loading-progress {
             height: 100%;
             width: 0;
             background-color: #00ff00;
+        }
+        #loading-text {
+            font-size: 24px;
         }
         #high-score-modal {
             display: none;
@@ -94,6 +99,7 @@
 </head>
 <body onload="brython()">
     <div id="loading-bar-container">
+        <div id="loading-text">Loading...</div>
         <div id="loading-bar">
             <div id="loading-progress"></div>
         </div>
@@ -183,15 +189,15 @@
         submit_name_button = document["submit-name"]
 
         assets_loaded = 0
-        total_assets = 6  # spaceship_img, title_img, boss_img, 3 audio files
+        total_assets = 10  # Count of all assets to be loaded
 
-        def asset_loaded():
+        def asset_loaded(event):
             global assets_loaded
             assets_loaded += 1
             progress = (assets_loaded / total_assets) * 100
             loading_progress.style.width = f"{progress}%"
             if assets_loaded == total_assets:
-                start_game()
+                window.setTimeout(start_game, 500)
 
         def start_game():
             loading_bar_container.style.display = "none"
@@ -603,13 +609,15 @@
 
         # Load assets and track progress
         def load_assets():
-            spaceship_img.bind('load', lambda e: asset_loaded())
-            title_img.bind('load', lambda e: asset_loaded())
-            boss_img.bind('load', lambda e: asset_loaded())
-            background_audio.bind('canplaythrough', lambda e: asset_loaded())
-            boss_audio.bind('canplaythrough', lambda e: asset_loaded())
-            laser_audio.bind('canplaythrough', lambda e: asset_loaded())
-            explosion_audio.bind('canplaythrough', lambda e: asset_loaded())
+            spaceship_img.bind('load', asset_loaded)
+            title_img.bind('load', asset_loaded)
+            boss_img.bind('load', asset_loaded)
+            for face in faces:
+                face.bind('load', asset_loaded)
+            background_audio.bind('canplaythrough', asset_loaded)
+            boss_audio.bind('canplaythrough', asset_loaded)
+            laser_audio.bind('canplaythrough', asset_loaded)
+            explosion_audio.bind('canplaythrough', asset_loaded)
 
         load_assets()
     </script>
