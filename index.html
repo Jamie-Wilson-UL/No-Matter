@@ -56,6 +56,8 @@
         }
         #loading-text {
             font-size: 24px;
+            font-family: 'Press Start 2P', cursive;
+            color: #00ff00;
         }
         #high-score-modal {
             display: none;
@@ -187,17 +189,6 @@
         high_score_modal = document["high-score-modal"]
         player_name_input = document["player-name"]
         submit_name_button = document["submit-name"]
-
-        assets_loaded = 0
-        total_assets = 10  # Count of all assets to be loaded
-
-        def asset_loaded(event):
-            global assets_loaded
-            assets_loaded += 1
-            progress = (assets_loaded / total_assets) * 100
-            loading_progress.style.width = f"{progress}%"
-            if assets_loaded == total_assets:
-                window.setTimeout(start_game, 500)
 
         def start_game():
             loading_bar_container.style.display = "none"
@@ -607,19 +598,13 @@
                 draw_start_screen()
                 window.requestAnimationFrame(lambda x: animate_title_screen())
 
-        # Load assets and track progress
-        def load_assets():
-            spaceship_img.bind('load', asset_loaded)
-            title_img.bind('load', asset_loaded)
-            boss_img.bind('load', asset_loaded)
-            for face in faces:
-                face.bind('load', asset_loaded)
-            background_audio.bind('canplaythrough', asset_loaded)
-            boss_audio.bind('canplaythrough', asset_loaded)
-            laser_audio.bind('canplaythrough', asset_loaded)
-            explosion_audio.bind('canplaythrough', asset_loaded)
+        # Simple loading screen
+        def show_loading_screen():
+            loading_bar_container.style.display = "flex"
+            canvas.style.display = "none"
+            window.setTimeout(start_game, 3000)  # Show loading screen for 3 seconds
 
-        load_assets()
+        show_loading_screen()
     </script>
 </body>
 </html>
