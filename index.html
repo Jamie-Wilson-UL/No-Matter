@@ -57,7 +57,7 @@
         #loading-text {
             font-size: 24px;
             font-family: 'Press Start 2P', cursive;
-            color: #00ff00;
+            color: white;
         }
         #high-score-modal {
             display: none;
@@ -189,6 +189,14 @@
         high_score_modal = document["high-score-modal"]
         player_name_input = document["player-name"]
         submit_name_button = document["submit-name"]
+
+        def asset_loaded(event):
+            global assets_loaded
+            assets_loaded += 1
+            progress = (assets_loaded / total_assets) * 100
+            loading_progress.style.width = f"{progress}%"
+            if assets_loaded == total_assets:
+                start_game()
 
         def start_game():
             loading_bar_container.style.display = "none"
