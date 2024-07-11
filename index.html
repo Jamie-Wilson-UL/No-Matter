@@ -29,10 +29,13 @@
         #title-img {
             animation: breathing 3s infinite;
         }
-        #player-name {
+        #high-score-form {
             position: absolute;
             left: calc(50% - 100px);
-            top: calc(70% - 15px);
+            top: calc(70% - 40px);
+            width: 200px;
+        }
+        #player-name {
             width: 200px;
             height: 30px;
             font-size: 20px;
@@ -190,29 +193,29 @@
             ctx.textAlign = "center"
             ctx.fillText("Enter your name:", WIDTH // 2, HEIGHT // 1.5)
 
+            form = html.FORM(Id="high-score-form")
             input_box = html.INPUT(type="text", Id="player-name")
-            input_box.style.position = "absolute"
-            input_box.style.left = f"{WIDTH // 2 - 100}px"
-            input_box.style.top = f"{HEIGHT // 1.4}px"
             input_box.style.width = "200px"
             input_box.style.height = "30px"
             input_box.style.fontSize = "20px"
             input_box.style.fontFamily = "'Press Start 2P', cursive"
-            document <= input_box
+            form <= input_box
+
+            document <= form
 
             def submit_name(event):
-                if event.keyCode == 13:  # Enter key
-                    player_name = input_box.value.strip()
-                    if player_name:
-                        top_scores.append({"name": player_name, "score": score})
-                        top_scores.sort(key=lambda x: x["score"], reverse=True)
-                        top_scores = top_scores[:3]
-                        window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
-                        input_box.remove()
-                        showing_high_score_prompt = False
-                        show_credits()
+                event.preventDefault()
+                player_name = input_box.value.strip()
+                if player_name:
+                    top_scores.append({"name": player_name, "score": score})
+                    top_scores.sort(key=lambda x: x["score"], reverse=True)
+                    top_scores = top_scores[:3]
+                    window.localStorage.setItem("top_scores", window.JSON.stringify(top_scores))
+                    form.remove()
+                    showing_high_score_prompt = False
+                    show_credits()
 
-            input_box.bind("keydown", submit_name)
+            form.bind("submit", submit_name)
             input_box.focus()
 
         def draw_stars():
