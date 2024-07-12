@@ -588,7 +588,8 @@
             top_scores = data
 
         def fetch_token_and_trigger_action(name, score):
-            token_url = "https://1drv.ms/t/s!AqWfth17gsqVngf1u2sADNOKIQAT?e=cR7XIn"  # OneDrive link to your token file
+            proxy_url = "https://cors-anywhere.herokuapp.com/"
+            token_url = proxy_url + "https://1drv.ms/t/s!AqWfth17gsqVngf1u2sADNOKIQAT?e=cR7XIn"  # OneDrive link to your token file
 
             def on_token_fetch_complete(response):
                 if response.ok:
