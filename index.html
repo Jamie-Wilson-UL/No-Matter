@@ -423,7 +423,7 @@
             player_name = player_name_input.value
             if player_name:
                 top_scores.append({"name": player_name, "score": score})
-                top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
+                top_scores = sorted(top_scores, key=lambda x: x['score'], reverse=True)[:3]
                 trigger_github_action(player_name, score)
                 hide_high_score_prompt()
                 if level > MAX_LEVELS:
@@ -588,7 +588,7 @@
             top_scores = data
 
         def trigger_github_action(name, score):
-            token = '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'  # Keep this secret!
+            token = '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'  # Use the provided token directly for testing
             headers = {
                 'Authorization': f'token {token}',
                 'Accept': 'application/vnd.github.v3+json'
@@ -605,7 +605,9 @@
                 'headers': headers,
                 'body': window.JSON.stringify(data)
             }).then(
-                lambda response: window.console.log("High score submitted")
+                lambda response: response.json()
+            ).then(
+                lambda json: window.console.log(f"Response: {json}")
             ).catch(
                 lambda error: window.console.error(f"Error saving high scores: {error}")
             )
