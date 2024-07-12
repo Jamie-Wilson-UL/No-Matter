@@ -7,8 +7,17 @@ from datetime import datetime
 response = requests.get('https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json')
 high_scores = response.json()
 
-# The new score to be added, replace with actual data
-new_score = {"name": os.getenv('PLAYER_NAME'), "score": int(os.getenv('PLAYER_SCORE'))}
+# Get the new score from the environment variables
+player_name = os.getenv('PLAYER_NAME')
+player_score = os.getenv('PLAYER_SCORE')
+
+if not player_name or not player_score:
+    raise ValueError("Player name or score not set in environment variables")
+
+try:
+    new_score = {"name": player_name, "score": int(player_score)}
+except ValueError:
+    raise ValueError("Invalid player score: must be an integer")
 
 # Update the high scores list
 high_scores.append(new_score)
