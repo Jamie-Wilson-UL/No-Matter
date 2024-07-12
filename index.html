@@ -621,7 +621,9 @@
 
         def initialize_high_score():
             global top_scores
-            window.fetch('https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json').then(
+            timestamp = window.Date.new().getTime()
+            url = f'https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json?nocache={timestamp}'
+            window.fetch(url).then(
                 lambda response: response.json()
             ).then(
                 lambda data: update_high_scores(data)
