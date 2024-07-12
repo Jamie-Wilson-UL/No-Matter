@@ -588,7 +588,7 @@
             top_scores = data
 
         def trigger_github_action(name, score):
-            token = window.localStorage.getItem('GH_TOKEN')  # Ensure the token is stored and retrieved securely
+            token = 'YOUR_NEW_GITHUB_TOKEN'  # Replace this with the actual GitHub token for testing
             headers = {
                 'Authorization': f'token {token}',
                 'Accept': 'application/vnd.github.v3+json'
@@ -611,6 +611,7 @@
             ).catch(
                 lambda error: window.console.error(f"Error saving high scores: {error}")
             )
+
 
 
         document.bind("keydown", move_player)
