@@ -28,4 +28,3 @@ jobs:
         python update_high_scores.py
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
