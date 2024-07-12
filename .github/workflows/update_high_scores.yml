@@ -27,4 +27,13 @@ jobs:
         echo "Updating high scores"
         python update_high_scores.py
       env:
+        PLAYER_NAME: ${{ github.event.client_payload.PLAYER_NAME }}
+        PLAYER_SCORE: ${{ github.event.client_payload.PLAYER_SCORE }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+    - name: Update high scores
+      run: |
+        echo "Updating high scores"
+        python update_high_scores.py
+      env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
