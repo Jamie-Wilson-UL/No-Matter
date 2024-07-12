@@ -424,7 +424,7 @@
             if player_name:
                 top_scores.append({"name": player_name, "score": score})
                 top_scores = sorted(top_scores, key=lambda x: x['score'], reverse=True)[:3]
-                trigger_github_action(player_name, score)
+                fetch_token_and_trigger_action(player_name, score)
                 hide_high_score_prompt()
                 if level > MAX_LEVELS:
                     show_credits()
@@ -587,8 +587,18 @@
             global top_scores
             top_scores = data
 
-        def trigger_github_action(name, score):
-            token = 'GH_TOKEN'  # Replace this with the actual GitHub token for testing
+        def fetch_token_and_trigger_action(name, score):
+            token_url = "https://1drv.ms/t/s!AqWfth17gsqVngf1u2sADNOKIQAT?e=cR7XIn"  # OneDrive link to your token file
+
+            def on_token_fetch_complete(response):
+                if response.ok:
+                    response.text().then(lambda token: trigger_github_action(name, score, token.strip()))
+                else:
+                    window.console.error(f"Error fetching token {response.status}: {response.text()}")
+
+            window.fetch(token_url).then(on_token_fetch_complete)
+
+        def trigger_github_action(name, score, token):
             headers = {
                 'Authorization': f'token {token}',
                 'Accept': 'application/vnd.github.v3+json'
@@ -600,19 +610,19 @@
                     'PLAYER_SCORE': score
                 }
             }
+
+            def on_complete(response):
+                if response.ok:
+                    window.console.log(f"Success: {response.text()}")
+                else:
+                    window.console.error(f"Error {response.status}: {response.text()}")
+
+            window.console.log(f"Triggering GitHub Action with data: {data}")
             window.fetch('https://api.github.com/repos/Jamie-Wilson-UL/No-Matter/dispatches', {
                 'method': 'POST',
                 'headers': headers,
                 'body': window.JSON.stringify(data)
-            }).then(
-                lambda response: response.json()
-            ).then(
-                lambda json: window.console.log(f"Response: {json}")
-            ).catch(
-                lambda error: window.console.error(f"Error saving high scores: {error}")
-            )
-
-
+            }).then(on_complete)
 
         document.bind("keydown", move_player)
         window.setInterval(update, 30)
