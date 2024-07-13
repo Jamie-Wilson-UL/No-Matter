@@ -1,14 +1,14 @@
 [
     {
-        "name": "Test Player",
-        "score": 12345
+        "name": "Totoro",
+        "score": 1000
+    },
+    {
+        "name": "Turban Jr.",
+        "score": 200
     },
     {
         "name": "Jamie",
-        "score": 221
-    },
-    {
-        "name": "Jamie",
-        "score": 202
+        "score": 100
     }
 ]
