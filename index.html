@@ -129,7 +129,7 @@
 
         WIDTH, HEIGHT = 800, 600
         PLAYER_SIZE = 50
-        ENEMY_SIZE = 50
+        ENEMY_SIZE = 40  # Reduced enemy size
         BOSS_SIZE = 200
         BULLET_WIDTH, BULLET_HEIGHT = 5, 20
         PLAYER_SPEED = 10
@@ -146,7 +146,6 @@
         game_over = False
         game_started = False
         showing_level_title = False
-        showing_credits = False
         showing_final_score = False
         showing_high_score_prompt = False
         ENEMY_SPEED = 1.5
@@ -157,7 +156,6 @@
         boss_laser_cooldown = 4000
         boss_last_diagonal_shot = 0
         boss_diagonal_cooldown = 1500
-        credits_y = HEIGHT
         level_start_time = 0
         top_scores = []
         high_score_updated = False
@@ -212,7 +210,8 @@
         def initialize_game():
             global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits, level_start_time
             if level <= MAX_LEVELS:
-                enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(3) for col in range(8)]
+                rows = 3 + level  # Increase number of rows with each level
+                enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(rows) for col in range(8)]
             else:
                 enemies = []
                 boss_hits = 0
@@ -227,13 +226,12 @@
             level_start_time = window.Date.new().getTime()
 
         def reset_game():
-            global level, game_started, game_over, score, showing_level_title, showing_credits, showing_high_score_prompt, showing_final_score
+            global level, game_started, game_over, score, showing_level_title, showing_high_score_prompt, showing_final_score
             level = 1
             game_over = False
             game_started = False
             score = 0
             showing_level_title = False
-            showing_credits = False
             showing_final_score = False
             showing_high_score_prompt = False
             animate_title_screen()
@@ -300,7 +298,7 @@
                     star["x"] = window.Math.random() * WIDTH
 
         def draw():
-            global game_over, game_started, showing_level_title, showing_credits, credits_y, showing_high_score_prompt, showing_final_score
+            global game_over, game_started, showing_level_title, showing_high_score_prompt, showing_final_score
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
             move_stars()
             draw_stars()
@@ -310,9 +308,7 @@
             else:
                 ctx.fillStyle = "rgba(0, 0, 255, 0.1)"
                 ctx.fillRect(0, 0, WIDTH, HEIGHT)
-            if showing_credits:
-                draw_credits()
-            elif not game_started:
+            if not game_started:
                 draw_start_screen()
             elif showing_level_title:
                 draw_level_title()
@@ -363,41 +359,6 @@
                     game_over = True
                     window.setTimeout(show_final_score, 3000)
 
-        def show_credits():
-            global showing_credits, credits_y
-            showing_credits = True
-            credits_y = HEIGHT
-            boss_audio.pause()
-            background_audio.play()
-            window.setTimeout(animate_credits, 1000)
-
-        def draw_credits():
-            global credits_y
-            ctx.clearRect(0, 0, WIDTH, HEIGHT)
-            ctx.fillStyle = "white"
-            ctx.font = "48px 'Press Start 2P'"
-            ctx.textAlign = "center"
-            ctx.fillText("Credits", WIDTH // 2, credits_y)
-            ctx.font = "24px 'Press Start 2P'"
-            credits_list = [
-                "Jamie Wilson: Development",
-                "Caitlin Palmer: Art and Design",
-                "Dan Kennedy: Play Tester",
-                "Jarlath Cowan: Moral Support"
-            ]
-            for i, credit in enumerate(credits_list):
-                ctx.fillText(credit, WIDTH // 2, credits_y + 50 * (i + 1))
-            credits_y -= 1
-
-            if credits_y < -50 * len(credits_list):
-                showing_credits = False
-                reset_game()
-
-        def animate_credits():
-            if showing_credits:
-                draw_credits()
-                window.requestAnimationFrame(lambda x: animate_credits())
-
         def show_final_score():
             global high_score_updated, showing_high_score_prompt, showing_final_score
             high_score_updated = False
@@ -413,10 +374,7 @@
                 showing_high_score_prompt = True
                 show_high_score_prompt()
             else:
-                if level > MAX_LEVELS:
-                    window.setTimeout(show_credits, 3000)
-                else:
-                    window.setTimeout(reset_game, 3000)
+                window.setTimeout(reset_game, 3000)
 
         def submit_name(event):
             global top_scores, score
@@ -426,10 +384,7 @@
                 top_scores = sorted(top_scores, key=lambda x: x['score'], reverse=True)[:3]
                 trigger_github_action(player_name, score)
                 hide_high_score_prompt()
-                if level > MAX_LEVELS:
-                    show_credits()
-                else:
-                    reset_game()
+                reset_game()
 
         submit_name_button.bind("click", submit_name)
 
@@ -582,7 +537,7 @@
         def level_up():
             global level, showing_level_title, score
             level += 1
-            time_bonus = max(0, int((100000 - (window.Date.new().getTime() - level_start_time)) / 1000))
+            time_bonus = max(0, int((120000 - (window.Date.new().getTime() - level_start_time)) / 800))  # Increase time bonus slightly
             score += time_bonus
             showing_level_title = True
             draw_level_title()
