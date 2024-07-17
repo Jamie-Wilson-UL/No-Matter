@@ -210,7 +210,10 @@
 
         def initialize_game():
             global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits, level_start_time
-            rows = 3 + level - 1  # Add one extra row for each level
+            if level == 3:
+                rows = 4  # Level 3 has four rows
+            else:
+                rows = 3  # All other levels have three rows
             cols = 8 + level  # Add one extra column for each level
             if level <= MAX_LEVELS:
                 enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(rows) for col in range(cols)]
@@ -262,6 +265,7 @@
             draw_stars()
             ctx.fillStyle = "yellow"
             ctx.font = "bold 48px 'Press Start 2P'"
+            ctx.textAlign = "center"
             if level > MAX_LEVELS:
                 ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 2)
             else:
