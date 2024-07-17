@@ -209,9 +209,10 @@
 
         def initialize_game():
             global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits, level_start_time
-            rows = 3  # Keep number of rows the same for each level
+            rows = 3 + level  # Add one extra row for each level
+            cols = 8 + level  # Add one extra column for each level
             if level <= MAX_LEVELS:
-                enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(rows) for col in range(8)]
+                enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(rows) for col in range(cols)]
             else:
                 enemies = []
                 boss_hits = 0
@@ -264,6 +265,7 @@
                 ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 2)
             else:
                 ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
+            window.setTimeout(initialize_game, 1000)
 
         def draw_final_score():
             ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -543,7 +545,6 @@
             score += time_bonus
             showing_level_title = True
             draw_level_title()
-            window.setTimeout(initialize_game, 1000)
 
         def start_game():
             global showing_level_title, game_started
@@ -641,4 +642,3 @@
     </script>
 </body>
 </html>
-
