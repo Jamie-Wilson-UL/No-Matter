@@ -210,10 +210,7 @@
 
         def initialize_game():
             global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots, showing_level_title, ENEMY_SPEED, game_over, level, game_started, score, boss_hits, level_start_time
-            if level == 3:
-                rows = 4  # Level 3 has four rows
-            else:
-                rows = 3  # All other levels have three rows
+            rows = 3  # Always have three rows of enemies
             cols = 8 + level  # Add one extra column for each level
             if level <= MAX_LEVELS:
                 enemies = [{"pos": [col * (ENEMY_SIZE + 10) + 50, row * (ENEMY_SIZE + 10) + 50], "img": faces[int(window.Math.random() * len(faces))]} for row in range(rows) for col in range(cols)]
