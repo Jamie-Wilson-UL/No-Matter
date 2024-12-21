@@ -58,7 +58,7 @@
       height: 100%;
       width: 0;
       background-color: #00ff00;
-      animation: fill 3s linear forwards;
+      animation: fill 3s linear forwards; /* 3s fill */
     }
     #loading-text {
       font-size: 24px;
@@ -104,6 +104,15 @@
       border: none;
       cursor: pointer;
     }
+
+    /* ### ADDED: A "Press SPACE to Continue" message */
+    #press-space-loading {
+      display: none; /* hidden initially */
+      font-size: 20px;
+      font-family: 'Press Start 2P', monospace;
+      color: white;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body onload="brython()">
@@ -114,6 +123,8 @@
     <div id="loading-bar">
       <div id="loading-progress"></div>
     </div>
+    <!-- ### ADDED: "Press SPACE" message for loading screen -->
+    <p id="press-space-loading">Press SPACE to Continue</p>
   </div>
 
   <!-- GAME CANVAS -->
@@ -191,9 +202,8 @@
     top_scores = []
     high_score_updated = False
 
-    # ### ADDED: We introduce `audio_unlocked = False`.
-    # We'll only play audio after user presses space once.
-    audio_unlocked = False  # <--- crucial fix
+    # ### ADDED: We'll only play audio after user input
+    audio_unlocked = False
 
     # Positions
     player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
@@ -271,12 +281,14 @@
     canvas = document["game-canvas"]
     ctx = canvas.getContext("2d")
     loading_bar_container = document["loading-bar-container"]
-    loading_bar = document["loading-bar"]
     loading_progress = document["loading-progress"]
 
     high_score_modal = document["high-score-modal"]
     player_name_input = document["player-name"]
     submit_name_button = document["submit-name"]
+
+    # ### ADDED: reference to the "Press SPACE" text in loading
+    press_space_loading = document["press-space-loading"]
 
     # -------------
     # AUDIO CONTROL
@@ -310,7 +322,9 @@
     def set_music_for_title_screen():
         """Plays the title audio for the title page."""
         stop_all_music()
-        title_audio.play()
+        # only play if audio_unlocked (will be set True once user pressed space)
+        if audio_unlocked:
+            title_audio.play()
 
     # -------------------------------------------------
     # SCALING UTILITY: CAP DIMENSIONS PRESERVING RATIO
@@ -337,10 +351,7 @@
     def show_title_screen():
         loading_bar_container.style.display = "none"
         canvas.style.display = "block"
-        ### We do NOT call set_music_for_title_screen() here automatically 
-        ### if we want to ensure the user pressed space. 
-        ### But your existing code does, so let's keep it.
-        set_music_for_title_screen()
+        set_music_for_title_screen()       # <--- Will only play if audio_unlocked
         initialize_high_score()
         animate_title_screen()
 
@@ -876,18 +887,19 @@
         initialize_game()
 
     def move_player(event):
-        global game_started, game_over, player_last_shot
-
+        global game_started, game_over, player_last_shot, audio_unlocked
         current_time = window.Date.new().getTime()
 
-        ### CHANGED: If user pressed space, we check if audio_unlocked is False.
-        ### If so, we set it True and then do set_music_for_title_screen, etc.
-        global audio_unlocked
         if event.keyCode == 32:  # SPACE
-            if not audio_unlocked:
-                audio_unlocked = True
-                # Now we can safely start the title audio (or whichever you want)
+            ### If the loading overlay is still up, we remove it & show the title screen
+            if loading_bar_container.style.display != "none":
+                loading_bar_container.style.display = "none"
+                canvas.style.display = "block"
+                audio_unlocked = True  # user gesture
                 set_music_for_title_screen()
+                initialize_high_score()
+                animate_title_screen()
+                return
 
             if not game_started:
                 # Start the game from the title screen
@@ -952,9 +964,10 @@
     def show_loading_screen():
         loading_bar_container.style.display = "flex"
         canvas.style.display = "none"
-        # ### REMOVED the old call to show_title_screen after 3s
-        # we wait for user pressing space
-        # window.setTimeout(show_title_screen, 3000) # commented out
+        # After 3s fill, show "Press SPACE"
+        def reveal_press_space():
+            document["press-space-loading"].style.display = "block"
+        window.setTimeout(reveal_press_space, 3000)
 
     # Start
     show_loading_screen()
