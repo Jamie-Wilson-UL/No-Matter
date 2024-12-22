@@ -140,7 +140,6 @@
 
   <script type="text/python">
     from browser import document, html, window
-    from browser import ajax
     import json
 
     # ---------------------------------------------------------
@@ -304,10 +303,9 @@
             print("Playing boss_audio")
 
     def set_music_for_title_screen():
-        """Plays the title audio for the title page."""
+        """Prepares the title audio for playback after user interaction."""
         print("Setting music for title screen")
         stop_all_music()
-        # Delay playing audio until user interacts
         # Do not autoplay to comply with browser policies
         print("Title music will play after user interaction")
 
@@ -329,6 +327,7 @@
     # LOADING SCREEN UTILS
     # -------------------------------------------------
     assets_loaded = 0
+    # Correct total_assets calculation based on unique assets
     total_assets = 3 + sum(len(imgs) for imgs in level_image_paths.values())  # spaceship, title, boss + level images
 
     def asset_loaded(asset_status):
@@ -1046,8 +1045,10 @@
             else:
                 print(f"Failed to fetch high scores. Status: {req.status}")
         
-        req = ajax.ajax()
-        req.bind('complete', on_complete)
+        req = window.XMLHttpRequest.new()
+        req.onreadystatechange = lambda: (
+            on_complete(req) if req.readyState == 4 else None
+        )
         req.open('GET', url, True)
         req.send()
 
@@ -1183,4 +1184,5 @@
   </script>
 </body>
 </html>
+
 
