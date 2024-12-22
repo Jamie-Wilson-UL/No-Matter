@@ -58,8 +58,7 @@
       height: 100%;
       width: 0;
       background-color: #00ff00;
-      /* Commented out to test if it affects the issue */
-      /* animation: fill 3s linear forwards; */
+      /* Removed animation to prevent interference with dynamic width updates */
     }
     #loading-text {
       font-size: 24px;
@@ -341,6 +340,7 @@
         if assets_loaded == total_assets:
             print("All assets loaded.")
             show_title_screen()
+        return  # Explicitly return None to prevent 'undefined' from appearing
 
     # Bind load events for all images
     spaceship_img.bind("load", lambda e: asset_loaded("spaceship_img"))
@@ -503,7 +503,7 @@
             ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
 
         print("Scheduling initialize_game() in 1 second")
-        window.set_timeout(initialize_game, 1000)  # Proceed to initialize the game after 1 second
+        window.setTimeout(initialize_game, 1000)  # Proceed to initialize the game after 1 second
 
         # Reset the flag to prevent re-drawing
         global showing_level_title
@@ -529,7 +529,7 @@
             show_high_score_prompt()
         else:
             print("No high score update: Scheduling game reset in 3 seconds")
-            window.set_timeout(reset_game, 3000)
+            window.setTimeout(reset_game, 3000)
 
     def show_high_score_prompt():
         print("Displaying high score modal")
@@ -633,7 +633,7 @@
                 ctx.font = "48px 'Press Start 2P'"
                 ctx.textAlign = "center"
                 ctx.fillText("GAME OVER", WIDTH // 2, HEIGHT // 2)
-                window.set_timeout(show_final_score, 3000)
+                window.setTimeout(show_final_score, 3000)
 
             # If boss is beaten
             if boss_hits >= BOSS_HITS_REQUIRED and not game_over:
@@ -645,7 +645,7 @@
                     ctx.font = "48px 'Press Start 2P'"
                     ctx.textAlign = "center"
                     ctx.fillText("YOU WIN!", WIDTH // 2, HEIGHT // 2)
-                    window.set_timeout(show_final_score, 3000)
+                    window.setTimeout(show_final_score, 3000)
 
             # Level up if no enemies remain
             if len(enemies) == 0 and level <= MAX_LEVELS and not game_over:
@@ -1024,9 +1024,9 @@
     # EVENT BIND
     # -----------
     window.bind("keydown", move_player)  # Changed from document.bind to window.bind
-    window.set_interval(update, 30)       # Approximately 33 FPS
-    window.set_interval(enemy_shoot, 500)
-    window.set_interval(toggle_flash_text, 1000)
+    window.setInterval(update, 30)       # Approximately 33 FPS
+    window.setInterval(enemy_shoot, 500)
+    window.setInterval(toggle_flash_text, 1000)
 
     # Simple loading screen
     def show_loading_screen():
