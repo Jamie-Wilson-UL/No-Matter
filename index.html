@@ -142,7 +142,7 @@
   </div>
 
   <script type="text/python">
-    from browser import document, html, window, timer
+    from browser import document, html, window
 
     # ---------------------------------------------------------
     # GAME CONSTANTS (collision boxes, speeds, bullet sizes, etc.)
@@ -502,7 +502,7 @@
             ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
 
         print("Scheduling initialize_game() in 1 second")
-        timer.set_timeout(initialize_game, 1000)  # Proceed to initialize the game after 1 second
+        window.set_timeout(initialize_game, 1000)  # Proceed to initialize the game after 1 second
 
         # Reset the flag to prevent re-drawing
         global showing_level_title
@@ -528,7 +528,7 @@
             show_high_score_prompt()
         else:
             print("No high score update: Scheduling game reset in 3 seconds")
-            timer.set_timeout(reset_game, 3000)
+            window.set_timeout(reset_game, 3000)
 
     def show_high_score_prompt():
         print("Displaying high score modal")
@@ -632,7 +632,7 @@
                 ctx.font = "48px 'Press Start 2P'"
                 ctx.textAlign = "center"
                 ctx.fillText("GAME OVER", WIDTH // 2, HEIGHT // 2)
-                timer.set_timeout(show_final_score, 3000)
+                window.set_timeout(show_final_score, 3000)
 
             # If boss is beaten
             if boss_hits >= BOSS_HITS_REQUIRED and not game_over:
@@ -644,7 +644,7 @@
                     ctx.font = "48px 'Press Start 2P'"
                     ctx.textAlign = "center"
                     ctx.fillText("YOU WIN!", WIDTH // 2, HEIGHT // 2)
-                    timer.set_timeout(show_final_score, 3000)
+                    window.set_timeout(show_final_score, 3000)
 
             # Level up if no enemies remain
             if len(enemies) == 0 and level <= MAX_LEVELS and not game_over:
@@ -864,7 +864,6 @@
                     print(f"Enemy moved down to {enemy['pos'][1]}")
                 ENEMY_SPEED = -ENEMY_SPEED
                 print("Enemies moved down and reversed direction")
-
         else:
             # Boss movement
             boss_pos[0] += boss_direction * 10
