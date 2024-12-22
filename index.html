@@ -376,7 +376,7 @@
             window.console.log(f"Displayed 'Level {level}' title.")
 
         # Proceed to initialize the game after 1 second
-        window.setTimeout(initialize_game, 1000)
+        window.setTimeout(lambda x: initialize_game(), 1000)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # 11) DRAW FINAL SCORE
@@ -714,7 +714,6 @@
                     e5["pos"][1] += ENEMY_SIZE
                 ENEMY_SPEED = -ENEMY_SPEED
                 window.console.log(f"Enemies changed direction. New speed: {ENEMY_SPEED}")
-
         else:
             # Boss movement
             boss_pos[0] += boss_direction * 10
