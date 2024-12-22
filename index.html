@@ -271,7 +271,8 @@
     canvas = document["game-canvas"]
     ctx = canvas.getContext("2d")
     loading_bar_container = document["loading-bar-container"]
-    press_space_loading = document.getElementById("press-space-loading") if "press-space-loading" in document else None
+    loading_progress = document["loading-progress"]
+    press_space_loading = document["press-space-loading"]
 
     high_score_modal = document["high-score-modal"]
     player_name_input = document["player-name"]
@@ -644,12 +645,12 @@
                 level_up()
                 window.console.log(f"Level up to Level {level}.")
 
-    def show_final_score_wrapper():
-        show_final_score()
-
     # ---------------------------
     # SHOW FINAL SCORE
     # ---------------------------
+    def show_final_score_wrapper():
+        show_final_score()
+
     def show_final_score():
         global high_score_updated, showing_high_score_prompt, showing_final_score
         high_score_updated = False
@@ -1024,4 +1025,3 @@
   </script>
 </body>
 </html>
-
