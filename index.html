@@ -333,7 +333,7 @@
     def show_title_screen():
         loading_bar_container.style.display = "none"
         canvas.style.display = "block"
-        set_music_for_title_screen()       # <--- Start title music
+        set_music_for_title_screen()       # Start title music
         initialize_high_score()
         animate_title_screen()
 
@@ -864,9 +864,9 @@
     # -----------
     def start_game():
         global showing_level_title, game_started
-        showing_level_title = False
-        game_started = True
-        initialize_game()
+        showing_level_title = True  # Enable Level 1 cover screen
+        game_started = True         # Indicate that the game has started
+        # Do not call initialize_game() directly here
 
     def move_player(event):
         global game_started, game_over, player_last_shot
@@ -945,4 +945,3 @@
   </script>
 </body>
 </html>
-
