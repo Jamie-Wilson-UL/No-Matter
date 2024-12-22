@@ -348,7 +348,11 @@
 
     for lvl, imgs in level_images.items():
         for img in imgs:
+            # Replace spaces with underscores in filenames
+            fixed_src = img.src.replace(" ", "_")
+            img.src = fixed_src
             img.bind("load", lambda e, lvl=lvl: asset_loaded(f"level{lvl}_img"))
+            img.bind("error", lambda e, lvl=lvl, src=img.src: asset_loaded(f"level{lvl}_img_failed"))
 
     def show_title_screen():
         print("Showing title screen")
@@ -356,7 +360,8 @@
         canvas.style.display = "block"
         set_music_for_title_screen()       # Start title music
         initialize_high_score()
-        animate_title_screen()
+        # No need for separate animation; main loop handles drawing
+        # draw_start_screen will be called by the main loop
 
     # ------------------------------
     # GAME INITIALIZATION / RESET
@@ -364,7 +369,6 @@
     def initialize_game():
         """
         Called when we actually start or move to a new level.
-        (But if we are showing the 'title screen', we haven't started yet.)
         """
         global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots
         global showing_level_title, ENEMY_SPEED, game_over, level
@@ -444,7 +448,7 @@
         showing_high_score_prompt = False
         final_score_scheduled = False
 
-        animate_title_screen()  # will call set_music_for_title_screen again
+        # The main loop will handle drawing the start screen again
 
     # ----------------------
     # DRAWING / RENDERING
@@ -522,6 +526,7 @@
             print("High score updated: Showing high score prompt")
             ctx.fillStyle = "yellow"
             ctx.font = "28px 'Press Start 2P'"
+            ctx.textAlign = "center"
             ctx.fillText("New High Score!", WIDTH // 2, HEIGHT // 1.7)
             show_high_score_prompt()
         else:
@@ -762,6 +767,7 @@
         global ENEMY_SPEED, boss_hits, boss_direction
 
         if game_over or not game_started or showing_level_title:
+            draw()
             return
 
         # Move player bullets
@@ -946,7 +952,6 @@
         print("Starting game: Enabling Level Title Screen")
         showing_level_title = True  # Enable Level 1 cover screen
         game_started = True         # Indicate that the game has started
-        # Do not call initialize_game() directly here
         print(f"showing_level_title set to {showing_level_title}, game_started set to {game_started}")
 
     def move_player(event):
@@ -1017,12 +1022,6 @@
     window.setInterval(update, 30)
     window.setInterval(enemy_shoot, 500)
     window.setInterval(toggle_flash_text, 1000)
-
-    # Title screen animation
-    def animate_title_screen():
-        if not game_started:
-            draw_start_screen()
-            window.requestAnimationFrame(lambda x: animate_title_screen())
 
     # Simple loading screen
     def show_loading_screen():
