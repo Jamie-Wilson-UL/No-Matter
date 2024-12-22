@@ -57,7 +57,7 @@
       height: 100%;
       width: 0;
       background-color: #00ff00;
-      /* Removed animation to allow dynamic updates based on asset loading */
+      transition: width 0.5s ease; /* Added transition for smooth width changes */
     }
     #loading-text {
       font-size: 24px;
@@ -501,7 +501,6 @@
             showing_level_title = False
             ENEMY_SPEED = 1.5 + level
             game_over = False
-            game_started = True
             level_start_time = window.Date.new().getTime()
 
             # Set music for the new level
@@ -862,21 +861,21 @@
             bullet[1] -= BULLET_SPEED
             if bullet[1] < 0:
                 bullets.remove(bullet)
-                print(f"Bullet removed for going off-screen: {bullet}")
+                # print(f"Bullet removed for going off-screen: {bullet}")  # Commented out
 
         # Move enemy bullets
         for bullet in enemy_bullets[:]:
             bullet[1] += ENEMY_BULLET_SPEED
             if bullet[1] > HEIGHT:
                 enemy_bullets.remove(bullet)
-                print(f"Enemy bullet removed for going off-screen: {bullet}")
+                # print(f"Enemy bullet removed for going off-screen: {bullet}")  # Commented out
 
         # Laser beams expire
         current_time = window.Date.new().getTime()
         for laser in laser_beams[:]:
             if current_time - laser["timestamp"] > LASER_DURATION:
                 laser_beams.remove(laser)
-                print(f"Laser beam removed after duration: {laser}")
+                # print(f"Laser beam removed after duration: {laser}")  # Commented out
 
         # Diagonal shots
         for shot in diagonal_shots[:]:
@@ -884,7 +883,7 @@
             shot["y"] += shot["dy"]
             if shot["y"] > HEIGHT or shot["x"] < 0 or shot["x"] > WIDTH:
                 diagonal_shots.remove(shot)
-                print(f"Diagonal shot removed for going off-screen: {shot}")
+                # print(f"Diagonal shot removed for going off-screen: {shot}")  # Commented out
 
         # Collisions with normal enemies
         if level <= MAX_LEVELS:
@@ -1098,15 +1097,21 @@
         print("Initializing high scores")
         timestamp = window.Date.new().getTime()
         url = f'https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json?nocache={timestamp}'
+        
         def on_complete(req):
             if req.status == 200 or req.status == 304:
                 try:
                     data = json.loads(req.responseText)
                     update_high_scores(data)
+                    print("High scores fetched and updated successfully.")
                 except Exception as e:
                     print(f"Error parsing high scores: {e}")
+                    # Proceed without high scores to prevent blocking
+                    show_title_screen()
             else:
                 print(f"Failed to fetch high scores. Status: {req.status}")
+                # Proceed without high scores to prevent blocking
+                show_title_screen()
         
         req = window.XMLHttpRequest.new()
         req.onreadystatechange = lambda: (
@@ -1117,12 +1122,14 @@
 
     def update_high_scores(data):
         global top_scores
-        # Ensure data is a list of dictionaries
-        if isinstance(data, list):
-            top_scores = [dict(item) for item in data]
+        # Ensure data is a list of dictionaries with 'name' and 'score' keys
+        if isinstance(data, list) and all('name' in item and 'score' in item for item in data):
+            top_scores = sorted(data, key=lambda x: x['score'], reverse=True)[:3]
             print(f"High scores updated: {top_scores}")
         else:
-            print("High score data is not a list.")
+            print("Invalid high score data format.")
+            # Proceed without updating top_scores
+            top_scores = []
 
     # -----------
     # EVENT BIND
@@ -1243,7 +1250,7 @@
 
     # Start
     show_loading_screen()
-
   </script>
 </body>
 </html>
+
