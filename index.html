@@ -350,7 +350,7 @@
     # ------------------------------
     # GAME INITIALIZATION / RESET
     # ------------------------------
-    def initialize_game():
+    def initialize_game(event=None):
         """
         Called when we actually start or move to a new level.
         (But if we are showing the 'title screen', we haven't started yet.)
@@ -484,7 +484,8 @@
             ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
 
         print("Scheduling initialize_game() in 1 second")
-        window.setTimeout(lambda: initialize_game(), 1000)  # Proceed to initialize the game after 1 second
+        # Updated setTimeout with lambda that accepts the event parameter
+        window.setTimeout(lambda _: initialize_game(), 1000)  # Proceed to initialize the game after 1 second
 
     def draw_final_score():
         print("Drawing final score")
