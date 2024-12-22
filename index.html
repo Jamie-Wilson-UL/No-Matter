@@ -360,7 +360,6 @@
         if press_space_loading:
             press_space_loading.style.display = "block"
             window.console.log("Loading complete. Prompting to press SPACE.")
-        # Now, the user can press SPACE to proceed to title screen
 
     # ------------------------------
     # GAME INITIALIZATION / RESET
@@ -431,7 +430,8 @@
         final_score_scheduled = False
 
         window.console.log("Game reset.")
-        animate_title_screen()  # will call set_music_for_title_screen again
+        set_music_for_title_screen()
+        animate_title_screen()  # will call draw_start_screen again
 
     # ----------------------
     # DRAWING / RENDERING
@@ -460,6 +460,7 @@
 
         # Draw leaderboard
         ctx.font = "bold 28px 'Press Start 2P'"
+        ctx.textAlign = "center"
         ctx.fillText("Leaderboard", WIDTH // 2, int(HEIGHT / 1.3) - 40)
         window.console.log("Displayed leaderboard.")
 
@@ -473,7 +474,7 @@
                 )
             window.console.log("Displayed leaderboard entries.")
 
-    def draw_level_title():
+    def draw_level_title_screen():
         global showing_level_title
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
@@ -492,8 +493,12 @@
 
         # Proceed to initialize the game after 1 second
         showing_level_title = True
-        window.setTimeout(lambda: (window.console.log("Initializing game..."), initialize_game()), 1000)
-        window.console.log("Scheduled initialize_game to start Level {level} in 1 second.")
+        window.setTimeout(initialize_game_wrapper, 1000)
+        window.console.log(f"Scheduled initialize_game to start Level {level} in 1 second.")
+
+    def initialize_game_wrapper():
+        window.console.log("Initializing game...")
+        initialize_game()
 
     def draw_final_score():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -510,8 +515,11 @@
             window.console.log("Displayed 'New High Score!' prompt.")
             show_high_score_prompt()
         else:
-            window.setTimeout(reset_game, 3000)
+            window.setTimeout(reset_game_wrapper, 3000)
             window.console.log("Scheduled game reset after final score.")
+
+    def reset_game_wrapper():
+        reset_game()
 
     def show_high_score_prompt():
         high_score_modal.style.display = "block"
@@ -552,7 +560,7 @@
         if not game_started:
             draw_start_screen()
         elif showing_level_title:
-            draw_level_title()
+            draw_level_title_screen()
         elif showing_final_score:
             draw_final_score()
         else:
@@ -617,7 +625,7 @@
                 ctx.textAlign = "center"
                 ctx.fillText("GAME OVER", WIDTH // 2, HEIGHT // 2)
                 window.console.log("Displayed 'GAME OVER' screen.")
-                window.setTimeout(show_final_score, 3000)
+                window.setTimeout(show_final_score_wrapper, 3000)
 
             # YOU WIN
             if boss_hits >= BOSS_HITS_REQUIRED and not game_over:
@@ -629,16 +637,19 @@
                     ctx.textAlign = "center"
                     ctx.fillText("YOU WIN!", WIDTH // 2, HEIGHT // 2)
                     window.console.log("Displayed 'YOU WIN!' screen.")
-                    window.setTimeout(show_final_score, 3000)
+                    window.setTimeout(show_final_score_wrapper, 3000)
 
             # LEVEL UP
             if len(enemies) == 0 and level <= MAX_LEVELS and not game_over:
                 level_up()
                 window.console.log(f"Level up to Level {level}.")
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 14) SHOW FINAL SCORE
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def show_final_score_wrapper():
+        show_final_score()
+
+    # ---------------------------
+    # SHOW FINAL SCORE
+    # ---------------------------
     def show_final_score():
         global high_score_updated, showing_high_score_prompt, showing_final_score
         high_score_updated = False
@@ -650,9 +661,9 @@
         showing_final_score = True
         draw_final_score()
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 15) HIGH SCORE SUBMIT
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ---------------------------
+    # HIGH SCORE SUBMIT
+    # ---------------------------
     def submit_name(evt):
         global top_scores, score
         nm = player_name_input.value
@@ -661,7 +672,7 @@
             top_scores = sorted(top_scores, key=lambda x: x['score'], reverse=True)[:3]
             trigger_github_action(nm, score)
             hide_high_score_prompt()
-            reset_game()
+            reset_game_wrapper()
 
     submit_name_button.bind("click", submit_name)
 
@@ -726,9 +737,9 @@
 
         def on_complete(resp):
             if resp.ok:
-                window.console.log(f"Success: {resp.text()}")
+                window.console.log(f"Success: {resp.text}")
             else:
-                window.console.error(f"Error {resp.status}: {resp.text()}")
+                window.console.error(f"Error {resp.status}: {resp.text}")
 
         window.console.log(f"Triggering GitHub Action with data: {data}")
         window.fetch(
@@ -741,7 +752,7 @@
         ).then(on_complete)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 16) UPDATE + SHOOT
+    # 17) UPDATE + SHOOT
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def update():
         global game_over, score, game_started, showing_level_title, boss_hits, boss_direction
@@ -900,14 +911,14 @@
         score += time_bonus
         showing_level_title = True
         window.console.log(f"Level up to Level {level}. Time bonus: {time_bonus}")
-        draw_level_title()
+        draw_level_title_screen()
 
     def start_game():
         global showing_level_title, game_started
         showing_level_title = True
         game_started = True
         window.console.log("Game started. Showing Level Title.")
-        draw_level_title()
+        draw_level_title_screen()
 
     def move_player(event):
         global game_started, game_over, player_last_shot
@@ -917,8 +928,7 @@
             window.console.log("SPACE key pressed.")
             if loading_bar_container.style.display != "none":
                 # Hide overlay, show canvas
-                loading_bar_container.style.display = "none"
-                canvas.style.display = "block"
+                hide_loading_screen()
                 set_music_for_title_screen()
                 initialize_high_score()
                 animate_title_screen()
@@ -938,7 +948,7 @@
                     player_last_shot = ctime
                     window.console.log("Player shot a bullet.")
             elif game_over:
-                reset_game()
+                reset_game_wrapper()
                 window.console.log("Resetting the game after game over.")
         elif game_started and not showing_level_title and not game_over:
             if event.keyCode == 37 and player_pos[0] > 0:
@@ -986,18 +996,29 @@
     def animate_title_screen():
         if not game_started:
             draw_start_screen()
-            window.requestAnimationFrame(lambda x: animate_title_screen())
+            window.requestAnimationFrame(animate_title_screen)
         else:
             window.console.log("Stopped title screen animation after game start.")
 
-    # Simple loading screen
+    # ---------------------------
+    # HELPER FUNCTIONS
+    # ---------------------------
+    def hide_loading_screen():
+        loading_bar_container.style.display = "none"
+        press_space_loading.style.display = "block"
+        window.console.log("Hidden loading screen and showed 'Press SPACE to Continue' prompt.")
+
+    def reset_game_wrapper():
+        reset_game()
+
+    # ---------------------------
+    # START THE GAME
+    # ---------------------------
     def show_loading_screen():
         loading_bar_container.style.display = "flex"
         canvas.style.display = "none"
         preload_images()
-        window.setTimeout(lambda: (loading_bar_container.style.display = "none", press_space_loading.style.display = "block"), 3000)
 
-    # Start
     show_loading_screen()
 
   </script>
