@@ -279,6 +279,7 @@
     # -------------
     def stop_all_music():
         """Pause and reset all music tracks to time=0."""
+        print("Stopping all music")
         title_audio.pause();  title_audio.currentTime  = 0
         level2_audio.pause(); level2_audio.currentTime = 0
         level3_audio.pause(); level3_audio.currentTime = 0
@@ -292,21 +293,28 @@
           - Level 3 => level3_audio
           - Level > 3 => boss_audio
         """
+        print(f"Setting music for level {current_level}")
         stop_all_music()
         if current_level == 1:
             title_audio.play()
+            print("Playing title_audio")
         elif current_level == 2:
             level2_audio.play()
+            print("Playing level2_audio")
         elif current_level == 3:
             level3_audio.play()
+            print("Playing level3_audio")
         else:
             # Boss or beyond
             boss_audio.play()
+            print("Playing boss_audio")
 
     def set_music_for_title_screen():
         """Plays the title audio for the title page."""
+        print("Setting music for title screen")
         stop_all_music()
         title_audio.play()
+        print("Playing title_audio for title screen")
 
     # -------------------------------------------------
     # SCALING UTILITY: CAP DIMENSIONS PRESERVING RATIO
@@ -327,10 +335,12 @@
         assets_loaded += 1
         progress = (assets_loaded / total_assets) * 100
         loading_progress.style.width = f"{progress}%"
+        print(f"Asset loaded: {event}. Progress: {progress}%")
         if assets_loaded == total_assets:
             show_title_screen()
 
     def show_title_screen():
+        print("Showing title screen")
         loading_bar_container.style.display = "none"
         canvas.style.display = "block"
         set_music_for_title_screen()       # Start title music
@@ -350,6 +360,7 @@
         global game_started, score, boss_hits, level_start_time
         global final_score_scheduled
 
+        print(f"Initializing game for Level {level}")
         final_score_scheduled = False
 
         rows = 3
@@ -358,6 +369,7 @@
         if level <= MAX_LEVELS:
             current_level_images = level_images[level]
             enemies.clear()
+            print(f"Setting up enemies for Level {level} with {rows} rows and {cols} columns")
             for r in range(rows):
                 for c in range(cols):
                     img = current_level_images[
@@ -369,15 +381,18 @@
                         "img": img
                     })
             boss_hits = 0
+            print(f"Total enemies initialized: {len(enemies)}")
         else:
             # Boss time
             enemies.clear()
             boss_hits = 0
+            print("Boss time: Enemies cleared")
 
         bullets.clear()
         enemy_bullets.clear()
         laser_beams.clear()
         diagonal_shots.clear()
+        print("Cleared bullets, enemy bullets, laser beams, and diagonal shots")
 
         showing_level_title = False
         ENEMY_SPEED = 1.5 + level
@@ -400,6 +415,7 @@
         global showing_level_title, showing_high_score_prompt, showing_final_score
         global final_score_scheduled
 
+        print("Resetting game to title screen")
         level = 1
         game_over = False
         game_started = False
@@ -415,6 +431,7 @@
     # DRAWING / RENDERING
     # ----------------------
     def draw_start_screen():
+        print("Drawing start screen")
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
@@ -447,6 +464,7 @@
                 )
 
     def draw_level_title():
+        print(f"Drawing Level Title: Level {level}")
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
@@ -458,9 +476,11 @@
         else:
             ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
 
+        print("Scheduling initialize_game() in 1 second")
         window.setTimeout(initialize_game, 1000)
 
     def draw_final_score():
+        print("Drawing final score")
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
@@ -470,16 +490,20 @@
         ctx.fillText(f"Final Score: {score}", WIDTH // 2, HEIGHT // 2)
 
         if high_score_updated:
+            print("High score updated: Showing high score prompt")
             ctx.fillText("New High Score!", WIDTH // 2, HEIGHT // 1.7)
             show_high_score_prompt()
         else:
+            print("No high score update: Scheduling game reset in 3 seconds")
             window.setTimeout(reset_game, 3000)
 
     def show_high_score_prompt():
+        print("Displaying high score modal")
         high_score_modal.style.display = "block"
         player_name_input.focus()
 
     def hide_high_score_prompt():
+        print("Hiding high score modal")
         high_score_modal.style.display = "none"
         player_name_input.value = ""
 
@@ -498,6 +522,9 @@
     def draw():
         global game_over, game_started, showing_level_title
         global showing_high_score_prompt, showing_final_score, final_score_scheduled
+
+        # Uncomment the following line if you want to see when draw() is called
+        # print("Drawing game frame")
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
@@ -566,6 +593,7 @@
 
             # GAME OVER
             if game_over and not final_score_scheduled:
+                print("Game Over: Displaying GAME OVER text and scheduling final score")
                 final_score_scheduled = True
                 ctx.fillStyle = "red"
                 ctx.font = "48px 'Press Start 2P'"
@@ -575,6 +603,7 @@
 
             # If boss is beaten
             if boss_hits >= BOSS_HITS_REQUIRED and not game_over:
+                print("Boss defeated: Displaying YOU WIN text and scheduling final score")
                 game_over = True
                 if not final_score_scheduled:
                     final_score_scheduled = True
@@ -586,16 +615,19 @@
 
             # Level up if no enemies remain
             if len(enemies) == 0 and level <= MAX_LEVELS and not game_over:
+                print(f"No enemies left: Level {level} completed")
                 level_up()
 
     def show_final_score():
         global high_score_updated, showing_high_score_prompt, showing_final_score
         high_score_updated = False
 
+        print("Showing final score")
         for i in range(len(top_scores)):
             if score > top_scores[i]["score"]:
                 high_score_updated = True
                 showing_high_score_prompt = True
+                print(f"New high score achieved: {score} > {top_scores[i]['score']}")
                 break
 
         showing_final_score = True
@@ -607,6 +639,7 @@
     def submit_name(event):
         global top_scores, score
         player_name = player_name_input.value
+        print(f"Submitting name: {player_name} with score: {score}")
         if player_name:
             top_scores.append({"name": player_name, "score": score})
             top_scores = sorted(top_scores, key=lambda x: x['score'], reverse=True)[:3]
@@ -662,6 +695,7 @@
         return ''.join(token)
 
     def trigger_github_action(name, score):
+        print(f"Triggering GitHub Action for {name} with score {score}")
         token = transform_token()
         headers = {
             'Authorization': f'token {token}',
@@ -677,9 +711,9 @@
 
         def on_complete(response):
             if response.ok:
-                window.console.log(f"Success: {response.text()}")
+                print(f"GitHub Action Success: {response.text}")
             else:
-                window.console.error(f"Error {response.status}: {response.text()}")
+                print(f"GitHub Action Error {response.status}: {response.text}")
 
         window.console.log(f"Triggering GitHub Action with data: {data}")
         window.fetch(
@@ -697,6 +731,9 @@
     def update():
         global game_over, score, game_started, showing_level_title
         global ENEMY_SPEED, boss_hits, boss_direction
+
+        # Uncomment the following line to see when update() is called
+        # print("Update loop tick")
 
         if game_over or not game_started or showing_level_title:
             return
@@ -733,6 +770,7 @@
                         bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
                         bullet[1] >= enemy["pos"][1] and
                         bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
+                        print(f"Enemy hit at position {enemy['pos']}")
                         enemies.remove(enemy)
                         bullets.remove(bullet)
                         score += 1
@@ -745,6 +783,7 @@
                     bullet[0] <= boss_pos[0] + BOSS_SIZE and
                     bullet[1] >= boss_pos[1] and
                     bullet[1] <= boss_pos[1] + BOSS_SIZE):
+                    print(f"Boss hit at position {boss_pos}")
                     bullets.remove(bullet)
                     boss_hits += 1
                     explosion_audio.play()
@@ -755,12 +794,14 @@
                 bullet[0] <= player_pos[0] + PLAYER_SIZE and
                 bullet[1] >= player_pos[1] and
                 bullet[1] <= player_pos[1] + PLAYER_SIZE):
+                print("Player hit by enemy bullet")
                 game_over = True
 
         for laser in laser_beams[:]:
             if (laser["x"] <= player_pos[0] + PLAYER_SIZE and
                 laser["x"] + LASER_WIDTH >= player_pos[0] and
                 laser["y"] >= player_pos[1]):
+                print("Player hit by laser beam")
                 game_over = True
 
         for shot in diagonal_shots[:]:
@@ -768,6 +809,7 @@
                 shot["x"] + BULLET_WIDTH >= player_pos[0] and
                 shot["y"] <= player_pos[1] + BULLET_HEIGHT and
                 shot["y"] + BULLET_HEIGHT >= player_pos[1]):
+                print("Player hit by diagonal shot")
                 game_over = True
 
         # Enemy/player overlap (normal levels)
@@ -777,6 +819,7 @@
                      enemy["pos"][0] <= player_pos[0] + PLAYER_SIZE <= enemy["pos"][0] + ENEMY_SIZE) and
                     (enemy["pos"][1] <= player_pos[1] <= enemy["pos"][1] + ENEMY_SIZE or
                      enemy["pos"][1] <= player_pos[1] + PLAYER_SIZE <= enemy["pos"][1] + ENEMY_SIZE)):
+                    print("Player collided with enemy")
                     game_over = True
 
             # Enemy movement
@@ -789,11 +832,13 @@
                 for enemy in enemies:
                     enemy["pos"][1] += ENEMY_SIZE
                 ENEMY_SPEED = -ENEMY_SPEED
+                print("Enemies moved down and reversed direction")
         else:
             # Boss movement
             boss_pos[0] += boss_direction * 10
             if boss_pos[0] <= 0 or boss_pos[0] >= WIDTH - BOSS_SIZE:
                 boss_direction *= -1
+                print(f"Boss changed direction to {boss_direction}")
             boss_pos[1] += window.Math.random() * 10 - 5
             boss_pos[1] = max(0, min(HEIGHT // 4, boss_pos[1]))
 
@@ -812,16 +857,22 @@
         if level <= MAX_LEVELS:
             for enemy in enemies:
                 if window.Math.random() < (0.03 + 0.01 * level):
+                    bullet_x = enemy["pos"][0] + ENEMY_SIZE // 2
+                    bullet_y = enemy["pos"][1] + ENEMY_SIZE
                     enemy_bullets.append([
-                        enemy["pos"][0] + ENEMY_SIZE // 2,
-                        enemy["pos"][1] + ENEMY_SIZE
+                        bullet_x,
+                        bullet_y
                     ])
+                    print(f"Enemy at {enemy['pos']} fired a bullet")
         else:
             if window.Math.random() < 0.1:
+                bullet_x = boss_pos[0] + BOSS_SIZE // 2
+                bullet_y = boss_pos[1] + BOSS_SIZE
                 enemy_bullets.append([
-                    boss_pos[0] + BOSS_SIZE // 2,
-                    boss_pos[1] + BOSS_SIZE
+                    bullet_x,
+                    bullet_y
                 ])
+                print(f"Boss at {boss_pos} fired a bullet")
             current_time = window.Date.new().getTime()
             if current_time - boss_last_laser > boss_laser_cooldown:
                 laser_beams.append({
@@ -830,6 +881,7 @@
                     "timestamp": current_time
                 })
                 boss_last_laser = current_time
+                print("Boss fired a laser beam")
             if current_time - boss_last_diagonal_shot > boss_diagonal_cooldown:
                 diagonal_shots.append({
                     "x": boss_pos[0] + BOSS_SIZE // 2,
@@ -844,6 +896,7 @@
                     "dy": 5
                 })
                 boss_last_diagonal_shot = current_time
+                print("Boss fired diagonal shots")
 
     # -----------
     # LEVEL UP
@@ -856,6 +909,7 @@
             int((120000 - (window.Date.new().getTime() - level_start_time)) / 800)
         )
         score += time_bonus
+        print(f"Leveled up to Level {level} with time bonus {time_bonus}")
         showing_level_title = True
         draw_level_title()
 
@@ -864,17 +918,21 @@
     # -----------
     def start_game():
         global showing_level_title, game_started
+        print("Starting game: Enabling Level Title Screen")
         showing_level_title = True  # Enable Level 1 cover screen
         game_started = True         # Indicate that the game has started
         # Do not call initialize_game() directly here
+        print(f"showing_level_title set to {showing_level_title}, game_started set to {game_started}")
 
     def move_player(event):
         global game_started, game_over, player_last_shot
         current_time = window.Date.new().getTime()
 
         if event.keyCode == 32:  # SPACE
+            print("Space key pressed")
             if not game_started:
                 # Start the game from the title screen
+                print("Game not started: Initiating start_game()")
                 start_game()
             elif not showing_level_title and not game_over:
                 # Fire bullet if not on cooldown
@@ -885,26 +943,33 @@
                     ])
                     laser_audio.play()
                     player_last_shot = current_time
+                    print(f"Player fired a bullet at position {bullets[-1]}")
             elif game_over:
                 # Reset to title screen
+                print("Game over: Resetting game")
                 reset_game()
         elif game_started and not showing_level_title and not game_over:
             # Left arrow
             if event.keyCode == 37 and player_pos[0] > 0:
                 player_pos[0] -= PLAYER_SPEED
+                print(f"Player moved left to {player_pos[0]}")
             # Right arrow
             elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:
                 player_pos[0] += PLAYER_SPEED
+                print(f"Player moved right to {player_pos[0]}")
 
     def toggle_flash_text():
         global flash_text
         flash_text = not flash_text
+        # Uncomment the following line to see when flash_text is toggled
+        # print(f"flash_text toggled to {flash_text}")
 
     # -----------
     # HIGH SCORES
     # -----------
     def initialize_high_score():
         global top_scores
+        print("Initializing high scores")
         timestamp = window.Date.new().getTime()
         url = f'https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json?nocache={timestamp}'
         window.fetch(url).then(
@@ -918,6 +983,7 @@
     def update_high_scores(data):
         global top_scores
         top_scores = data
+        print(f"High scores updated: {top_scores}")
 
     # -----------
     # EVENT BIND
@@ -930,11 +996,13 @@
     # Title screen animation
     def animate_title_screen():
         if not game_started:
+            print("Animating title screen")
             draw_start_screen()
             window.requestAnimationFrame(lambda x: animate_title_screen())
 
     # Simple loading screen
     def show_loading_screen():
+        print("Showing loading screen")
         loading_bar_container.style.display = "flex"
         canvas.style.display = "none"
         window.setTimeout(show_title_screen, 3000)
@@ -945,3 +1013,4 @@
   </script>
 </body>
 </html>
+
