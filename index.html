@@ -223,7 +223,7 @@
             "level1/redtshirt.png"
         ],
         2: [
-            "level2/broken guitar.png",  # Corrected
+            "level2/broken_guitar.png",  # Renamed to avoid spaces
             "level2/brokenbtl.png",
             "level2/greentshirt.png",
             "level2/sticker.png",
@@ -231,10 +231,10 @@
         ],
         3: [
             "level3/cat.png",
-            "level3/chemical.paws.png",  # Corrected
+            "level3/chemical_paws.png",  # Renamed to avoid spaces
             "level3/flask.png",
             "level3/purpletshirt.png",
-            "level3/spill.smoke.png"    # Corrected
+            "level3/spill_smoke.png"    # Renamed to avoid spaces
         ],
     }
     level_images = {
@@ -994,7 +994,7 @@
     window.setInterval(toggle_flash_text, 1000)
 
     # Title screen animation
-    def animate_title_screen():
+    def animate_title_screen(timestamp):
         if not game_started:
             draw_start_screen()
             window.requestAnimationFrame(animate_title_screen)
