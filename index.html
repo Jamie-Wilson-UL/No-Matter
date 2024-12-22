@@ -2,12 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>No Matter Blaster</title>
-  <!-- Include Brython -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
-  <!-- Include Brython Standard Library -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython_stdlib.js"></script>
   <style>
     body {
       text-align: center;
@@ -31,6 +28,8 @@
       50% { transform: scale(1.1); }
       100% { transform: scale(1); }
     }
+    /* #keyframes fill removed to eliminate conflicting CSS animation */
+
     #title-img {
       animation: breathing 3s infinite;
     }
@@ -57,7 +56,9 @@
       height: 100%;
       width: 0;
       background-color: #00ff00;
-      transition: width 0.5s ease; /* Added transition for smooth width changes */
+      /* # FIX: Removed CSS animation to allow JavaScript control */
+      /* animation: fill 3s linear forwards; */
+      transition: width 0.3s ease; /* Added transition for smoother updates */
     }
     #loading-text {
       font-size: 24px;
@@ -158,7 +159,7 @@
     ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT = 5, 15
     ENEMY_BULLET_SPEED = 2.5
     LASER_WIDTH = 10
-    LASER_DURATION = 600  # in ms
+    LASER_DURATION = 600
     MAX_LEVELS = 3
     BOSS_HITS_REQUIRED = 20
 
@@ -182,11 +183,11 @@
     ENEMY_SPEED = 1.5
     flash_text = True
     player_last_shot = 0
-    player_shot_cooldown = 500  # in ms
+    player_shot_cooldown = 500
     boss_last_laser = 0
-    boss_laser_cooldown = 4000  # in ms
+    boss_laser_cooldown = 4000
     boss_last_diagonal_shot = 0
-    boss_diagonal_cooldown = 1500  # in ms
+    boss_diagonal_cooldown = 1500
     level_start_time = 0
     top_scores = []
     high_score_updated = False
@@ -204,7 +205,7 @@
     title_img     = document["title-img"]
     boss_img      = html.IMG(src="boss.png")
 
-    # LEVEL-BASED ENEMY ART (Using actual filenames with spaces and periods)
+    # LEVEL-BASED ENEMY ART
     level_image_paths = {
         1: [
             "level1/dog.png",
@@ -214,7 +215,7 @@
             "level1/redtshirt.png"
         ],
         2: [
-            "level2/broken%20guitar.png",  # URL-encoded space
+            "level2/broken guitar.png",  # Original path with space
             "level2/brokenbtl.png",
             "level2/greentshirt.png",
             "level2/sticker.png",
@@ -274,7 +275,6 @@
     # -------------
     def stop_all_music():
         """Pause and reset all music tracks to time=0."""
-        print("Stopping all music")
         title_audio.pause();  title_audio.currentTime  = 0
         level2_audio.pause(); level2_audio.currentTime = 0
         level3_audio.pause(); level3_audio.currentTime = 0
@@ -288,28 +288,21 @@
           - Level 3 => level3_audio
           - Level > 3 => boss_audio
         """
-        print(f"Setting music for level {current_level}")
         stop_all_music()
         if current_level == 1:
-            title_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
-            print("Playing title_audio")
+            title_audio.play()
         elif current_level == 2:
-            level2_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
-            print("Playing level2_audio")
+            level2_audio.play()
         elif current_level == 3:
-            level3_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
-            print("Playing level3_audio")
+            level3_audio.play()
         else:
             # Boss or beyond
-            boss_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
-            print("Playing boss_audio")
+            boss_audio.play()
 
     def set_music_for_title_screen():
-        """Prepares the title audio for playback after user interaction."""
-        print("Setting music for title screen")
+        """Plays the title audio for the title page."""
         stop_all_music()
-        # Do not autoplay to comply with browser policies
-        print("Title music will play after user interaction")
+        title_audio.play()
 
     # -------------------------------------------------
     # SCALING UTILITY: CAP DIMENSIONS PRESERVING RATIO
@@ -318,12 +311,9 @@
         w = img.naturalWidth
         h = img.naturalHeight
         if w == 0 or h == 0:
-            print("Image not loaded yet. Using fallback dimensions.")
             return (max_dim, max_dim)  # fallback if not loaded
         ratio = min(max_dim / w, max_dim / h)
-        scaled_w, scaled_h = w * ratio, h * ratio
-        print(f"Scaled dimensions: {scaled_w}x{scaled_h} for image with original size {w}x{h}")
-        return (scaled_w, scaled_h)
+        return (w * ratio, h * ratio)
 
     # -------------------------------------------------
     # LOADING SCREEN UTILS
@@ -355,7 +345,7 @@
             print(f"Asset failed to load: {asset_name}. Progress: {progress}%")
             if asset_name in critical_assets:
                 print(f"Critical asset {asset_name} failed to load. Cannot start the game.")
-                # Optionally, display an error message to the user
+                # Display an error message to the user
                 loading_bar_container.innerHTML = "<p>Critical assets failed to load. Please refresh the page.</p>"
                 return
         
@@ -437,8 +427,7 @@
         print("Showing title screen")
         loading_bar_container.style.display = "none"
         canvas.style.display = "block"
-        # Do not autoplay music here to comply with browser policies
-        set_music_for_title_screen()       # Prepare music to play after user interacts
+        set_music_for_title_screen()       # Start title music
         initialize_high_score()
         animate_title_screen()
 
@@ -501,6 +490,7 @@
             showing_level_title = False
             ENEMY_SPEED = 1.5 + level
             game_over = False
+            game_started = True
             level_start_time = window.Date.new().getTime()
 
             # Set music for the new level
@@ -644,9 +634,6 @@
     def draw():
         global game_over, game_started, showing_level_title
         global showing_high_score_prompt, showing_final_score, final_score_scheduled
-
-        # Uncomment the following line if you want to see when draw() is called
-        # print("Drawing game frame")
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
@@ -831,9 +818,9 @@
 
         def on_complete(response):
             if response.ok:
-                print(f"GitHub Action Success: {response.text}")
+                window.console.log(f"Success: {response.text()}")
             else:
-                print(f"GitHub Action Error {response.status}: {response.text}")
+                window.console.error(f"Error {response.status}: {response.text()}")
 
         window.console.log(f"Triggering GitHub Action with data: {data}")
         window.fetch(
@@ -861,21 +848,18 @@
             bullet[1] -= BULLET_SPEED
             if bullet[1] < 0:
                 bullets.remove(bullet)
-                # print(f"Bullet removed for going off-screen: {bullet}")  # Commented out
 
         # Move enemy bullets
         for bullet in enemy_bullets[:]:
             bullet[1] += ENEMY_BULLET_SPEED
             if bullet[1] > HEIGHT:
                 enemy_bullets.remove(bullet)
-                # print(f"Enemy bullet removed for going off-screen: {bullet}")  # Commented out
 
         # Laser beams expire
         current_time = window.Date.new().getTime()
         for laser in laser_beams[:]:
             if current_time - laser["timestamp"] > LASER_DURATION:
                 laser_beams.remove(laser)
-                # print(f"Laser beam removed after duration: {laser}")  # Commented out
 
         # Diagonal shots
         for shot in diagonal_shots[:]:
@@ -883,7 +867,6 @@
             shot["y"] += shot["dy"]
             if shot["y"] > HEIGHT or shot["x"] < 0 or shot["x"] > WIDTH:
                 diagonal_shots.remove(shot)
-                # print(f"Diagonal shot removed for going off-screen: {shot}")  # Commented out
 
         # Collisions with normal enemies
         if level <= MAX_LEVELS:
@@ -895,7 +878,7 @@
                         enemies.remove(enemy)
                         bullets.remove(bullet)
                         score += 1
-                        explosion_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
+                        explosion_audio.play()
                         break
 
         else:
@@ -906,7 +889,7 @@
                     print(f"Boss hit at position {boss_pos} by bullet {bullet}")
                     bullets.remove(bullet)
                     boss_hits += 1
-                    explosion_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
+                    explosion_audio.play()
 
         # Collisions with player
         for bullet in enemy_bullets[:]:
@@ -1043,10 +1026,10 @@
     def start_game():
         global showing_level_title, game_started
         print("Starting game: Enabling Level Title Screen")
-        showing_level_title = True  # Enable Level 1 cover screen
+        showing_level_title = True  # Enable Level Title Screen
         game_started = True         # Indicate that the game has started
         # Play title music now that the user has interacted
-        title_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
+        title_audio.play()
         print(f"showing_level_title set to {showing_level_title}, game_started set to {game_started}")
 
     def move_player(event):
@@ -1066,7 +1049,7 @@
                         player_pos[0] + PLAYER_SIZE // 2 - BULLET_WIDTH // 2,
                         player_pos[1]
                     ])
-                    laser_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
+                    laser_audio.play()
                     player_last_shot = current_time
                     print(f"Player fired a bullet at position {bullets[-1]}")
             elif game_over:
@@ -1086,8 +1069,6 @@
     def toggle_flash_text():
         global flash_text
         flash_text = not flash_text
-        # Uncomment the following line to see when flash_text is toggled
-        # print(f"flash_text toggled to {flash_text}")
 
     # -----------
     # HIGH SCORES
@@ -1225,9 +1206,9 @@
 
         def on_complete(response):
             if response.ok:
-                print(f"GitHub Action Success: {response.text}")
+                window.console.log(f"Success: {response.text()}")
             else:
-                print(f"GitHub Action Error {response.status}: {response.text}")
+                window.console.error(f"Error {response.status}: {response.text()}")
 
         window.console.log(f"Triggering GitHub Action with data: {data}")
         window.fetch(
@@ -1250,7 +1231,9 @@
 
     # Start
     show_loading_screen()
+
   </script>
 </body>
 </html>
+
 
