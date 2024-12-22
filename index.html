@@ -458,7 +458,7 @@
         else:
             ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
 
-        window.setTimeout(initialize_game, 1000)  # Proceed to initialize the game after 1 second
+        window.setTimeout(initialize_game, 1000)
 
     def draw_final_score():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -864,11 +864,9 @@
     # -----------
     def start_game():
         global showing_level_title, game_started
-        showing_level_title = True  # Set to True to display Level 1 screen
+        showing_level_title = True  # Set to True to display Level 1 cover screen
         game_started = True
-        # Do not call initialize_game() here; it will be called from draw_level_title
-        # This ensures the "Level 1" screen is shown first
-        # initialize_game()  # Removed this line
+        # initialize_game()  # Removed this line to allow the level title screen to display first
 
     def move_player(event):
         global game_started, game_over, player_last_shot
@@ -934,40 +932,16 @@
         if not game_started:
             draw_start_screen()
             window.requestAnimationFrame(lambda x: animate_title_screen())
-        else:
-            pass  # Do nothing if the game has started
 
     # Simple loading screen
     def show_loading_screen():
         loading_bar_container.style.display = "flex"
         canvas.style.display = "none"
-        # Assuming total_assets is defined elsewhere; if not, define it based on your assets
-        global assets_loaded, total_assets
-        assets_loaded = 0
-        # Calculate total assets based on level_image_paths
-        total_assets = 1 + len(level_image_paths[1]) + len(level_image_paths[2]) + len(level_image_paths[3]) + 1  # spaceship, level1, level2, level3, boss
-        # Preload images
-        spaceship_img.bind("load", asset_loaded)
-        title_img.bind("load", asset_loaded)
-        boss_img.bind("load", asset_loaded)
-        for lvl in level_images:
-            for img in level_images[lvl]:
-                img.bind("load", asset_loaded)
-        # If images are already cached, manually call asset_loaded
-        if spaceship_img.complete:
-            asset_loaded(None)
-        if title_img.complete:
-            asset_loaded(None)
-        if boss_img.complete:
-            asset_loaded(None)
-        for lvl in level_images:
-            for img in level_images[lvl]:
-                if img.complete:
-                    asset_loaded(None)
+        window.setTimeout(show_title_screen, 3000)
 
+    # Start
     show_loading_screen()
 
   </script>
 </body>
 </html>
-
