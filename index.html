@@ -120,7 +120,7 @@
     <div id="loading-bar">
       <div id="loading-progress"></div>
     </div>
-    <!-- Press SPACE after bar is done -->
+    <!-- Press SPACE after bar finishes -->
     <p id="press-space-loading">Press SPACE to Continue</p>
   </div>
 
@@ -188,7 +188,7 @@
     top_scores = []
     high_score_updated = False
 
-    audio_unlocked = False  # Not used since audio is removed
+    # audio_unlocked removed since audio is removed
 
     player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
     boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
@@ -292,10 +292,7 @@
         game_started = True
         level_start_time = window.Date.new().getTime()
 
-        if level <= MAX_LEVELS:
-            set_music_for_level(level)  # Removed, since audio is removed
-        else:
-            set_music_for_level(MAX_LEVELS + 1)  # Removed, since audio is removed
+        # set_music_for_level removed since audio is removed
 
     def reset_game():
         global level, game_started, game_over, score
@@ -331,7 +328,7 @@
     def show_title_screen():
         loading_bar_container.style.display = "none"
         canvas.style.display = "block"
-        set_music_for_title_screen()  # Removed, since audio is removed
+        # set_music_for_title_screen removed since audio is removed
         initialize_high_score()
         animate_title_screen()
 
@@ -770,10 +767,10 @@
         game_started = True
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 19) MOVE PLAYER
+    # 18) MOVE PLAYER
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def move_player(evt):
-        global game_started, game_over, player_last_shot, audio_unlocked
+        global game_started, game_over, player_last_shot
         ctime = window.Date.new().getTime()
 
         if evt.keyCode == 32:  # SPACE
@@ -781,8 +778,8 @@
                 # Hide overlay, show canvas
                 loading_bar_container.style.display = "none"
                 canvas.style.display = "block"
-                audio_unlocked = True  # Not used, since audio is removed
-                set_music_for_title_screen()  # Removed, since audio is removed
+                # audio_unlocked removed since audio is removed
+                # set_music_for_title_screen() removed since audio is removed
                 initialize_high_score()
                 animate_title_screen()
                 return
@@ -831,7 +828,7 @@
     window.setInterval(toggle_flash_text, 1000)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 20) SHOW HIGH SCORE PROMPT
+    # 19) SHOW HIGH SCORE PROMPT
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def show_high_score_prompt():
         high_score_modal.style.display = "block"
@@ -842,7 +839,7 @@
         player_name_input.value = ""
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 21) START THE GAME
+    # 20) START THE GAME
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     show_loading_screen()
 
