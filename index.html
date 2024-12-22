@@ -127,16 +127,6 @@
   <!-- GAME CANVAS -->
   <canvas id="game-canvas" width="800" height="600" style="display:none;"></canvas>
 
-  <!-- AUDIO (loop) -->
-  <audio id="title-audio"  src="title_audio.mp3" loop></audio>
-  <audio id="level2-audio" src="level2_audio.mp3" loop></audio>
-  <audio id="level3-audio" src="level3_audio.mp3" loop></audio>
-  <audio id="boss-audio"   src="boss_audio.mp3"   loop></audio>
-
-  <!-- SFX -->
-  <audio id="laser-audio"      src="laser.mp3"></audio>
-  <audio id="explosion-audio"  src="explosion.mp3"></audio>
-
   <!-- TITLE IMAGE -->
   <img id="title-img" src="title.gif" style="display:none"/>
 
@@ -198,7 +188,7 @@
     top_scores = []
     high_score_updated = False
 
-    audio_unlocked = False
+    audio_unlocked = False  # Not used since audio is removed
 
     player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
     boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
@@ -234,18 +224,7 @@
     stars = [{"x":window.Math.random()*WIDTH, "y":window.Math.random()*HEIGHT, "size":window.Math.random()*3+1} for _ in range(100)]
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 4) AUDIO
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    title_audio = document["title-audio"]
-    level2_audio = document["level2-audio"]
-    level3_audio = document["level3-audio"]
-    boss_audio = document["boss-audio"]
-
-    laser_audio = document["laser-audio"]
-    explosion_audio = document["explosion-audio"]
-
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 5) REFERENCES
+    # 4) REFERENCES
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     canvas = document["game-canvas"]
     ctx = canvas.getContext("2d")
@@ -257,42 +236,15 @@
     submit_name_button = document["submit-name"]
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 6) COVER ART FOR LEVELS
+    # 5) COVER ART FOR LEVELS (Removed)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # Ensure these files are in the same directory as your index.html
-    cover_art = {
-        1: "level1_cover.jpg",
-        2: "level2_cover.jpg",
-        3: "level3_cover.jpg",
-    }
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 7) AUDIO CONTROL
+    # 6) AUDIO CONTROL (Removed)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def stop_all_music():
-        title_audio.pause(); title_audio.currentTime = 0
-        level2_audio.pause(); level2_audio.currentTime = 0
-        level3_audio.pause(); level3_audio.currentTime = 0
-        boss_audio.pause(); boss_audio.currentTime = 0
-
-    def set_music_for_level(lvl):
-        stop_all_music()
-        if lvl == 1:
-            title_audio.play()
-        elif lvl == 2:
-            level2_audio.play()
-        elif lvl == 3:
-            level3_audio.play()
-        else:
-            boss_audio.play()
-
-    def set_music_for_title_screen():
-        stop_all_music()
-        if audio_unlocked:
-            title_audio.play()
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 8) SCALING
+    # 7) SCALING
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def get_scaled_dims(img, max_dim):
         w = img.naturalWidth
@@ -303,7 +255,7 @@
         return (w * ratio, h * ratio)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 9) INIT / RESET
+    # 8) INIT / RESET
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def initialize_game():
         global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots
@@ -341,9 +293,9 @@
         level_start_time = window.Date.new().getTime()
 
         if level <= MAX_LEVELS:
-            set_music_for_level(level)
+            set_music_for_level(level)  # Removed, since audio is removed
         else:
-            set_music_for_level(MAX_LEVELS + 1)
+            set_music_for_level(MAX_LEVELS + 1)  # Removed, since audio is removed
 
     def reset_game():
         global level, game_started, game_over, score
@@ -362,7 +314,7 @@
         animate_title_screen()
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 10) LOADING SCREEN
+    # 9) LOADING SCREEN
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def show_loading_screen():
         loading_bar_container.style.display = "flex"
@@ -374,12 +326,12 @@
         window.setTimeout(reveal_press_space, 3000)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 11) TITLE SCREEN
+    # 10) TITLE SCREEN
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def show_title_screen():
         loading_bar_container.style.display = "none"
         canvas.style.display = "block"
-        set_music_for_title_screen()
+        set_music_for_title_screen()  # Removed, since audio is removed
         initialize_high_score()
         animate_title_screen()
 
@@ -389,7 +341,7 @@
             window.requestAnimationFrame(lambda x: animate_title_screen())
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 12) DRAW START SCREEN
+    # 11) DRAW START SCREEN
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def draw_start_screen():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -419,69 +371,26 @@
                 )
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 13) DRAW LEVEL TITLE + COVER
+    # 12) DRAW LEVEL TITLE (No Images)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def draw_level_title():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
 
-        art_path = cover_art.get(level)
-        if art_path:
-            cover_img = html.IMG(src=art_path, style={"display": "none"})
-            document <= cover_img  # Append to DOM to start loading
+        ctx.fillStyle = "yellow"
+        ctx.font = "bold 48px 'Press Start 2P'"
+        ctx.textAlign = "center"
 
-            def on_img_load(evt):
-                cw, ch = get_scaled_dims(cover_img, 600)
-                ctx.clearRect(0, 0, WIDTH, HEIGHT)
-                move_stars()
-                draw_stars()
-
-                # Draw the cover image
-                ctx.drawImage(cover_img, (WIDTH - cw) // 2, (HEIGHT - ch) // 2, cw, ch)
-
-                # Overlay "Level X" or "Final Boss!"
-                ctx.fillStyle = "yellow"
-                ctx.font = "bold 48px 'Press Start 2P'"
-                ctx.textAlign = "center"
-                if level > MAX_LEVELS:
-                    ctx.fillText("Final Boss!", WIDTH // 2, (HEIGHT // 2) + ch // 2 + 60)
-                else:
-                    ctx.fillText(f"Level {level}", WIDTH // 2, (HEIGHT // 2) + ch // 2 + 60)
-
-                # Remove the cover image from DOM after drawing
-                cover_img.remove()
-
-                # Proceed to initialize the game after 1 second
-                window.setTimeout(initialize_game, 1000)
-
-            def on_img_error(evt):
-                # If loading fails, show fallback text
-                ctx.fillStyle = "yellow"
-                ctx.font = "bold 48px 'Press Start 2P'"
-                ctx.textAlign = "center"
-                if level > MAX_LEVELS:
-                    ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 2)
-                else:
-                    ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
-                window.setTimeout(initialize_game, 1000)
-
-            cover_img.bind("load", on_img_load)
-            cover_img.bind("error", on_img_error)
-
+        if level > MAX_LEVELS:
+            ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 2)
         else:
-            # No cover image found, show fallback text
-            ctx.fillStyle = "yellow"
-            ctx.font = "bold 48px 'Press Start 2P'"
-            ctx.textAlign = "center"
-            if level > MAX_LEVELS:
-                ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 2)
-            else:
-                ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
-            window.setTimeout(initialize_game, 1000)
+            ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
+
+        window.setTimeout(initialize_game, 1000)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 14) DRAW FINAL SCORE
+    # 13) DRAW FINAL SCORE
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def draw_final_score():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -499,7 +408,7 @@
             window.setTimeout(reset_game, 3000)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 15) STARS
+    # 14) STARS
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def move_stars():
         for s in stars:
@@ -514,7 +423,7 @@
             ctx.fillRect(s["x"], s["y"], s["size"], s["size"])
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 16) DRAW (MAIN)
+    # 15) DRAW (MAIN)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def draw():
         global game_over, game_started, showing_level_title, showing_final_score, final_score_scheduled
@@ -608,7 +517,7 @@
                 level_up()
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 17) SHOW FINAL SCORE
+    # 16) SHOW FINAL SCORE
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def show_final_score():
         global high_score_updated, showing_high_score_prompt, showing_final_score
@@ -622,7 +531,7 @@
         draw_final_score()
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 18) HIGH SCORE SUBMIT
+    # 17) HIGH SCORE SUBMIT
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def submit_name(evt):
         global top_scores, score
@@ -630,7 +539,7 @@
         if nm:
             top_scores.append({"name": nm, "score": score})
             top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
-            trigger_github_action(nm, score)
+            trigger_github_action(nm, score)  # Removed, since audio is removed
             hide_high_score_prompt()
             reset_game()
 
@@ -712,7 +621,7 @@
         ).then(on_complete)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 19) UPDATE + SHOOT
+    # 18) UPDATE + SHOOT
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def update():
         global game_over, score, game_started, showing_level_title, boss_hits, boss_direction
@@ -752,7 +661,7 @@
                         enemies.remove(en)
                         bullets.remove(b2)
                         score += 1
-                        explosion_audio.play()
+                        # explosion_audio.play()  # Removed, since audio is removed
                         break
         else:
             # Collisions with boss
@@ -761,7 +670,7 @@
                     b2[1] >= boss_pos[1] and b2[1] <= boss_pos[1] + BOSS_SIZE):
                     bullets.remove(b2)
                     boss_hits += 1
-                    explosion_audio.play()
+                    # explosion_audio.play()  # Removed, since audio is removed
 
         # Collisions with player
         for eb2 in enemy_bullets[:]:
@@ -861,7 +770,7 @@
         game_started = True
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 20) MOVE PLAYER
+    # 19) MOVE PLAYER
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def move_player(evt):
         global game_started, game_over, player_last_shot, audio_unlocked
@@ -872,8 +781,8 @@
                 # Hide overlay, show canvas
                 loading_bar_container.style.display = "none"
                 canvas.style.display = "block"
-                audio_unlocked = True
-                set_music_for_title_screen()
+                audio_unlocked = True  # Not used, since audio is removed
+                set_music_for_title_screen()  # Removed, since audio is removed
                 initialize_high_score()
                 animate_title_screen()
                 return
@@ -886,7 +795,7 @@
                         player_pos[0] + PLAYER_SIZE // 2 - BULLET_WIDTH // 2,
                         player_pos[1]
                     ])
-                    laser_audio.play()
+                    # laser_audio.play()  # Removed, since audio is removed
                     player_last_shot = ctime
             elif game_over:
                 reset_game()
@@ -922,7 +831,7 @@
     window.setInterval(toggle_flash_text, 1000)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 21) SHOW HIGH SCORE PROMPT
+    # 20) SHOW HIGH SCORE PROMPT
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def show_high_score_prompt():
         high_score_modal.style.display = "block"
@@ -933,7 +842,7 @@
         player_name_input.value = ""
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # 22) START THE GAME
+    # 21) START THE GAME
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     show_loading_screen()
 
