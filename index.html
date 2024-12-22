@@ -864,9 +864,9 @@
     # -----------
     def start_game():
         global showing_level_title, game_started
-        showing_level_title = True  # Set to True to display Level 1 cover screen
+        showing_level_title = False
         game_started = True
-        # initialize_game()  # Removed this line to allow the level title screen to display first
+        initialize_game()
 
     def move_player(event):
         global game_started, game_over, player_last_shot
@@ -945,3 +945,4 @@
   </script>
 </body>
 </html>
+
