@@ -6,8 +6,117 @@
   <title>No Matter Blaster</title>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
   <style>
-    /* Your existing CSS styles */
-    /* ... */
+    body {
+      text-align: center;
+      background-color: black;
+      color: white;
+      font-family: 'Press Start 2P', monospace;
+      overflow: hidden;
+    }
+    canvas {
+      border: 8px solid #00ff00;
+      border-radius: 10px;
+      box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00, 0 0 60px #00ff00, 0 0 80px #00ff00;
+      display: block;
+      margin: 20px auto;
+      background-color: #000;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    @keyframes breathing {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    @keyframes fill {
+      0% { width: 0; }
+      100% { width: 100%; }
+    }
+    #title-img {
+      animation: breathing 3s infinite;
+    }
+    #loading-bar-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: black;
+    }
+    #loading-bar {
+      width: 50%;
+      height: 30px;
+      background-color: white;
+      border: 3px solid #00ff00;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    #loading-progress {
+      height: 100%;
+      width: 0;
+      background-color: #00ff00;
+      animation: fill 3s linear forwards;
+    }
+    #loading-text {
+      font-size: 24px;
+      font-family: 'Press Start 2P', monospace;
+      color: white;
+      font-weight: bold;
+    }
+    #high-score-modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.9);
+      color: white;
+      font-family: 'Press Start 2P', monospace;
+    }
+    #high-score-modal-content {
+      background-color: black;
+      margin: 15% auto;
+      padding: 20px;
+      border: 3px solid #00ff00;
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+    }
+    #player-name {
+      width: 80%;
+      height: 40px;
+      font-size: 20px;
+      font-family: 'Press Start 2P', monospace;
+      margin-bottom: 10px;
+    }
+    #submit-name {
+      width: 80%;
+      height: 40px;
+      font-size: 20px;
+      font-family: 'Press Start 2P', monospace;
+      background-color: #00ff00;
+      border: none;
+      cursor: pointer;
+    }
+    /* START BUTTON STYLES */
+    #start-button {
+      width: 200px;
+      height: 60px;
+      font-size: 24px;
+      font-family: 'Press Start 2P', monospace;
+      background-color: #00ff00;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      animation: breathing 2s infinite;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body onload="brython()">
@@ -23,11 +132,13 @@
   <!-- GAME CANVAS -->
   <canvas id="game-canvas" width="800" height="600" style="display:none;"></canvas>
 
-  <!-- AUDIO ELEMENTS -->
+  <!-- NEW AUDIO TAGS (each loops) -->
   <audio id="title-audio" src="title_audio.mp3" loop></audio>
   <audio id="level2-audio" src="level2_audio.mp3" loop></audio>
   <audio id="level3-audio" src="level3_audio.mp3" loop></audio>
   <audio id="boss-audio" src="boss_audio.mp3" loop></audio>
+
+  <!-- Sound effects remain the same -->
   <audio id="laser-audio" src="laser.mp3"></audio>
   <audio id="explosion-audio" src="explosion.mp3"></audio>
 
@@ -43,11 +154,14 @@
     </div>
   </div>
 
+  <!-- START BUTTON -->
+  <button id="start-button" style="display: none;">Start Game</button>
+
   <script type="text/python">
     from browser import document, html, window
 
     # ---------------------------------------------------------
-    # GAME CONSTANTS
+    # GAME CONSTANTS (collision boxes, speeds, bullet sizes, etc.)
     # ---------------------------------------------------------
     WIDTH, HEIGHT = 800, 600
     PLAYER_SIZE = 50
@@ -116,7 +230,7 @@
             "level1/redtshirt.png"
         ],
         2: [
-            "level2/broken guitar.png",  # Renamed to remove space
+            "level2/broken_guitar.png",  # Renamed to remove space
             "level2/brokenbtl.png",
             "level2/greentshirt.png",
             "level2/sticker.png",
@@ -134,6 +248,10 @@
         lvl: [html.IMG(src=path) for path in level_image_paths[lvl]]
         for lvl in level_image_paths
     }
+
+    # Initialize asset loading counters
+    assets_loaded = 0
+    total_assets = 3 + sum(len(imgs) for imgs in level_images.values())
 
     enemies = []
     bullets = []
@@ -170,6 +288,9 @@
     high_score_modal = document["high-score-modal"]
     player_name_input = document["player-name"]
     submit_name_button = document["submit-name"]
+
+    # START BUTTON
+    start_button = document["start-button"]
 
     # -------------
     # AUDIO CONTROL
@@ -240,13 +361,22 @@
             print("All assets loaded.")
             show_title_screen()
 
+    # Bind load events for all images
+    spaceship_img.bind("load", lambda e: asset_loaded("spaceship_img"))
+    title_img.bind("load", lambda e: asset_loaded("title_img"))
+    boss_img.bind("load", lambda e: asset_loaded("boss_img"))
+
+    for lvl, imgs in level_images.items():
+        for img in imgs:
+            img.bind("load", lambda e, lvl=lvl: asset_loaded(f"level{lvl}_img"))
+
     def show_title_screen():
         print("Showing title screen")
         loading_bar_container.style.display = "none"
         canvas.style.display = "block"
         set_music_for_title_screen()       # Start title music
         initialize_high_score()
-        animate_title_screen()
+        show_start_button()                 # Display the start button instead of animating
 
     # ------------------------------
     # GAME INITIALIZATION / RESET
@@ -277,13 +407,16 @@
                         img = current_level_images[
                             int(window.Math.random() * len(current_level_images))
                         ]
+                        enemy_x = c * (ENEMY_SIZE + 10) + 50
+                        enemy_y = r * (ENEMY_SIZE + 10) + 50
                         enemies.append({
-                            "pos": [c * (ENEMY_SIZE + 10) + 50,
-                                    r * (ENEMY_SIZE + 10) + 50],
+                            "pos": [enemy_x, enemy_y],
                             "img": img
                         })
                 boss_hits = 0
                 print(f"Total enemies initialized: {len(enemies)}")
+                for enemy in enemies:
+                    print(f"Enemy initialized at position: {enemy['pos']}")
             else:
                 # Boss time
                 enemies.clear()
@@ -319,7 +452,7 @@
         Called when we want to return to the title screen after game over or a completed run.
         """
         global level, game_started, game_over, score
-        global showing_level_title, showing_high_score_prompt, showing_final_score
+        global showing_level_title, showing_final_score, showing_high_score_prompt
         global final_score_scheduled
 
         print("Resetting game to title screen")
@@ -332,7 +465,7 @@
         showing_high_score_prompt = False
         final_score_scheduled = False
 
-        animate_title_screen()  # will call set_music_for_title_screen again
+        show_start_button()  # Show the start button again
 
     # ----------------------
     # DRAWING / RENDERING
@@ -384,7 +517,7 @@
             ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
 
         print("Scheduling initialize_game() in 1 second")
-        window.setTimeout(lambda: initialize_game(), 1000)  # Proceed to initialize the game after 1 second
+        window.setTimeout(initialize_game, 1000)  # Proceed to initialize the game after 1 second
 
     def draw_final_score():
         print("Drawing final score")
@@ -397,7 +530,8 @@
         ctx.fillText(f"Final Score: {score}", WIDTH // 2, HEIGHT // 2)
 
         if high_score_updated:
-            print("High score updated: Showing high score prompt")
+            ctx.fillStyle = "white"
+            ctx.font = "36px 'Press Start 2P'"
             ctx.fillText("New High Score!", WIDTH // 2, HEIGHT // 1.7)
             show_high_score_prompt()
         else:
@@ -415,6 +549,7 @@
         player_name_input.value = ""
 
     def draw_stars():
+        print("Drawing stars")
         ctx.fillStyle = "white"
         for star in stars:
             ctx.fillRect(star["x"], star["y"], star["size"], star["size"])
@@ -439,9 +574,9 @@
 
         # Slight background tint
         if level > MAX_LEVELS:
-            ctx.fillStyle = "rgba(255, 0, 0, 0.1)"
+            ctx.fillStyle = "rgba(255, 0, 0, 0.05)"  # Reduced opacity
         else:
-            ctx.fillStyle = "rgba(0, 0, 255, 0.1)"
+            ctx.fillStyle = "rgba(0, 0, 255, 0.05)"  # Reduced opacity
         ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
         if not game_started:
@@ -529,7 +664,7 @@
         global high_score_updated, showing_high_score_prompt, showing_final_score
         high_score_updated = False
 
-        print("Showing final score")
+        print(f"Final Score: {score}")
         for i in range(len(top_scores)):
             if score > top_scores[i]["score"]:
                 high_score_updated = True
@@ -546,10 +681,10 @@
     def submit_name(event):
         global top_scores, score
         player_name = player_name_input.value
-        print(f"Submitting name: {player_name} with score: {score}")
         if player_name:
             top_scores.append({"name": player_name, "score": score})
             top_scores = sorted(top_scores, key=lambda x: x['score'], reverse=True)[:3]
+            print(f"Submitting new high score: {player_name} - {score}")
             trigger_github_action(player_name, score)
             hide_high_score_prompt()
             reset_game()
@@ -639,10 +774,7 @@
         global game_over, score, game_started, showing_level_title
         global ENEMY_SPEED, boss_hits, boss_direction
 
-        # Uncomment the following line if you want to see when update() is called
-        # print("Update loop tick")
-
-        if game_over or not game_started:
+        if game_over or not game_started or showing_level_title:
             return
 
         # Move player bullets
@@ -677,45 +809,51 @@
         if level <= MAX_LEVELS:
             for enemy in enemies[:]:
                 for bullet in bullets[:]:
-                    if (enemy["pos"][0] <= bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
-                        enemy["pos"][1] <= bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
-                        print(f"Enemy hit at position {enemy['pos']} by bullet {bullet}")
+                    if (bullet[0] >= enemy["pos"][0] and
+                        bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
+                        bullet[1] >= enemy["pos"][1] and
+                        bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
                         enemies.remove(enemy)
                         bullets.remove(bullet)
                         score += 1
                         explosion_audio.play()
+                        print(f"Enemy hit at position {enemy['pos']} by bullet {bullet}")
                         break
         else:
             # Collisions with boss
             for bullet in bullets[:]:
-                if (boss_pos[0] <= bullet[0] <= boss_pos[0] + BOSS_SIZE and
-                    boss_pos[1] <= bullet[1] <= boss_pos[1] + BOSS_SIZE):
-                    print(f"Boss hit at position {boss_pos} by bullet {bullet}")
+                if (bullet[0] >= boss_pos[0] and
+                    bullet[0] <= boss_pos[0] + BOSS_SIZE and
+                    bullet[1] >= boss_pos[1] and
+                    bullet[1] <= boss_pos[1] + BOSS_SIZE):
                     bullets.remove(bullet)
                     boss_hits += 1
                     explosion_audio.play()
+                    print(f"Boss hit at position {boss_pos} by bullet {bullet}")
 
         # Collisions with player
         for bullet in enemy_bullets[:]:
-            if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_SIZE and
-                player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_SIZE):
-                print(f"Player hit by enemy bullet at position {bullet}")
+            if (bullet[0] >= player_pos[0] and
+                bullet[0] <= player_pos[0] + PLAYER_SIZE and
+                bullet[1] >= player_pos[1] and
+                bullet[1] <= player_pos[1] + PLAYER_SIZE):
                 game_over = True
+                print(f"Player hit by enemy bullet at position {bullet}")
 
         for laser in laser_beams[:]:
-            if (player_pos[0] <= laser["x"] + LASER_WIDTH and
-                laser["x"] <= player_pos[0] + PLAYER_SIZE and
-                player_pos[1] <= laser["y"]):
-                print(f"Player hit by laser beam at position {laser}")
+            if (laser["x"] <= player_pos[0] + PLAYER_SIZE and
+                laser["x"] + LASER_WIDTH >= player_pos[0] and
+                laser["y"] >= player_pos[1]):
                 game_over = True
+                print(f"Player hit by laser beam at position {laser}")
 
         for shot in diagonal_shots[:]:
-            if (player_pos[0] <= shot["x"] + BULLET_WIDTH and
-                shot["x"] <= player_pos[0] + PLAYER_SIZE and
-                player_pos[1] <= shot["y"] + BULLET_HEIGHT and
-                shot["y"] <= player_pos[1] + BULLET_HEIGHT):
-                print(f"Player hit by diagonal shot at position {shot}")
+            if (shot["x"] <= player_pos[0] + PLAYER_SIZE and
+                shot["x"] + BULLET_WIDTH >= player_pos[0] and
+                shot["y"] <= player_pos[1] + BULLET_HEIGHT and
+                shot["y"] + BULLET_HEIGHT >= player_pos[1]):
                 game_over = True
+                print(f"Player hit by diagonal shot at position {shot}")
 
         # Enemy/player overlap (normal levels)
         if level <= MAX_LEVELS:
@@ -724,30 +862,32 @@
                      enemy["pos"][0] <= player_pos[0] + PLAYER_SIZE <= enemy["pos"][0] + ENEMY_SIZE) and
                     (enemy["pos"][1] <= player_pos[1] <= enemy["pos"][1] + ENEMY_SIZE or
                      enemy["pos"][1] <= player_pos[1] + PLAYER_SIZE <= enemy["pos"][1] + ENEMY_SIZE)):
-                    print("Player collided with enemy")
                     game_over = True
+                    print("Player collided with enemy")
 
             # Enemy movement
             move_down = False
             for enemy in enemies:
                 enemy["pos"][0] += ENEMY_SPEED
+                print(f"Enemy at {enemy['pos']} moved by {ENEMY_SPEED}")
                 if enemy["pos"][0] > WIDTH - ENEMY_SIZE or enemy["pos"][0] < 0:
                     move_down = True
             if move_down:
                 for enemy in enemies:
                     enemy["pos"][1] += ENEMY_SIZE
+                    print(f"Enemy moved down to {enemy['pos'][1]}")
                 ENEMY_SPEED = -ENEMY_SPEED
                 print("Enemies moved down and reversed direction")
-
         else:
             # Boss movement
             boss_pos[0] += boss_direction * 10
+            print(f"Boss moved to {boss_pos}")
             if boss_pos[0] <= 0 or boss_pos[0] >= WIDTH - BOSS_SIZE:
                 boss_direction *= -1
                 print(f"Boss changed direction to {boss_direction}")
             boss_pos[1] += window.Math.random() * 10 - 5
             boss_pos[1] = max(0, min(HEIGHT // 4, boss_pos[1]))
-            print(f"Boss position updated to {boss_pos}")
+            print(f"Boss vertical position updated to {boss_pos[1]}")
 
         draw()
 
@@ -761,22 +901,18 @@
         if level <= MAX_LEVELS:
             for enemy in enemies:
                 if window.Math.random() < (0.03 + 0.01 * level):
-                    bullet_x = enemy["pos"][0] + ENEMY_SIZE // 2
-                    bullet_y = enemy["pos"][1] + ENEMY_SIZE
                     enemy_bullets.append([
-                        bullet_x,
-                        bullet_y
+                        enemy["pos"][0] + ENEMY_SIZE // 2,
+                        enemy["pos"][1] + ENEMY_SIZE
                     ])
-                    print(f"Enemy at {enemy['pos']} fired a bullet at ({bullet_x}, {bullet_y})")
+                    print(f"Enemy at {enemy['pos']} fired a bullet at ({enemy_bullets[-1][0]}, {enemy_bullets[-1][1]})")
         else:
             if window.Math.random() < 0.1:
-                bullet_x = boss_pos[0] + BOSS_SIZE // 2
-                bullet_y = boss_pos[1] + BOSS_SIZE
                 enemy_bullets.append([
-                    bullet_x,
-                    bullet_y
+                    boss_pos[0] + BOSS_SIZE // 2,
+                    boss_pos[1] + BOSS_SIZE
                 ])
-                print(f"Boss at {boss_pos} fired a bullet at ({bullet_x}, {bullet_y})")
+                print(f"Boss at {boss_pos} fired a bullet at ({enemy_bullets[-1][0]}, {enemy_bullets[-1][1]})")
             current_time = window.Date.new().getTime()
             if current_time - boss_last_laser > boss_laser_cooldown:
                 laser_beams.append({
@@ -822,13 +958,13 @@
     # -----------
     def start_game():
         global showing_level_title, game_started
-        print("Starting game: Enabling Level Title Screen")
-        showing_level_title = True  # Enable Level 1 cover screen
-        game_started = True         # Indicate that the game has started
-        # Do not call initialize_game() directly here
-        print(f"showing_level_title set to {showing_level_title}, game_started set to {game_started}")
+        print("Starting game: Initializing game")
+        showing_level_title = False
+        game_started = True
+        initialize_game()
 
     def move_player(event):
+        print(f"Key event detected: {event.keyCode}")  # Debugging statement
         global game_started, game_over, player_last_shot
         current_time = window.Date.new().getTime()
 
@@ -892,19 +1028,32 @@
     # -----------
     # EVENT BIND
     # -----------
-    document.bind("keydown", move_player)
+    window.bind("keydown", move_player)  # Changed from document.bind to window.bind
     window.setInterval(update, 30)
     window.setInterval(enemy_shoot, 500)
     window.setInterval(toggle_flash_text, 1000)
 
-    # Title screen animation
-    def animate_title_screen():
-        global game_started  # Ensure access to the global variable
-        print(f"animate_title_screen: game_started={game_started}")
-        if not game_started:
-            print("Animating title screen")
-            draw_start_screen()
-            window.requestAnimationFrame(lambda x: animate_title_screen())
+    # START BUTTON HANDLING
+    def show_start_button():
+        print("Displaying start button")
+        start_button.style.display = "block"
+
+    def hide_start_button():
+        print("Hiding start button")
+        start_button.style.display = "none"
+
+    def start_game_via_button(event):
+        print("Start button clicked")
+        hide_start_button()
+        start_game()
+
+    start_button.bind("click", start_game_via_button)
+
+    # Remove animate_title_screen to prevent infinite loop
+    # def animate_title_screen():
+    #     if not game_started:
+    #         draw_start_screen()
+    #         window.requestAnimationFrame(lambda x: animate_title_screen())
 
     # Simple loading screen
     def show_loading_screen():
@@ -919,5 +1068,3 @@
   </script>
 </body>
 </html>
-
-
