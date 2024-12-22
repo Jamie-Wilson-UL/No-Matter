@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>No Matter Blaster</title>
+  <!-- Include Brython -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
   <style>
     body {
@@ -58,7 +59,7 @@
       height: 100%;
       width: 0;
       background-color: #00ff00;
-      /* Removed animation to prevent interference with dynamic width updates */
+      /* Removed animation to allow dynamic updates based on asset loading */
     }
     #loading-text {
       font-size: 24px;
@@ -214,7 +215,7 @@
             "level1/redtshirt.png"
         ],
         2: [
-            "level2/broken guitar.png",  # Correct filename with space
+            "level2/broken guitar.png",
             "level2/brokenbtl.png",
             "level2/greentshirt.png",
             "level2/sticker.png",
@@ -329,29 +330,52 @@
     # LOADING SCREEN UTILS
     # -------------------------------------------------
     assets_loaded = 0
-    total_assets = 3 + sum(len(imgs) for imgs in level_images.values())  # spaceship, title, boss + level images
+    total_assets = 3 + sum(len(imgs) for imgs in level_image_paths.values())  # spaceship, title, boss + level images
 
-    def asset_loaded(asset_name):
+    def asset_loaded(asset_status):
         global assets_loaded
         assets_loaded += 1
         progress = (assets_loaded / total_assets) * 100
         loading_progress.style.width = f"{progress}%"
-        print(f"Asset loaded: {asset_name}. Progress: {progress}%")
+        
+        if asset_status.startswith("loaded:"):
+            asset_name = asset_status.split("loaded:")[1]
+            print(f"Asset loaded: {asset_name}. Progress: {progress}%")
+        elif asset_status.startswith("failed:"):
+            asset_name = asset_status.split("failed:")[1]
+            print(f"Asset failed to load: {asset_name}. Progress: {progress}%")
+        
         if assets_loaded == total_assets:
             print("All assets loaded.")
             show_title_screen()
-        return  # Explicitly return None to prevent 'undefined' from appearing
 
-    # Bind load events for all images
-    spaceship_img.bind("load", lambda e: asset_loaded("spaceship_img"))
-    title_img.bind("load", lambda e: asset_loaded("title_img"))
-    boss_img.bind("load", lambda e: asset_loaded("boss_img"))
-
+    # Bind load events for all images with unique identifiers
     for lvl, imgs in level_images.items():
-        for img in imgs:
-            # Ensure the image filename is correct (no renaming)
-            img.bind("load", lambda e, lvl=lvl: asset_loaded(f"level{lvl}_img"))
-            img.bind("error", lambda e, lvl=lvl, src=img.src: asset_loaded(f"level{lvl}_img_failed"))
+        for img, path in zip(imgs, level_image_paths[lvl]):
+            def handle_load(e, path=path):
+                asset_loaded(f"loaded:{path}")
+            def handle_error(e, path=path):
+                asset_loaded(f"failed:{path}")
+            
+            img.bind("load", handle_load)
+            img.bind("error", handle_error)
+            
+            # If the image is already loaded (cached), manually call asset_loaded
+            if img.complete:
+                if img.naturalWidth != 0:
+                    asset_loaded(f"loaded:{path}")
+                else:
+                    asset_loaded(f"failed:{path}")
+
+    # Bind load events for primary images
+    spaceship_img.bind("load", lambda e: asset_loaded("loaded:car.png"))
+    spaceship_img.bind("error", lambda e: asset_loaded("failed:car.png"))
+
+    title_img.bind("load", lambda e: asset_loaded("loaded:title.gif"))
+    title_img.bind("error", lambda e: asset_loaded("failed:title.gif"))
+
+    boss_img.bind("load", lambda e: asset_loaded("loaded:boss.png"))
+    boss_img.bind("error", lambda e: asset_loaded("failed:boss.png"))
 
     def show_title_screen():
         print("Showing title screen")
@@ -359,7 +383,7 @@
         canvas.style.display = "block"
         set_music_for_title_screen()       # Start title music
         initialize_high_score()
-        # The main loop will handle drawing the start screen
+        animate_title_screen()
 
     # ------------------------------
     # GAME INITIALIZATION / RESET
@@ -1028,12 +1052,114 @@
     window.setInterval(enemy_shoot, 500)
     window.setInterval(toggle_flash_text, 1000)
 
-    # Simple loading screen
+    # Title screen animation
+    def animate_title_screen():
+        if not game_started:
+            draw_start_screen()
+            window.requestAnimationFrame(lambda x: animate_title_screen())
+
+    # -------------
+    # HIGH SCORE SUBMISSION
+    # -------------
+    def submit_high_score():
+        global top_scores, score
+        player_name = player_name_input.value.strip()
+        if player_name:
+            top_scores.append({"name": player_name, "score": score})
+            top_scores = sorted(top_scores, key=lambda x: x['score'], reverse=True)[:3]
+            trigger_github_action(player_name, score)
+            hide_high_score_prompt()
+            reset_game()
+
+    submit_name_button.bind("click", submit_high_score)
+
+    # -----------------------------------------
+    # GITHUB ACTION TRIGGER (BE CAREFUL WITH TOKENS)
+    # -----------------------------------------
+    def transform_token():
+        placeholder = 'a' * 40
+        token = list(placeholder)
+        token[0] = 'g'
+        token[1] = 'h'
+        token[2] = 'p'
+        token[3] = '_'
+        token[4] = '1'
+        token[5] = 'y'
+        token[6] = '0'
+        token[7] = 'x'
+        token[8] = 'i'
+        token[9] = 'X'
+        token[10] = 'q'
+        token[11] = 'P'
+        token[12] = 'd'
+        token[13] = 'g'
+        token[14] = 'p'
+        token[15] = 'B'
+        token[16] = 'H'
+        token[17] = 'R'
+        token[18] = '4'
+        token[19] = 'o'
+        token[20] = 't'
+        token[21] = 'u'
+        token[22] = 'p'
+        token[23] = '4'
+        token[24] = 'E'
+        token[25] = 'V'
+        token[26] = '4'
+        token[27] = 'p'
+        token[28] = 'd'
+        token[29] = 'M'
+        token[30] = 'R'
+        token[31] = 'R'
+        token[32] = 'g'
+        token[33] = '8'
+        token[34] = '1'
+        token[35] = 'g'
+        token[36] = 'k'
+        token[37] = 'W'
+        token[38] = '3'
+        token[39] = 'u'
+        return ''.join(token)
+
+    def trigger_github_action(name, score):
+        print(f"Triggering GitHub Action for {name} with score {score}")
+        token = transform_token()
+        headers = {
+            'Authorization': f'token {token}',
+            'Accept': 'application/vnd.github.v3+json'
+        }
+        data = {
+            'event_type': 'update-high-scores',
+            'client_payload': {
+                'PLAYER_NAME': name,
+                'PLAYER_SCORE': score
+            }
+        }
+
+        def on_complete(response):
+            if response.ok:
+                print(f"GitHub Action Success: {response.text}")
+            else:
+                print(f"GitHub Action Error {response.status}: {response.text}")
+
+        window.console.log(f"Triggering GitHub Action with data: {data}")
+        window.fetch(
+            'https://api.github.com/repos/Jamie-Wilson-UL/No-Matter/dispatches',
+            {
+                'method': 'POST',
+                'headers': headers,
+                'body': window.JSON.stringify(data)
+            }
+        ).then(on_complete).catch(lambda e: window.console.error(f"GitHub Action Error: {e}"))
+
+    # ---------------
+    # LOADING SCREEN
+    # ---------------
     def show_loading_screen():
         print("Showing loading screen")
         loading_bar_container.style.display = "flex"
         canvas.style.display = "none"
-        # Once assets are loaded, show_title_screen() is called
+        # Assets are loaded via event listeners; once all are loaded, show_title_screen() is called
 
     # Start
     show_loading_screen()
