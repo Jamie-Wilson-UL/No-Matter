@@ -6,6 +6,8 @@
   <title>No Matter Blaster</title>
   <!-- Include Brython -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
+  <!-- Include Brython Standard Library -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython_stdlib.js"></script>
   <style>
     body {
       text-align: center;
@@ -1038,7 +1040,7 @@
         def on_complete(req):
             if req.status == 200 or req.status == 304:
                 try:
-                    data = json.loads(req.text)
+                    data = json.loads(req.responseText)
                     update_high_scores(data)
                 except Exception as e:
                     print(f"Error parsing high scores: {e}")
@@ -1184,5 +1186,4 @@
   </script>
 </body>
 </html>
-
 
