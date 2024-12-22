@@ -29,10 +29,6 @@
       50% { transform: scale(1.1); }
       100% { transform: scale(1); }
     }
-    @keyframes fill {
-      0% { width: 0; }
-      100% { width: 100%; }
-    }
     #title-img {
       animation: breathing 3s infinite;
     }
@@ -144,6 +140,8 @@
 
   <script type="text/python">
     from browser import document, html, window
+    from browser import ajax
+    import json
 
     # ---------------------------------------------------------
     # GAME CONSTANTS (collision boxes, speeds, bullet sizes, etc.)
@@ -205,7 +203,7 @@
     title_img     = document["title-img"]
     boss_img      = html.IMG(src="boss.png")
 
-    # LEVEL-BASED ENEMY ART
+    # LEVEL-BASED ENEMY ART (Renamed to avoid spaces)
     level_image_paths = {
         1: [
             "level1/dog.png",
@@ -215,7 +213,7 @@
             "level1/redtshirt.png"
         ],
         2: [
-            "level2/broken guitar.png",
+            "level2/broken_guitar.png",
             "level2/brokenbtl.png",
             "level2/greentshirt.png",
             "level2/sticker.png",
@@ -223,10 +221,10 @@
         ],
         3: [
             "level3/cat.png",
-            "level3/chemical.paws.png",
+            "level3/chemical_paws.png",
             "level3/flask.png",
             "level3/purpletshirt.png",
-            "level3/spill.smoke.png"
+            "level3/spill_smoke.png"
         ],
     }
     level_images = {
@@ -292,25 +290,26 @@
         print(f"Setting music for level {current_level}")
         stop_all_music()
         if current_level == 1:
-            title_audio.play()
+            title_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
             print("Playing title_audio")
         elif current_level == 2:
-            level2_audio.play()
+            level2_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
             print("Playing level2_audio")
         elif current_level == 3:
-            level3_audio.play()
+            level3_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
             print("Playing level3_audio")
         else:
             # Boss or beyond
-            boss_audio.play()
+            boss_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
             print("Playing boss_audio")
 
     def set_music_for_title_screen():
         """Plays the title audio for the title page."""
         print("Setting music for title screen")
         stop_all_music()
-        title_audio.play()
-        print("Playing title_audio for title screen")
+        # Delay playing audio until user interacts
+        # Do not autoplay to comply with browser policies
+        print("Title music will play after user interaction")
 
     # -------------------------------------------------
     # SCALING UTILITY: CAP DIMENSIONS PRESERVING RATIO
@@ -336,6 +335,8 @@
         global assets_loaded
         assets_loaded += 1
         progress = (assets_loaded / total_assets) * 100
+        # Ensure progress does not exceed 100%
+        progress = min(progress, 100)
         loading_progress.style.width = f"{progress}%"
         
         if asset_status.startswith("loaded:"):
@@ -381,7 +382,8 @@
         print("Showing title screen")
         loading_bar_container.style.display = "none"
         canvas.style.display = "block"
-        set_music_for_title_screen()       # Start title music
+        # Do not autoplay music here to comply with browser policies
+        set_music_for_title_screen()       # Prepare music to play after user interacts
         initialize_high_score()
         animate_title_screen()
 
@@ -470,7 +472,8 @@
         showing_high_score_prompt = False
         final_score_scheduled = False
 
-        # The main loop will handle drawing the start screen again
+        # Stop all music and prepare to play title music after user interacts
+        set_music_for_title_screen()
 
     # ----------------------
     # DRAWING / RENDERING
@@ -831,7 +834,7 @@
                         enemies.remove(enemy)
                         bullets.remove(bullet)
                         score += 1
-                        explosion_audio.play()
+                        explosion_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
                         break
 
         else:
@@ -842,7 +845,7 @@
                     print(f"Boss hit at position {boss_pos} by bullet {bullet}")
                     bullets.remove(bullet)
                     boss_hits += 1
-                    explosion_audio.play()
+                    explosion_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
 
         # Collisions with player
         for bullet in enemy_bullets[:]:
@@ -981,6 +984,8 @@
         print("Starting game: Enabling Level Title Screen")
         showing_level_title = True  # Enable Level 1 cover screen
         game_started = True         # Indicate that the game has started
+        # Play title music now that the user has interacted
+        title_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
         print(f"showing_level_title set to {showing_level_title}, game_started set to {game_started}")
 
     def move_player(event):
@@ -1000,7 +1005,7 @@
                         player_pos[0] + PLAYER_SIZE // 2 - BULLET_WIDTH // 2,
                         player_pos[1]
                     ])
-                    laser_audio.play()
+                    laser_audio.play().catch(lambda e: print(f"Audio play error: {e}"))
                     player_last_shot = current_time
                     print(f"Player fired a bullet at position {bullets[-1]}")
             elif game_over:
@@ -1031,18 +1036,29 @@
         print("Initializing high scores")
         timestamp = window.Date.new().getTime()
         url = f'https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json?nocache={timestamp}'
-        window.fetch(url).then(
-            lambda response: response.json()
-        ).then(
-            lambda data: update_high_scores(data)
-        ).catch(
-            lambda error: window.console.error(f"Error fetching high scores: {error}")
-        )
+        def on_complete(req):
+            if req.status == 200 or req.status == 304:
+                try:
+                    data = json.loads(req.text)
+                    update_high_scores(data)
+                except Exception as e:
+                    print(f"Error parsing high scores: {e}")
+            else:
+                print(f"Failed to fetch high scores. Status: {req.status}")
+        
+        req = ajax.ajax()
+        req.bind('complete', on_complete)
+        req.open('GET', url, True)
+        req.send()
 
     def update_high_scores(data):
         global top_scores
-        top_scores = data
-        print(f"High scores updated: {top_scores}")
+        # Ensure data is a list of dictionaries
+        if isinstance(data, list):
+            top_scores = [dict(item) for item in data]
+            print(f"High scores updated: {top_scores}")
+        else:
+            print("High score data is not a list.")
 
     # -----------
     # EVENT BIND
