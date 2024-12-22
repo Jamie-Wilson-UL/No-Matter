@@ -204,7 +204,7 @@
     title_img     = document["title-img"]
     boss_img      = html.IMG(src="boss.png")
 
-    # LEVEL-BASED ENEMY ART (Renamed to avoid spaces)
+    # LEVEL-BASED ENEMY ART (Using actual filenames with spaces and periods)
     level_image_paths = {
         1: [
             "level1/dog.png",
@@ -214,7 +214,7 @@
             "level1/redtshirt.png"
         ],
         2: [
-            "level2/broken_guitar.png",
+            "level2/broken guitar.png",
             "level2/brokenbtl.png",
             "level2/greentshirt.png",
             "level2/sticker.png",
@@ -222,10 +222,10 @@
         ],
         3: [
             "level3/cat.png",
-            "level3/chemical_paws.png",
+            "level3/chemical.paws.png",
             "level3/flask.png",
             "level3/purpletshirt.png",
-            "level3/spill_smoke.png"
+            "level3/spill.smoke.png"
         ],
     }
     level_images = {
@@ -332,8 +332,16 @@
     # Correct total_assets calculation based on unique assets
     total_assets = 3 + sum(len(imgs) for imgs in level_image_paths.values())  # spaceship, title, boss + level images
 
+    # Define critical assets
+    critical_assets = [
+        "car.png",
+        "boss.png",
+        "title.gif",
+        # Add any other critical assets here
+    ]
+
     def asset_loaded(asset_status):
-        global assets_loaded
+        global assets_loaded, top_scores
         assets_loaded += 1
         progress = (assets_loaded / total_assets) * 100
         # Ensure progress does not exceed 100%
@@ -346,6 +354,11 @@
         elif asset_status.startswith("failed:"):
             asset_name = asset_status.split("failed:")[1]
             print(f"Asset failed to load: {asset_name}. Progress: {progress}%")
+            if asset_name in critical_assets:
+                print(f"Critical asset {asset_name} failed to load. Cannot start the game.")
+                # Optionally, display an error message to the user
+                loading_bar_container.innerHTML = "<p>Critical assets failed to load. Please refresh the page.</p>"
+                return
         
         if assets_loaded == total_assets:
             print("All assets loaded.")
@@ -417,15 +430,21 @@
                         if img_index >= len(current_level_images):
                             img_index = len(current_level_images) - 1
                         img = current_level_images[img_index]
-                        enemy_x = c * (ENEMY_SIZE + 10) + 50
-                        enemy_y = r * (ENEMY_SIZE + 10) + 50
-                        enemies.append({
-                            "pos": [enemy_x, enemy_y],
-                            "img": img
-                        })
-                        print(f"Enemy initialized at position: [{enemy_x}, {enemy_y}]")
+                        if img.complete and img.naturalWidth != 0:
+                            enemy_x = c * (ENEMY_SIZE + 10) + 50
+                            enemy_y = r * (ENEMY_SIZE + 10) + 50
+                            enemies.append({
+                                "pos": [enemy_x, enemy_y],
+                                "img": img
+                            })
+                            print(f"Enemy initialized at position: [{enemy_x}, {enemy_y}]")
+                        else:
+                            print(f"Failed to load enemy image: {img.src}. Enemy not added.")
                 boss_hits = 0
                 print(f"Total enemies initialized: {len(enemies)}")
+                if len(enemies) == 0:
+                    print("No enemies loaded for this level. Cannot proceed.")
+                    game_over = True  # Or handle appropriately
             else:
                 # Boss time
                 enemies.clear()
@@ -1186,4 +1205,3 @@
   </script>
 </body>
 </html>
-
