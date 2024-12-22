@@ -219,7 +219,7 @@
             "level1/redtshirt.png"
         ],
         2: [
-            "level2/broken guitar.png",
+            "level2/broken_guitar.png",  # Renamed to remove space
             "level2/brokenbtl.png",
             "level2/greentshirt.png",
             "level2/sticker.png",
@@ -360,52 +360,58 @@
         global game_started, score, boss_hits, level_start_time
         global final_score_scheduled
 
-        print(f"Initializing game for Level {level}")
-        final_score_scheduled = False
+        try:
+            print(f"Initializing game for Level {level}")
+            final_score_scheduled = False
 
-        rows = 3
-        cols = 8 + level
+            rows = 3
+            cols = 8 + level
 
-        if level <= MAX_LEVELS:
-            current_level_images = level_images[level]
-            enemies.clear()
-            print(f"Setting up enemies for Level {level} with {rows} rows and {cols} columns")
-            for r in range(rows):
-                for c in range(cols):
-                    img = current_level_images[
-                        int(window.Math.random() * len(current_level_images))
-                    ]
-                    enemies.append({
-                        "pos": [c * (ENEMY_SIZE + 10) + 50,
-                                r * (ENEMY_SIZE + 10) + 50],
-                        "img": img
-                    })
-            boss_hits = 0
-            print(f"Total enemies initialized: {len(enemies)}")
-        else:
-            # Boss time
-            enemies.clear()
-            boss_hits = 0
-            print("Boss time: Enemies cleared")
+            if level <= MAX_LEVELS:
+                current_level_images = level_images[level]
+                enemies.clear()
+                print(f"Setting up enemies for Level {level} with {rows} rows and {cols} columns")
+                for r in range(rows):
+                    for c in range(cols):
+                        img = current_level_images[
+                            int(window.Math.random() * len(current_level_images))
+                        ]
+                        enemies.append({
+                            "pos": [c * (ENEMY_SIZE + 10) + 50,
+                                    r * (ENEMY_SIZE + 10) + 50],
+                            "img": img
+                        })
+                boss_hits = 0
+                print(f"Total enemies initialized: {len(enemies)}")
+            else:
+                # Boss time
+                enemies.clear()
+                boss_hits = 0
+                print("Boss time: Enemies cleared")
 
-        bullets.clear()
-        enemy_bullets.clear()
-        laser_beams.clear()
-        diagonal_shots.clear()
-        print("Cleared bullets, enemy bullets, laser beams, and diagonal shots")
+            bullets.clear()
+            enemy_bullets.clear()
+            laser_beams.clear()
+            diagonal_shots.clear()
+            print("Cleared bullets, enemy bullets, laser beams, and diagonal shots")
 
-        showing_level_title = False
-        ENEMY_SPEED = 1.5 + level
-        game_over = False
-        game_started = True
-        level_start_time = window.Date.new().getTime()
+            showing_level_title = False
+            ENEMY_SPEED = 1.5 + level
+            game_over = False
+            game_started = True
+            level_start_time = window.Date.new().getTime()
 
-        # Set music for the new level
-        if level <= MAX_LEVELS:
-            set_music_for_level(level)
-        else:
-            # Boss music
-            set_music_for_level(MAX_LEVELS + 1)
+            # Set music for the new level
+            if level <= MAX_LEVELS:
+                set_music_for_level(level)
+            else:
+                # Boss music
+                set_music_for_level(MAX_LEVELS + 1)
+
+            print("Game initialized successfully")
+
+        except Exception as e:
+            print(f"Error in initialize_game: {e}")
 
     def reset_game():
         """
@@ -464,6 +470,7 @@
                 )
 
     def draw_level_title():
+        global game_started  # Ensure access to global variable
         print(f"Drawing Level Title: Level {level}")
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
@@ -477,7 +484,7 @@
             ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
 
         print("Scheduling initialize_game() in 1 second")
-        window.setTimeout(initialize_game, 1000)
+        window.setTimeout(lambda: initialize_game(), 1000)  # Proceed to initialize the game after 1 second
 
     def draw_final_score():
         print("Drawing final score")
@@ -732,7 +739,7 @@
         global game_over, score, game_started, showing_level_title
         global ENEMY_SPEED, boss_hits, boss_direction
 
-        # Uncomment the following line to see when update() is called
+        # Uncomment the following line if you want to see when update() is called
         # print("Update loop tick")
 
         if game_over or not game_started or showing_level_title:
@@ -995,6 +1002,8 @@
 
     # Title screen animation
     def animate_title_screen():
+        global game_started  # Ensure access to the global variable
+        print(f"animate_title_screen: game_started={game_started}")
         if not game_started:
             print("Animating title screen")
             draw_start_screen()
