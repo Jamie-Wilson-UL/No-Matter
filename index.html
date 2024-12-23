@@ -463,7 +463,7 @@
         ctx.fillText("Get ready to blast the enemies!", WIDTH // 2, HEIGHT // 2 + 30)
 
         # After 2 seconds, start the game
-        window.setTimeout(start_level1, 2000)
+        window.setTimeout(lambda: window.start_level1(), 2000)
 
     # **Added Function: start_level1()**
     def start_level1():
@@ -471,6 +471,10 @@
         global showing_level1_screen
         showing_level1_screen = False
         initialize_game()
+
+    # **Assign Functions to window for JavaScript access**
+    window.draw_level1_screen = draw_level1_screen
+    window.start_level1 = start_level1
 
     def draw_level_title():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -971,11 +975,36 @@
         canvas.style.display = "none"
         window.setTimeout(show_title_screen, 3000)
 
-    # **Added Functions: draw_level1_screen() and start_level1()**
-    # (Already defined above)
-
     # Start
     show_loading_screen()
+
+    # -------------------
+    # NEW FUNCTIONS ADDED
+    # -------------------
+    def draw_level1_screen():
+        """Draws the Level 1 introductory screen."""
+        ctx.clearRect(0, 0, WIDTH, HEIGHT)
+        move_stars()
+        draw_stars()
+        ctx.fillStyle = "cyan"
+        ctx.font = "bold 48px 'Press Start 2P'"
+        ctx.textAlign = "center"
+        ctx.fillText("Level 1", WIDTH // 2, HEIGHT // 2 - 30)
+        ctx.font = "24px 'Press Start 2P'"
+        ctx.fillText("Get ready to blast the enemies!", WIDTH // 2, HEIGHT // 2 + 30)
+
+        # After 2 seconds, start the game
+        window.setTimeout(lambda: window.start_level1(), 2000)
+
+    def start_level1():
+        """Starts Level 1 by initializing the game."""
+        global showing_level1_screen
+        showing_level1_screen = False
+        initialize_game()
+
+    # **Assign Functions to window for JavaScript access**
+    window.draw_level1_screen = draw_level1_screen
+    window.start_level1 = start_level1
 
   </script>
 </body>
