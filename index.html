@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>No Matter Blaster</title>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.10.5/brython.min.js"></script>
+  <!-- Updated Brython Script (Version 3.12.0) -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.12.0/brython.min.js"></script>
   <style>
     /* [Your existing styles remain unchanged] */
     /* ... */
@@ -645,7 +646,7 @@
             for enemy in enemies[:]:
                 for bullet in bullets[:]:
                     if (enemy["pos"][0] <= bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
-                        enemy["pos"][1] <= bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
+                        enemy["pos"][1] <= bullet["y"] <= enemy["pos"][1] + ENEMY_SIZE):
                         enemies.remove(enemy)
                         bullets.remove(bullet)
                         score += 1
@@ -868,3 +869,4 @@
   </script>
 </body>
 </html>
+
