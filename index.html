@@ -143,7 +143,7 @@
   </div>
 
   <script type="text/python">
-    from browser import document, html, window
+    from browser import document, html, window, timer
 
     # ---------------------------------------------------------
     # GAME CONSTANTS (collision boxes, speeds, bullet sizes, etc.)
@@ -192,8 +192,9 @@
     top_scores = []
     high_score_updated = False
 
-    # **Added Variable: showing_level1_screen**
+    # **Added Variables**
     showing_level1_screen = False
+    level1_transition_scheduled = False
 
     # Positions
     player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
@@ -452,6 +453,7 @@
     # **Added Function: draw_level1_screen()**
     def draw_level1_screen():
         """Draws the Level 1 introductory screen."""
+        global level1_transition_scheduled
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
@@ -462,19 +464,20 @@
         ctx.font = "24px 'Press Start 2P'"
         ctx.fillText("Get ready to blast the enemies!", WIDTH // 2, HEIGHT // 2 + 30)
 
-        # After 2 seconds, start the game
-        window.setTimeout(lambda: window.start_level1(), 2000)
+        if not level1_transition_scheduled:
+            level1_transition_scheduled = True
+            timer.set_timeout(start_level1, 2000)  # Schedule after 2 seconds
 
     # **Added Function: start_level1()**
     def start_level1():
         """Starts Level 1 by initializing the game."""
-        global showing_level1_screen
+        global showing_level1_screen, level1_transition_scheduled
         showing_level1_screen = False
+        level1_transition_scheduled = False
         initialize_game()
 
     # **Assign Functions to window for JavaScript access**
-    window.draw_level1_screen = draw_level1_screen
-    window.start_level1 = start_level1
+    # (No longer needed since using Brython's timer)
 
     def draw_level_title():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -488,7 +491,7 @@
         else:
             ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 2)
 
-        window.setTimeout(initialize_game, 1000)
+        timer.set_timeout(initialize_game, 1000)
 
     def draw_final_score():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -503,7 +506,7 @@
             ctx.fillText("New High Score!", WIDTH // 2, HEIGHT // 1.7)
             show_high_score_prompt()
         else:
-            window.setTimeout(reset_game, 3000)
+            timer.set_timeout(reset_game, 3000)
 
     def show_high_score_prompt():
         high_score_modal.style.display = "block"
@@ -529,7 +532,7 @@
     def draw():
         global game_over, game_started, showing_level_title
         global showing_high_score_prompt, showing_final_score, final_score_scheduled
-        global showing_level1_screen  # Added: Reference to new flag
+        global showing_level1_screen  # Reference to new flag
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
@@ -544,7 +547,7 @@
 
         if not game_started:
             draw_start_screen()
-        elif showing_level1_screen:  # Added: Check for Level 1 screen
+        elif showing_level1_screen:  # Check for Level 1 screen
             draw_level1_screen()
         elif showing_level_title:
             draw_level_title()
@@ -605,7 +608,7 @@
                 ctx.font = "48px 'Press Start 2P'"
                 ctx.textAlign = "center"
                 ctx.fillText("GAME OVER", WIDTH // 2, HEIGHT // 2)
-                window.setTimeout(show_final_score, 3000)
+                timer.set_timeout(show_final_score, 3000)
 
             # If boss is beaten
             if boss_hits >= BOSS_HITS_REQUIRED and not game_over:
@@ -616,7 +619,7 @@
                     ctx.font = "48px 'Press Start 2P'"
                     ctx.textAlign = "center"
                     ctx.fillText("YOU WIN!", WIDTH // 2, HEIGHT // 2)
-                    window.setTimeout(show_final_score, 3000)
+                    timer.set_timeout(show_final_score, 3000)
 
             # Level up if no enemies remain
             if len(enemies) == 0 and level <= MAX_LEVELS and not game_over:
@@ -973,38 +976,10 @@
     def show_loading_screen():
         loading_bar_container.style.display = "flex"
         canvas.style.display = "none"
-        window.setTimeout(show_title_screen, 3000)
+        timer.set_timeout(show_title_screen, 3000)
 
     # Start
     show_loading_screen()
-
-    # -------------------
-    # NEW FUNCTIONS ADDED
-    # -------------------
-    def draw_level1_screen():
-        """Draws the Level 1 introductory screen."""
-        ctx.clearRect(0, 0, WIDTH, HEIGHT)
-        move_stars()
-        draw_stars()
-        ctx.fillStyle = "cyan"
-        ctx.font = "bold 48px 'Press Start 2P'"
-        ctx.textAlign = "center"
-        ctx.fillText("Level 1", WIDTH // 2, HEIGHT // 2 - 30)
-        ctx.font = "24px 'Press Start 2P'"
-        ctx.fillText("Get ready to blast the enemies!", WIDTH // 2, HEIGHT // 2 + 30)
-
-        # After 2 seconds, start the game
-        window.setTimeout(lambda: window.start_level1(), 2000)
-
-    def start_level1():
-        """Starts Level 1 by initializing the game."""
-        global showing_level1_screen
-        showing_level1_screen = False
-        initialize_game()
-
-    # **Assign Functions to window for JavaScript access**
-    window.draw_level1_screen = draw_level1_screen
-    window.start_level1 = start_level1
 
   </script>
 </body>
