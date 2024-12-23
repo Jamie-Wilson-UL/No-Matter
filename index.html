@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>No Matter Blaster</title>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.10.5/brython.min.js"></script>
   <style>
     body {
       text-align: center;
@@ -66,6 +66,14 @@
       color: white;
       font-weight: bold;
     }
+    #press-start-text {
+      font-size: 24px;
+      font-family: 'Press Start 2P', monospace;
+      color: white;
+      font-weight: bold;
+      margin-top: 20px;
+      display: none;
+    }
     #high-score-modal {
       display: none;
       position: fixed;
@@ -114,6 +122,7 @@
     <div id="loading-bar">
       <div id="loading-progress"></div>
     </div>
+    <div id="press-start-text">Press Space to Start</div>
   </div>
 
   <!-- GAME CANVAS -->
@@ -121,6 +130,7 @@
 
   <!-- AUDIO ELEMENTS -->
   <audio id="title-audio" src="title_audio.mp3" loop></audio>
+  <audio id="level1-audio" src="level1_audio.mp3" loop></audio>
   <audio id="level2-audio" src="level2_audio.mp3" loop></audio>
   <audio id="level3-audio" src="level3_audio.mp3" loop></audio>
   <audio id="boss-audio" src="boss_audio.mp3" loop></audio>
@@ -142,7 +152,7 @@
   </div>
 
   <script type="text/python">
-    from browser import document, html, window
+    from browser import document, html, window, timer
 
     # ---------------------------------------------------------
     # GAME CONSTANTS (collision boxes, speeds, bullet sizes, etc.)
@@ -178,6 +188,7 @@
     showing_final_score = False
     showing_high_score_prompt = False
     final_score_scheduled = False
+    showing_press_start_screen = False
 
     ENEMY_SPEED = 1.5
     flash_text = True
@@ -256,6 +267,7 @@
     # AUDIO ELEMENTS
     # --------------------
     title_audio  = document["title-audio"]
+    level1_audio = document["level1-audio"]
     level2_audio = document["level2-audio"]
     level3_audio = document["level3-audio"]
     boss_audio   = document["boss-audio"]
@@ -269,32 +281,30 @@
     loading_bar_container = document["loading-bar-container"]
     loading_bar = document["loading-bar"]
     loading_progress = document["loading-progress"]
+    press_start_text = document["press-start-text"]
 
     high_score_modal = document["high-score-modal"]
     player_name_input = document["player-name"]
     submit_name_button = document["submit-name"]
 
-    # -------------
-    # AUDIO CONTROL
-    # -------------
+    # -------------------------
+    # AUDIO CONTROL FUNCTIONS
+    # -------------------------
     def stop_all_music():
-        """Pause and reset all music tracks to time=0."""
+        """Pause and reset all music tracks."""
         title_audio.pause();  title_audio.currentTime  = 0
+        level1_audio.pause(); level1_audio.currentTime = 0
         level2_audio.pause(); level2_audio.currentTime = 0
         level3_audio.pause(); level3_audio.currentTime = 0
         boss_audio.pause();   boss_audio.currentTime   = 0
 
     def set_music_for_level(current_level):
         """
-        Stop all audio, then:
-          - Level 1 => title_audio
-          - Level 2 => level2_audio
-          - Level 3 => level3_audio
-          - Level > 3 => boss_audio
+        Stop all audio, then play the corresponding level's audio on loop.
         """
         stop_all_music()
         if current_level == 1:
-            title_audio.play()
+            level1_audio.play()
         elif current_level == 2:
             level2_audio.play()
         elif current_level == 3:
@@ -304,7 +314,7 @@
             boss_audio.play()
 
     def set_music_for_title_screen():
-        """Plays the title audio for the title page."""
+        """Play the title audio on loop."""
         stop_all_music()
         title_audio.play()
 
@@ -320,22 +330,15 @@
         return (w * ratio, h * ratio)
 
     # -------------------------------------------------
-    # LOADING SCREEN UTILS (OPTIONAL)
+    # LOADING SCREEN UTILITIES
     # -------------------------------------------------
-    def asset_loaded(event):
-        global assets_loaded
-        assets_loaded += 1
-        progress = (assets_loaded / total_assets) * 100
-        loading_progress.style.width = f"{progress}%"
-        if assets_loaded == total_assets:
-            show_title_screen()
-
     def show_title_screen():
+        """Transition from loading screen to title screen."""
         loading_bar_container.style.display = "none"
+        press_start_text.style.display = "block"  # Show "Press Space to Start"
         canvas.style.display = "block"
-        set_music_for_title_screen()       # <--- Start title music
-        initialize_high_score()
-        animate_title_screen()
+        showing_press_start_screen = True
+        animate_press_start_screen()
 
     # ------------------------------
     # GAME INITIALIZATION / RESET
@@ -396,7 +399,7 @@
 
     def reset_game():
         """
-        Called when we want to return to the title screen after game over or a completed run.
+        Resets the game to initial state and returns to title screen.
         """
         global level, game_started, game_over, score
         global showing_level_title, showing_high_score_prompt, showing_final_score
@@ -411,7 +414,9 @@
         showing_high_score_prompt = False
         final_score_scheduled = False
 
-        animate_title_screen()  # will call set_music_for_title_screen again
+        set_music_for_title_screen()  # Play title audio on loop
+        showing_press_start_screen = True
+        animate_press_start_screen()
 
     # ----------------------
     # DRAWING / RENDERING
@@ -434,7 +439,7 @@
             ctx.fillStyle = "white"
             ctx.font = "bold 28px 'Press Start 2P'"
             ctx.textAlign = "center"
-            ctx.fillText("Press Space to Play", WIDTH // 2, HEIGHT // 1.7)
+            ctx.fillText("Press Space to Start", WIDTH // 2, HEIGHT // 1.7)
 
         ctx.font = "bold 28px 'Press Start 2P'"
         ctx.fillText("Leaderboard", WIDTH // 2, HEIGHT // 1.3 - 40)
@@ -518,7 +523,7 @@
             ctx.fillStyle = "rgba(0, 0, 255, 0.1)"
         ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
-        if not game_started:
+        if showing_press_start_screen:
             draw_start_screen()
         elif showing_level_title:
             draw_level_title()
@@ -596,22 +601,23 @@
             if len(enemies) == 0 and level <= MAX_LEVELS and not game_over:
                 level_up()
 
-    def show_final_score():
-        global high_score_updated, showing_high_score_prompt, showing_final_score
-        high_score_updated = False
+    # ---------------------------
+    # LEVEL UP FUNCTION
+    # ---------------------------
+    def level_up():
+        global level, showing_level_title, score
+        level += 1
+        time_bonus = max(
+            0,
+            int((120000 - (window.Date.new().getTime() - level_start_time)) / 800)
+        )
+        score += time_bonus
+        showing_level_title = True
+        draw_level_title()
 
-        for i in range(len(top_scores)):
-            if score > top_scores[i]["score"]:
-                high_score_updated = True
-                showing_high_score_prompt = True
-                break
-
-        showing_final_score = True
-        draw_final_score()
-
-    # --------------------------------
-    # HIGH SCORE: SUBMIT / FETCH / UPDATE
-    # --------------------------------
+    # ---------------------------
+    # HIGH SCORE SUBMISSION
+    # ---------------------------
     def submit_name(event):
         global top_scores, score
         player_name = player_name_input.value.strip()
@@ -624,6 +630,9 @@
 
     submit_name_button.bind("click", submit_name)
 
+    # ---------------------------
+    # GITHUB ACTION TRIGGER
+    # ---------------------------
     def transform_token():
         placeholder = 'a' * 40
         token = list(placeholder)
@@ -799,9 +808,9 @@
 
         draw()
 
-    # -------------
-    # ENEMY SHOOTING
-    # -------------
+    # ---------------------------
+    # ENEMY SHOOTING FUNCTION
+    # ---------------------------
     def enemy_shoot():
         global game_over, game_started, showing_level_title
         global boss_last_laser, boss_last_diagonal_shot
@@ -845,40 +854,27 @@
                 })
                 boss_last_diagonal_shot = current_time
 
-    # -----------
-    # LEVEL UP
-    # -----------
-    def level_up():
-        global level, showing_level_title, score
-        level += 1
-        time_bonus = max(
-            0,
-            int((120000 - (window.Date.new().getTime() - level_start_time)) / 800)
-        )
-        score += time_bonus
-        showing_level_title = True
-        draw_level_title()
-
-    # -----------
-    # START GAME
-    # -----------
-    def start_game():
-        """Triggered when the player presses Space to start the game."""
-        global showing_level_title, game_started, level
-        level = 1  # Initialize at Level 1
-        showing_level_title = True  # Trigger the level title screen
-        game_started = True
-        draw_level_title()  # Display the Level 1 title
-
-    def move_player(event):
-        global game_started, game_over, player_last_shot
+    # ---------------------------
+    # KEYBOARD EVENT HANDLER
+    # ---------------------------
+    def handle_keydown(event):
+        global game_started, game_over, player_last_shot, showing_press_start_screen, showing_title_screen
         current_time = window.Date.new().getTime()
 
         if event.keyCode == 32:  # SPACE
-            if not game_started:
-                # Start the game from the title screen
-                start_game()
-            elif not showing_level_title and not game_over:
+            if showing_press_start_screen:
+                # User presses Space to start and enable audio
+                showing_press_start_screen = False
+                set_music_for_title_screen()  # Start title audio
+                window.console.log("Title audio started.")
+                showing_title_screen = True
+                animate_title_screen()
+            elif showing_title_screen:
+                # User presses Space on title screen to start Level 1
+                showing_title_screen = False
+                showing_level_title = True
+                draw_level_title()
+            elif game_started and not showing_level_title and not game_over:
                 # Fire bullet if not on cooldown
                 if current_time - player_last_shot > player_shot_cooldown:
                     bullets.append([
@@ -898,13 +894,16 @@
             elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:
                 player_pos[0] += PLAYER_SPEED
 
+    # ---------------------------
+    # FLASH TEXT TOGGLE
+    # ---------------------------
     def toggle_flash_text():
         global flash_text
         flash_text = not flash_text
 
-    # -----------
-    # HIGH SCORES
-    # -----------
+    # ---------------------------
+    # HIGH SCORE FETCHING
+    # ---------------------------
     def initialize_high_score():
         global top_scores
         timestamp = window.Date.new().getTime()
@@ -921,28 +920,53 @@
         global top_scores
         top_scores = data
 
+    # ---------------------------
+    # AUDIO INITIATION ON USER INTERACTION
+    # ---------------------------
+    def enable_audio(event):
+        # Play a silent sound to enable audio playback
+        title_audio.play().then(lambda: None).catch(lambda: None)
+        document.unbind("click", enable_audio)
+        document.unbind("keydown", enable_audio)
+
     # -----------
     # EVENT BIND
     # -----------
-    document.bind("keydown", move_player)
+    document.bind("keydown", handle_keydown)
     window.setInterval(update, 30)
     window.setInterval(enemy_shoot, 500)
     window.setInterval(toggle_flash_text, 1000)
+    window.bind("click", enable_audio)  # Enable audio on click
+    document.bind("keydown", enable_audio)  # Enable audio on keydown
 
-    # Title screen animation
+    # -----------
+    # INITIALIZATION
+    # -----------
+    def start_loading():
+        """Display the loading screen and start loading process."""
+        loading_bar_container.style.display = "flex"
+        press_start_text.style.display = "none"
+        canvas.style.display = "none"
+        window.setTimeout(show_title_screen, 3000)  # Extended loading time
+
+    # Start
+    initialize_high_score()
+    start_loading()
+
+    # ---------------------------
+    # ANIMATION FUNCTIONS
+    # ---------------------------
+    def animate_press_start_screen():
+        if showing_press_start_screen:
+            draw_start_screen()
+            window.requestAnimationFrame(lambda x: animate_press_start_screen())
+
     def animate_title_screen():
-        if not game_started:
+        if showing_title_screen:
             draw_start_screen()
             window.requestAnimationFrame(lambda x: animate_title_screen())
 
-    # Simple loading screen
-    def show_loading_screen():
-        loading_bar_container.style.display = "flex"
-        canvas.style.display = "none"
-        window.setTimeout(show_title_screen, 3000)
-
-    # Start
-    show_loading_screen()
+    animate_press_start_screen()
 
   </script>
 </body>
