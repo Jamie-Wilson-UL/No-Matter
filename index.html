@@ -913,7 +913,7 @@
     # ---------------------------
     def enable_audio(event):
         # Play a silent sound to enable audio playback
-        title_audio.play().then(lambda: None).catch(lambda: None)
+        title_audio.play().then(lambda _: None).catch(lambda _: None)
         document.unbind("click", enable_audio)
         document.unbind("keydown", enable_audio)
 
@@ -943,18 +943,18 @@
     # ---------------------------
     # ANIMATION FUNCTIONS
     # ---------------------------
-    def animate_press_start_screen():
+    def animate_press_start_screen(frame):
         if showing_press_start_screen:
             draw_start_screen()
-            window.requestAnimationFrame(lambda x: animate_press_start_screen())
+            window.requestAnimationFrame(animate_press_start_screen)
 
-    def animate_title_screen():
+    def animate_title_screen(frame):
         if showing_title_screen:
             draw_start_screen()
-            window.requestAnimationFrame(lambda x: animate_title_screen())
+            window.requestAnimationFrame(animate_title_screen)
 
-    animate_press_start_screen()
-
+    animate_press_start_screen(0)
   </script>
 </body>
 </html>
+
