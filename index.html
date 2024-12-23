@@ -332,7 +332,6 @@
 
     def show_title_screen():
         loading_bar_container.style.display = "none"
-        press_start_text.style.display = "block"  # Show "Press Space to Start"
         canvas.style.display = "block"
         set_music_for_title_screen()       # <--- Start title music
         initialize_high_score()
@@ -741,7 +740,7 @@
             for enemy in enemies[:]:
                 for bullet in bullets[:]:
                     if (enemy["pos"][0] <= bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
-                        enemy["pos"][1] <= bullet["y"] <= enemy["pos"][1] + ENEMY_SIZE):
+                        enemy["pos"][1] <= bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
                         enemies.remove(enemy)
                         bullets.remove(bullet)
                         score += 1
@@ -751,7 +750,7 @@
             # Collisions with boss
             for bullet in bullets[:]:
                 if (boss_pos[0] <= bullet[0] <= boss_pos[0] + BOSS_SIZE and
-                    boss_pos[1] <= bullet["y"] <= boss_pos[1] + BOSS_SIZE):
+                    boss_pos[1] <= bullet[1] <= boss_pos[1] + BOSS_SIZE):
                     bullets.remove(bullet)
                     boss_hits += 1
                     explosion_audio.play()
@@ -759,7 +758,7 @@
         # Collisions with player
         for bullet in enemy_bullets[:]:
             if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_SIZE and
-                player_pos[1] <= bullet["y"] <= player_pos[1] + PLAYER_SIZE):
+                player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_SIZE):
                 game_over = True
 
         for laser in laser_beams[:]:
@@ -927,7 +926,7 @@
     # -----------
     # EVENT BIND
     # -----------
-    document.bind("keydown", move_player)
+    document.bind("keydown", handle_keydown)
     window.setInterval(update, 30)
     window.setInterval(enemy_shoot, 500)
     window.setInterval(toggle_flash_text, 1000)
@@ -957,3 +956,4 @@
   </script>
 </body>
 </html>
+
