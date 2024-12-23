@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>No Matter Blaster</title>
+  <!-- Include Brython -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
+  <!-- Include Brython Standard Library -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython_stdlib.js"></script> <!-- # FIX: Added Brython standard library -->
   <style>
     body {
       text-align: center;
@@ -28,8 +31,11 @@
       50% { transform: scale(1.1); }
       100% { transform: scale(1); }
     }
-    /* #keyframes fill removed to eliminate conflicting CSS animation */
-
+    /* # FIX: Removed @keyframes fill to eliminate conflicting CSS animation */
+    /* @keyframes fill {
+      0% { width: 0; }
+      100% { width: 100%; }
+    } */
     #title-img {
       animation: breathing 3s infinite;
     }
@@ -58,7 +64,7 @@
       background-color: #00ff00;
       /* # FIX: Removed CSS animation to allow JavaScript control */
       /* animation: fill 3s linear forwards; */
-      transition: width 0.3s ease; /* Added transition for smoother updates */
+      transition: width 0.3s ease; /* # FIX: Added transition for smoother updates */
     }
     #loading-text {
       font-size: 24px;
@@ -954,6 +960,9 @@
 
         draw()
 
+    # -------------
+    # ENEMY SHOOTING
+    # -------------
     def enemy_shoot():
         global game_over, game_started, showing_level_title
         global boss_last_laser, boss_last_diagonal_shot
@@ -1235,5 +1244,3 @@
   </script>
 </body>
 </html>
-
-
