@@ -152,8 +152,9 @@
   </div>
 
   <script type="text/python">
-    from browser import document, html, window, timer
-
+    from browser import document, html, window
+    import math
+    
     # ---------------------------------------------------------
     # GAME CONSTANTS (collision boxes, speeds, bullet sizes, etc.)
     # ---------------------------------------------------------
@@ -337,6 +338,7 @@
         loading_bar_container.style.display = "none"
         press_start_text.style.display = "block"  # Show "Press Space to Start"
         canvas.style.display = "block"
+        global showing_press_start_screen
         showing_press_start_screen = True
         animate_press_start_screen()
 
@@ -929,9 +931,9 @@
         document.unbind("click", enable_audio)
         document.unbind("keydown", enable_audio)
 
-    # -----------
+    # ---------------------------
     # EVENT BIND
-    # -----------
+    # ---------------------------
     document.bind("keydown", handle_keydown)
     window.setInterval(update, 30)
     window.setInterval(enemy_shoot, 500)
@@ -949,7 +951,6 @@
         canvas.style.display = "none"
         window.setTimeout(show_title_screen, 3000)  # Extended loading time
 
-    # Start
     initialize_high_score()
     start_loading()
 
@@ -971,4 +972,3 @@
   </script>
 </body>
 </html>
-
