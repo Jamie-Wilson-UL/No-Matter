@@ -224,6 +224,7 @@
     audio_unlocked = False  # To manage audio playback after loading
     animation_running = False  # Prevent multiple animation loops
     initializing_level = False  # Flag to indicate level initialization
+    final_score_displayed = False  # Prevent multiple final score displays
 
     player_pos = [WIDTH // 2 - PLAYER_HITBOX_SIZE // 2, HEIGHT - 2 * PLAYER_HITBOX_SIZE]
     boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
@@ -244,7 +245,7 @@
     static_bg_level = document["static-bg-level"]  # New Static Background for Levels
     boss_cover = document["boss-cover"] if "boss-cover" in document else None  # Optional
 
-    # Load images for levels
+    # Load images for levels with URL-encoded paths
     level_image_paths = {
         1: [
             "level1/dog.png",
@@ -512,6 +513,9 @@
         global game_started, score, boss_hits, level_start_time
         global final_score_scheduled, initializing_level
 
+        if initializing_level:
+            return  # Prevent multiple initializations
+
         final_score_scheduled = False
         initializing_level = True  # Start initializing
 
@@ -559,7 +563,7 @@
         """
         global level, game_started, game_over, score
         global showing_level_title, showing_final_score, showing_high_score_prompt
-        global final_score_scheduled, animation_running
+        global final_score_scheduled, animation_running, final_score_displayed
 
         level = 1
         game_over = False
@@ -569,6 +573,7 @@
         showing_final_score = False
         showing_high_score_prompt = False
         final_score_scheduled = False
+        final_score_displayed = False
 
         set_music_for_title_screen()  # Play title audio on loop
 
@@ -630,7 +635,7 @@
         """
         Draws all enemy bullets on the canvas.
         """
-        ctx.fillStyle = "orange"
+        ctx.fillStyle = "red"  # Changed from orange to red
         for bullet in enemy_bullets:
             ctx.fillRect(bullet[0], bullet[1], ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT)
 
@@ -647,7 +652,7 @@
         Draws all diagonal shots on the canvas.
         """
         ctx.strokeStyle = "magenta"
-        ctx.lineWidth = 4  # Increased from 2 to 4 for better visibility
+        ctx.lineWidth = 6  # Increased from 4 to 6 for better visibility
         for shot in diagonal_shots:
             ctx.beginPath()
             ctx.moveTo(shot["x"], shot["y"])
@@ -787,7 +792,13 @@
                 )
 
     def draw_final_score():
-        global showing_final_score
+        global showing_final_score, final_score_displayed
+
+        if final_score_displayed:
+            return  # Prevent multiple displays
+
+        showing_final_score = False
+        final_score_displayed = True
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
@@ -877,6 +888,7 @@
         global game_started, game_over, player_last_shot, showing_level_title
         global showing_final_score, showing_high_score_prompt, final_score_scheduled
         global audio_unlocked, animation_running, initializing_level
+        global final_score_displayed
 
         current_time = window.Date.new().getTime()
 
@@ -908,8 +920,8 @@
                     ])
                     laser_audio.play()
                     player_last_shot = current_time
-            elif game_over:
-                # Reset to title screen
+            elif game_over and not showing_final_score:
+                # Reset to title screen after game over
                 reset_game()
         elif game_started and not showing_level_title and not game_over:
             # Left arrow
@@ -985,43 +997,45 @@
                     window.console.log(f"Boss hit! Total hits: {boss_hits}")
 
         # Collisions with player
-        for bullet in enemy_bullets[:]:
-            # Corrected collision detection using bullet[1]
-            if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_HITBOX_SIZE and
-                player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_HITBOX_SIZE):
-                game_over = True
-                show_final_score()  # Call to display Game Over screen
-                window.console.log("Player hit by enemy bullet! Game Over.")
+        if not final_score_displayed:
+            for bullet in enemy_bullets[:]:
+                # Corrected collision detection using bullet[1]
+                if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_HITBOX_SIZE and
+                    player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_HITBOX_SIZE):
+                    game_over = True
+                    show_final_score()  # Call to display Game Over screen
+                    window.console.log("Player hit by enemy bullet! Game Over.")
 
-        for laser in laser_beams[:]:
-            # Check collision with laser beam
-            if (player_pos[0] <= laser["x"] + LASER_WIDTH and
-                laser["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
-                player_pos[1] <= laser["y"]):
-                game_over = True
-                show_final_score()  # Call to display Game Over screen
-                window.console.log("Player hit by laser beam! Game Over.")
+            for laser in laser_beams[:]:
+                # Check collision with laser beam
+                if (player_pos[0] <= laser["x"] + LASER_WIDTH and
+                    laser["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
+                    player_pos[1] <= laser["y"]):
+                    game_over = True
+                    show_final_score()  # Call to display Game Over screen
+                    window.console.log("Player hit by laser beam! Game Over.")
 
-        for shot in diagonal_shots[:]:
-            # Check collision with diagonal shots
-            if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
-                player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_HITBOX_SIZE):
-                game_over = True
-                show_final_score()  # Call to display Game Over screen
-                window.console.log("Player hit by diagonal shot! Game Over.")
+            for shot in diagonal_shots[:]:
+                # Check collision with diagonal shots
+                if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
+                    player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_HITBOX_SIZE):
+                    game_over = True
+                    show_final_score()  # Call to display Game Over screen
+                    window.console.log("Player hit by diagonal shot! Game Over.")
 
-        # Enemy/player overlap (normal levels)
+            # Enemy/player overlap (normal levels)
+            if level <= MAX_LEVELS:
+                for enemy in enemies:
+                    if (enemy["pos"][0] <= player_pos[0] <= enemy["pos"][0] + ENEMY_SIZE or
+                        enemy["pos"][0] <= player_pos[0] + PLAYER_HITBOX_SIZE <= enemy["pos"][0] + ENEMY_SIZE):
+                        if (enemy["pos"][1] <= player_pos[1] <= enemy["pos"][1] + ENEMY_SIZE or
+                            enemy["pos"][1] <= player_pos[1] + PLAYER_HITBOX_SIZE <= enemy["pos"][1] + ENEMY_SIZE):
+                            game_over = True
+                            show_final_score()  # Call to display Game Over screen
+                            window.console.log("Player collided with enemy! Game Over.")
+
+        # Enemy movement
         if level <= MAX_LEVELS:
-            for enemy in enemies:
-                if (enemy["pos"][0] <= player_pos[0] <= enemy["pos"][0] + ENEMY_SIZE or
-                    enemy["pos"][0] <= player_pos[0] + PLAYER_HITBOX_SIZE <= enemy["pos"][0] + ENEMY_SIZE):
-                    if (enemy["pos"][1] <= player_pos[1] <= enemy["pos"][1] + ENEMY_SIZE or
-                        enemy["pos"][1] <= player_pos[1] + PLAYER_HITBOX_SIZE <= enemy["pos"][1] + ENEMY_SIZE):
-                        game_over = True
-                        show_final_score()  # Call to display Game Over screen
-                        window.console.log("Player collided with enemy! Game Over.")
-
-            # Enemy movement
             move_down = False
             for enemy in enemies:
                 enemy["pos"][0] += ENEMY_SPEED
@@ -1046,7 +1060,7 @@
         if level <= MAX_LEVELS and not enemies and not initializing_level:
             window.console.log(f"Level {level} completed!")
             level_up()
-        elif level > MAX_LEVELS and boss_hits >= BOSS_HITS_REQUIRED:
+        elif level > MAX_LEVELS and boss_hits >= BOSS_HITS_REQUIRED and not final_score_displayed:
             game_over = True
             show_final_score()
             window.console.log("Boss defeated! Game Over.")
@@ -1092,14 +1106,14 @@
                 diagonal_shots.append({
                     "x": boss_pos[0] + BOSS_SIZE // 2,
                     "y": boss_pos[1] + BOSS_SIZE,
-                    "dx": 8,  # Reduced from 15 to 8 for slower shots
-                    "dy": 8   # Reduced from 15 to 8 for slower shots
+                    "dx": 5,  # Further reduced from 8 to 5 for slower shots
+                    "dy": 5   # Further reduced from 8 to 5 for slower shots
                 })
                 diagonal_shots.append({
                     "x": boss_pos[0] + BOSS_SIZE // 2,
                     "y": boss_pos[1] + BOSS_SIZE,
-                    "dx": -8,  # Reduced from -15 to -8 for slower shots
-                    "dy": 8    # Reduced from 15 to 8 for slower shots
+                    "dx": -5,  # Further reduced from -8 to -5 for slower shots
+                    "dy": 5    # Further reduced from 8 to 5 for slower shots
                 })
                 boss_last_diagonal_shot = current_time
                 window.console.log("Boss firing diagonal shots.")
@@ -1130,6 +1144,11 @@
     # -------------------------------------------------
     def show_final_score():
         global high_score_updated, showing_high_score_prompt, showing_final_score
+        global final_score_displayed
+
+        if final_score_displayed:
+            return  # Prevent multiple displays
+
         high_score_updated = False
         for i in range(len(top_scores)):
             if score > top_scores[i]["score"]:
