@@ -464,7 +464,8 @@
     def initialize_game():
         """
         Create the enemies / boss for the current level.
-        Called AFTER the 4s cover screen has finished.
+        Called AFTER the 4s cover screen has finished,
+        ensuring correct spawn positions.
         """
         global initializing_level, level, enemies, bullets
         global enemy_bullets, laser_beams, diagonal_shots
@@ -491,6 +492,7 @@
                     })
             boss_hits = 0
         else:
+            # Final Boss level
             enemies.clear()
             boss_hits = 0
 
@@ -504,7 +506,6 @@
         game_started = True
         level_start_time = window.Date.new().getTime()
 
-        # Done
         initializing_level = False
 
     def reset_game():
@@ -542,45 +543,36 @@
             animation_running = True
 
     # -------------------------------------------------
-    # 9) START GAME 
+    # 9) START GAME (Cover Screen Immediately)
     # -------------------------------------------------
     def start_game():
         """
         Called on the title screen when the player presses SPACE.
+        1) Stop title music + start level music right now
+           so the cover screen has audio playing.
+        2) Show the level cover for 4s.
+        3) Then spawn enemies.
         """
         global level, game_started, showing_level_title
         level = 1
         game_started = True
-        # Instead of showing enemies right away, we show the cover
-        show_cover_screen()
 
-    # -------------------------------------------------
-    # 10) COVER SCREEN CONTROL
-    # -------------------------------------------------
-    def show_cover_screen():
-        """
-        Show the cover screen for this level, start music, 
-        and schedule the 4-second wait.
-        """
-        global showing_level_title
-        showing_level_title = True
-
-        # Start the level music immediately (so it plays on the cover)
+        # Immediately start the correct level music
         set_music_for_level(level)
 
-        # After 4 seconds, hide cover + create enemies
-        window.setTimeout(finish_cover_screen, 4000)
+        # Show cover screen
+        showing_level_title = True
 
-    def finish_cover_screen():
-        """
-        Hide the cover screen, then populate enemies.
-        """
-        global showing_level_title
-        showing_level_title = False
-        initialize_game()
+        # After 4 seconds, hide cover and spawn the enemies
+        def after_cover():
+            global showing_level_title
+            showing_level_title = False
+            initialize_game()
+
+        window.setTimeout(after_cover, 4000)
 
     # -------------------------------------------------
-    # 11) DRAWING
+    # 10) DRAWING
     # -------------------------------------------------
     def draw_stars():
         ctx.fillStyle = "white"
@@ -678,11 +670,12 @@
                     HEIGHT//1.2 + 30*i
                 )
 
-    # Cover Screen for each level
+    # Cover Screen
     def draw_level_title():
         """
-        Draw the level cover (purely visual).
-        No music or setTimeout calls here—handled in show_cover_screen().
+        Draw the level cover (purely visuals).
+        Audio was already started the moment
+        we set showing_level_title = True.
         """
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
@@ -712,7 +705,7 @@
             c_w, c_h = get_scaled_dims(cover_img, 400)
             ctx.drawImage(cover_img, (WIDTH-c_w)//2, HEIGHT//3 - 50, c_w, c_h)
 
-    # Draw the actual gameplay
+    # Actual gameplay
     def draw_gameplay():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         draw_static_bg()
@@ -767,7 +760,7 @@
         player_name_input.value = ""
 
     # -------------------------------------------------
-    # 12) MAIN LOOP
+    # 11) MAIN LOOP
     # -------------------------------------------------
     def main_loop(timestamp):
         global animation_running, showing_final_score
@@ -778,11 +771,10 @@
         if showing_final_score:
             draw_final_score()
         elif showing_level_title:
-            draw_level_title()   # purely draws the cover screen
+            draw_level_title()   # purely draws the cover
         elif not game_started:
             draw_title_screen()
         elif game_over:
-            # show final
             showing_final_score = True
             draw_final_score()
         else:
@@ -791,9 +783,10 @@
         window.requestAnimationFrame(main_loop)
 
     # -------------------------------------------------
-    # 13) UPDATES & COLLISIONS
+    # 12) UPDATES & COLLISIONS
     # -------------------------------------------------
     def update():
+        # Skip updates if we're not in normal gameplay
         if game_over or not game_started or showing_level_title or showing_final_score:
             return
 
@@ -833,7 +826,6 @@
             for e in enemies:
                 e["pos"][0] += ENEMY_SPEED
 
-                # Check if enemy reached bottom => game over
                 if e["pos"][1] + ENEMY_SIZE >= HEIGHT:
                     global game_over
                     game_over = True
@@ -932,11 +924,22 @@
         )
         score += bonus
 
-        # Now go to the cover screen for the new level
-        show_cover_screen()
+        # Immediately switch to next level's music
+        set_music_for_level(level)
+
+        # Show cover screen for 4s
+        global showing_level_title
+        showing_level_title = True
+
+        def after_cover():
+            global showing_level_title
+            showing_level_title = False
+            initialize_game()
+
+        window.setTimeout(after_cover, 4000)
 
     # -------------------------------------------------
-    # 14) ENEMY SHOOTING
+    # 13) ENEMY SHOOTING
     # -------------------------------------------------
     def enemy_shoot():
         if game_over or not game_started or showing_level_title or showing_final_score:
@@ -978,7 +981,7 @@
                 boss_last_diagonal_shot = now
 
     # -------------------------------------------------
-    # 15) CONTROLS
+    # 14) CONTROLS
     # -------------------------------------------------
     def handle_keydown(e):
         global game_started, game_over, player_last_shot
@@ -1000,6 +1003,7 @@
             # Start from title
             if not game_started:
                 start_game()
+            # If in gameplay, fire bullet
             elif not showing_level_title and not game_over:
                 now = window.Date.new().getTime()
                 if now - player_last_shot > player_shot_cooldown:
@@ -1007,6 +1011,7 @@
                     bullets.append([bx, player_pos[1]])
                     laser_audio.play()
                     player_last_shot = now
+            # If game over, pressing SPACE resets
             elif game_over and not showing_final_score:
                 reset_game()
 
@@ -1024,7 +1029,7 @@
         flash_text = not flash_text
 
     # -------------------------------------------------
-    # 16) LOADING SCREEN
+    # 15) LOADING SCREEN
     # -------------------------------------------------
     def show_loading_screen():
         loading_bar_container.style.display = "flex"
@@ -1041,7 +1046,7 @@
                 s["x"] = window.Math.random()*WIDTH
 
     # -------------------------------------------------
-    # 17) START
+    # 16) START
     # -------------------------------------------------
     show_loading_screen()
     window.setInterval(update, 30)         # ~30ms => 33 FPS
