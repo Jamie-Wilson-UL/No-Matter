@@ -540,7 +540,20 @@
             animation_running = True
 
     # -------------------------------------------------
-    # 9) DRAWING
+    # 9) START GAME (Restored)
+    # -------------------------------------------------
+    def start_game():
+        """
+        Called on the title screen when the player presses SPACE.
+        """
+        global level, game_started, showing_level_title
+        level = 1
+        game_started = True
+        showing_level_title = True
+        console.log("Starting the game at Level 1. Will show Level 1 cover screen.")
+
+    # -------------------------------------------------
+    # 10) DRAWING
     # -------------------------------------------------
     def draw_stars():
         ctx.fillStyle = "white"
@@ -732,7 +745,7 @@
     # 10) MAIN LOOP
     # -------------------------------------------------
     def main_loop(timestamp):
-        global animation_running, showing_final_score  # <-- FIX: declare globals
+        global animation_running, showing_final_score
 
         if not animation_running:
             animation_running = True
@@ -774,12 +787,14 @@
         # Bullets
         for b in bullets[:]:
             b[1] -= BULLET_SPEED
-            if b[1] < 0: bullets.remove(b)
+            if b[1] < 0: 
+                bullets.remove(b)
 
         # Enemy bullets
         for eb in enemy_bullets[:]:
             eb[1] += ENEMY_BULLET_SPEED
-            if eb[1] > HEIGHT: enemy_bullets.remove(eb)
+            if eb[1] > HEIGHT: 
+                enemy_bullets.remove(eb)
 
         # Laser beams expire
         for l in laser_beams[:]:
@@ -798,12 +813,17 @@
 
         # Enemy / Boss movement
         if level <= MAX_LEVELS:
-            # Move enemies horizontally
             move_down = False
             for e in enemies:
                 e["pos"][0] += ENEMY_SPEED
+                # If an enemy has reached the bottom => game over
+                if e["pos"][1] + ENEMY_SIZE >= HEIGHT:
+                    global game_over
+                    game_over = True
+
                 if e["pos"][0] > WIDTH - ENEMY_SIZE or e["pos"][0] < 0:
                     move_down = True
+
             if move_down:
                 for e in enemies:
                     e["pos"][1] += ENEMY_SIZE
