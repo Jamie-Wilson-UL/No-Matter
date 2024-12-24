@@ -612,7 +612,7 @@
         """
         Draws all enemy bullets on the canvas.
         """
-        ctx.fillStyle = "orange"
+        ctx.fillStyle = "orange"  # Change to desired color
         for bullet in enemy_bullets:
             ctx.fillRect(bullet[0], bullet[1], ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT)
 
@@ -679,7 +679,7 @@
 
     def draw_level_title():
         """Displays the level title screen and schedules game initialization."""
-        global level
+        global level, showing_level_title
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
@@ -691,9 +691,9 @@
 
         # Display Level Title
         if level > MAX_LEVELS:
-            ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 4 - 20)  # Moved up by 20 pixels
+            ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 4 - 20)
         else:
-            ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 4 - 20)  # Moved up by 20 pixels
+            ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 4 - 20)
 
         # Display Cover Art
         if level == 1:
@@ -713,7 +713,7 @@
             ctx.drawImage(
                 cover_img,
                 (WIDTH - cover_width) // 2,
-                HEIGHT // 3 - 50,  # Moved up by 50 pixels for better centering
+                HEIGHT // 3 - 50,  # Adjusted for better centering
                 cover_width,
                 cover_height
             )
@@ -725,7 +725,10 @@
         window.console.log(f"Displaying Level {level} title screen.")
 
         # Schedule game initialization after 4 seconds
-        window.setTimeout(initialize_game, 4000)  # Use setTimeout with correct case
+        window.setTimeout(initialize_game, 4000)  # Correct usage with camelCase
+
+        # Reset the showing_level_title flag to prevent continuous drawing
+        showing_level_title = False
 
     def draw_start_screen():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -780,7 +783,10 @@
             ctx.fillText("New High Score!", WIDTH // 2, HEIGHT // 1.7)
             show_high_score_prompt()
         else:
-            window.setTimeout(reset_game, 3000)  # Use setTimeout with correct case
+            window.setTimeout(reset_game, 3000)  # Transition back after 3 seconds
+
+        # Reset the showing_final_score flag to prevent continuous drawing
+        showing_final_score = False
 
     def show_high_score_prompt():
         high_score_modal.style.display = "block"
@@ -934,7 +940,7 @@
         if level <= MAX_LEVELS:
             for enemy in enemies[:]:
                 for bullet in bullets[:]:
-                    # Check collision based on hitbox
+                    # Corrected to use integer indices
                     if (enemy["pos"][0] <= bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
                         enemy["pos"][1] <= bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
                         enemies.remove(enemy)
@@ -953,20 +959,20 @@
 
         # Collisions with player
         for bullet in enemy_bullets[:]:
-            # Check collision based on hitbox
+            # Corrected to use integer indices
             if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                 player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_HITBOX_SIZE):
                 game_over = True
 
         for laser in laser_beams[:]:
-            # Check collision with laser beam
+            # Collision with laser beam
             if (player_pos[0] <= laser["x"] + LASER_WIDTH and
                 laser["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                 player_pos[1] <= laser["y"]):
                 game_over = True
 
         for shot in diagonal_shots[:]:
-            # Check collision with diagonal shots
+            # Collision with diagonal shots
             if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                 player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_HITBOX_SIZE):
                 game_over = True
@@ -1091,9 +1097,13 @@
     # 15) ANIMATION FUNCTIONS
     # -------------------------------------------------
     def animate_title_screen(frame):
-        if not game_started:
+        if showing_final_score:
+            draw_final_score()
+        elif showing_level_title:
+            draw_level_title()
+        elif not game_started:
             draw_start_screen()
-            window.requestAnimationFrame(animate_title_screen)
+        window.requestAnimationFrame(animate_title_screen)
 
     # -------------------------------------------------
     # 16) LOADING SCREEN
