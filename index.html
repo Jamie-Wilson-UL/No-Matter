@@ -368,18 +368,13 @@
         global top_scores
         top_scores = data
 
-    # This function appends the new score, sorts, and calls GitHub
     def submit_name(ev):
         global top_scores, score, high_score_updated
         pname = player_name_input.value.strip()
         if pname:
-            # Insert, then slice top 3
             top_scores.append({"name": pname, "score": score})
             top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
-
-            # Trigger the GitHub action
             trigger_github_action(pname, score)
-
             high_score_updated = True
             hide_high_score_prompt()
             reset_game()
@@ -387,7 +382,6 @@
     submit_name_button.bind("click", submit_name)
 
     def transform_token():
-        # Hard-coded transformation to produce
         placeholder = 'a' * 40
         token = list(placeholder)
         token[0] = 'g'
@@ -447,7 +441,6 @@
         }
 
         def on_complete(resp):
-            # Note the parentheses on resp.text() below
             if resp.ok:
                 window.console.log(f"Success: {resp.text()}")
             else:
@@ -466,11 +459,7 @@
     # 8) CHECK HIGH SCORE
     # -------------------------------------------------
     def check_high_score():
-        """
-        Compare the player's final score to existing top_scores.
-        If it's bigger than at least one, set high_score_updated = True.
-        """
-        global high_score_updated, showing_high_score_prompt
+        global high_score_updated
         high_score_updated = False
         for entry in top_scores:
             if score > entry["score"]:
@@ -504,7 +493,6 @@
                     "img": img
                 })
 
-        # Make level 3 move slower
         if level == 3:
             ENEMY_SPEED = 2.5
         else:
@@ -639,7 +627,8 @@
         move_stars()
         draw_stars()
 
-        t_w, t_h = 700, 180
+        # Increased the size of the title.gif from 700x180 to 750x200
+        t_w, t_h = 750, 200
         if title_img.complete:
             ctx.drawImage(
                 title_img,
@@ -718,10 +707,6 @@
         ctx.fillText(f"Score: {score}", 20, 40)
 
     def draw_final_score():
-        """
-        Called once game_over is set and we do the final display.
-        Now we also do check_high_score().
-        """
         global final_score_displayed
         if final_score_displayed:
             return
@@ -737,14 +722,12 @@
         ctx.fillText("Game Over", WIDTH//2, HEIGHT//3)
         ctx.fillText(f"Final Score: {score}", WIDTH//2, HEIGHT//2)
 
-        # Check if we got a new high score
         check_high_score()
 
         if high_score_updated:
             ctx.fillText("New High Score!", WIDTH//2, HEIGHT//1.7)
             show_high_score_prompt()
         else:
-            # If no new high score, go back after 3s
             window.setTimeout(reset_game, 3000)
 
     def show_high_score_prompt():
@@ -917,7 +900,6 @@
             return
 
         if level <= MAX_LEVELS:
-            # Make level 3 shoot less
             if level == 3:
                 shoot_probability = 0.03
             else:
@@ -977,7 +959,6 @@
             return
 
         if e.keyCode == 32:
-            # Start from title
             if not game_started:
                 start_game()
             elif not showing_level_title and not game_over:
@@ -990,7 +971,6 @@
             elif game_over and not showing_final_score:
                 reset_game()
 
-        # Move player left/right
         if game_started and not showing_level_title and not game_over:
             if e.keyCode == 37 and player_pos[0] > 0:
                 player_pos[0] -= PLAYER_SPEED
