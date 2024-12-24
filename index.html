@@ -203,7 +203,7 @@
     level = 1
     game_over = False
     game_started = False
-    showing_level_title = False  # "cover screen" flag
+    showing_level_title = False
     showing_final_score = False
     showing_high_score_prompt = False
 
@@ -224,7 +224,7 @@
     level_start_time = 0
     top_scores = []
     high_score_updated = False
-    ENEMY_SPEED = 1.5
+    ENEMY_SPEED = 1.5  # Will be overridden per level
 
     # Player / Boss positions
     player_pos = [WIDTH//2 - PLAYER_HITBOX_SIZE//2, HEIGHT - 2*PLAYER_HITBOX_SIZE]
@@ -463,9 +463,9 @@
     # -------------------------------------------------
     def initialize_game():
         """
-        Create the enemies / boss for the current level.
-        Called AFTER the 4s cover screen has finished,
-        ensuring correct spawn positions.
+        Called AFTER the 4s cover screen, spawns enemies.
+        For Level 3, we keep 3 rows,
+        but the overall movement & shooting is reduced (see below).
         """
         global initializing_level, level, enemies, bullets
         global enemy_bullets, laser_beams, diagonal_shots
@@ -476,32 +476,35 @@
             return
         initializing_level = True
 
-        if level <= MAX_LEVELS:
-            current_imgs = level_images[level]
-            enemies.clear()
-            rows, cols = 3, 8 + level
-            for r in range(rows):
-                for c in range(cols):
-                    img = current_imgs[int(window.Math.random()*len(current_imgs))]
-                    enemies.append({
-                        "pos": [
-                            c*(ENEMY_SIZE+10) + 50,
-                            r*(ENEMY_SIZE+10) + 50
-                        ],
-                        "img": img
-                    })
-            boss_hits = 0
-        else:
-            # Final Boss level
-            enemies.clear()
-            boss_hits = 0
+        # By default, 3 rows x (8+level) columns
+        rows, cols = 3, 8 + level
+        current_imgs = level_images[level]
+        enemies.clear()
+        for r in range(rows):
+            for c in range(cols):
+                img = current_imgs[int(window.Math.random()*len(current_imgs))]
+                enemies.append({
+                    "pos": [
+                        c*(ENEMY_SIZE+10) + 50,
+                        r*(ENEMY_SIZE+10) + 50
+                    ],
+                    "img": img
+                })
 
+        # Make Level 3 easier: move slower
+        if level == 3:
+            # Default would be 1.5 + 3 = 4.5, but we’ll reduce it
+            ENEMY_SPEED = 2.5
+        else:
+            # Normal speed scale
+            ENEMY_SPEED = 1.5 + level
+
+        boss_hits = 0
         bullets.clear()
         enemy_bullets.clear()
         laser_beams.clear()
         diagonal_shots.clear()
 
-        ENEMY_SPEED = 1.5 + level
         game_over = False
         game_started = True
         level_start_time = window.Date.new().getTime()
@@ -543,27 +546,23 @@
             animation_running = True
 
     # -------------------------------------------------
-    # 9) START GAME (Cover Screen Immediately)
+    # 9) START GAME
     # -------------------------------------------------
     def start_game():
         """
-        Called on the title screen when the player presses SPACE.
-        1) Stop title music + start level music right now
-           so the cover screen has audio playing.
-        2) Show the level cover for 4s.
-        3) Then spawn enemies.
+        Press SPACE on the title screen => show Level 1 cover, etc.
         """
         global level, game_started, showing_level_title
         level = 1
         game_started = True
 
-        # Immediately start the correct level music
+        # Start correct music
         set_music_for_level(level)
 
         # Show cover screen
         showing_level_title = True
 
-        # After 4 seconds, hide cover and spawn the enemies
+        # After 4 seconds, hide cover and spawn enemies
         def after_cover():
             global showing_level_title
             showing_level_title = False
@@ -633,12 +632,12 @@
         if static_bg_level.complete:
             ctx.drawImage(static_bg_level, 0, 0, WIDTH, HEIGHT)
 
-    # Title Page
     def draw_title_screen():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
-        # Larger area for the title image
+
+        # Title image area
         t_w, t_h = 700, 180
         if title_img.complete:
             ctx.drawImage(
@@ -664,22 +663,16 @@
         if top_scores:
             ctx.font = "24px 'Press Start 2P'"
             for i, sc in enumerate(top_scores):
-                ctx.fillText(
-                    f"{i+1}. {sc['name']} - {sc['score']}",
-                    WIDTH//2,
-                    HEIGHT//1.2 + 30*i
-                )
+                ctx.fillText(f"{i+1}. {sc['name']} - {sc['score']}", WIDTH//2, HEIGHT//1.2 + 30*i)
 
-    # Cover Screen
     def draw_level_title():
         """
-        Draw the level cover (purely visuals).
-        Audio was already started the moment
-        we set showing_level_title = True.
+        The 4-second cover screen for the level.
         """
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
+
         ctx.fillStyle = "yellow"
         ctx.font = "bold 48px 'Press Start 2P'"
         ctx.textAlign = "center"
@@ -705,7 +698,6 @@
             c_w, c_h = get_scaled_dims(cover_img, 400)
             ctx.drawImage(cover_img, (WIDTH-c_w)//2, HEIGHT//3 - 50, c_w, c_h)
 
-    # Actual gameplay
     def draw_gameplay():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         draw_static_bg()
@@ -726,7 +718,6 @@
         ctx.textAlign = "left"
         ctx.fillText(f"Score: {score}", 20, 40)
 
-    # Game Over / Final Score
     def draw_final_score():
         global final_score_displayed
         if final_score_displayed:
@@ -743,7 +734,6 @@
         ctx.fillText("Game Over", WIDTH//2, HEIGHT//3)
         ctx.fillText(f"Final Score: {score}", WIDTH//2, HEIGHT//2)
 
-        # If new high score
         if high_score_updated:
             ctx.fillText("New High Score!", WIDTH//2, HEIGHT//1.7)
             show_high_score_prompt()
@@ -771,7 +761,7 @@
         if showing_final_score:
             draw_final_score()
         elif showing_level_title:
-            draw_level_title()   # purely draws the cover
+            draw_level_title()
         elif not game_started:
             draw_title_screen()
         elif game_over:
@@ -786,14 +776,13 @@
     # 12) UPDATES & COLLISIONS
     # -------------------------------------------------
     def update():
-        # Skip updates if we're not in normal gameplay
+        # Skip updates if not in normal gameplay
         if game_over or not game_started or showing_level_title or showing_final_score:
             return
 
-        # Move Stars
         move_stars()
 
-        # Bullets
+        # Player bullets
         for b in bullets[:]:
             b[1] -= BULLET_SPEED
             if b[1] < 0:
@@ -825,7 +814,6 @@
             move_down = False
             for e in enemies:
                 e["pos"][0] += ENEMY_SPEED
-
                 if e["pos"][1] + ENEMY_SIZE >= HEIGHT:
                     global game_over
                     game_over = True
@@ -839,7 +827,7 @@
                 global ENEMY_SPEED
                 ENEMY_SPEED = -ENEMY_SPEED
 
-            # If no more enemies -> level_up()
+            # If no enemies remain -> next level
             if not enemies and not initializing_level:
                 level_up()
 
@@ -852,7 +840,7 @@
             boss_pos[1] += window.Math.random()*10 - 5
             boss_pos[1] = max(0, min(HEIGHT//4, boss_pos[1]))
 
-            # If enough boss hits -> game over
+            # If enough hits => game over
             if boss_hits >= BOSS_HITS_REQUIRED and not final_score_displayed:
                 global game_over
                 game_over = True
@@ -860,8 +848,8 @@
     def handle_collisions():
         global game_over, score, boss_hits
 
-        # Normal enemies
         if level <= MAX_LEVELS:
+            # Normal enemies
             for e in enemies[:]:
                 ex, ey = e["pos"]
                 for b in bullets[:]:
@@ -903,28 +891,27 @@
                     player_pos[1] <= s["y"] <= player_pos[1]+PLAYER_HITBOX_SIZE):
                     game_over = True
 
-            # Enemy overlap
-            if level <= MAX_LEVELS:
-                for e in enemies:
-                    ex, ey = e["pos"]
-                    if (ex <= player_pos[0] <= ex+ENEMY_SIZE or
-                        ex <= player_pos[0]+PLAYER_HITBOX_SIZE <= ex+ENEMY_SIZE):
-                        if (ey <= player_pos[1] <= ey+ENEMY_SIZE or
-                            ey <= player_pos[1]+PLAYER_HITBOX_SIZE <= ey+ENEMY_SIZE):
-                            game_over = True
+            # Enemy overlap with player
+            for e in enemies:
+                ex, ey = e["pos"]
+                if (ex <= player_pos[0] <= ex+ENEMY_SIZE or
+                    ex <= player_pos[0]+PLAYER_HITBOX_SIZE <= ex+ENEMY_SIZE):
+                    if (ey <= player_pos[1] <= ey+ENEMY_SIZE or
+                        ey <= player_pos[1]+PLAYER_HITBOX_SIZE <= ey+ENEMY_SIZE):
+                        game_over = True
 
     def level_up():
         global level, score
         level += 1
 
-        # Time-based bonus
+        # Time-based bonus, up to 2 min => 120000 ms
         bonus = max(
             0,
             int((120000 - (window.Date.new().getTime() - level_start_time))/800)
         )
         score += bonus
 
-        # Immediately switch to next level's music
+        # Next level's music
         set_music_for_level(level)
 
         # Show cover screen for 4s
@@ -946,13 +933,21 @@
             return
 
         if level <= MAX_LEVELS:
+            # Normal formula: window.Math.random() < (0.03 + 0.01*level)
+            # For level 3, we reduce it further
+            if level == 3:
+                shoot_probability = 0.03  # e.g., 3% (less than the usual 6%)
+            else:
+                shoot_probability = 0.03 + 0.01 * level
+
             for e in enemies:
-                if window.Math.random() < (0.03 + 0.01*level):
+                if window.Math.random() < shoot_probability:
                     enemy_bullets.append([
                         e["pos"][0] + ENEMY_SIZE//2,
                         e["pos"][1] + ENEMY_SIZE
                     ])
         else:
+            # Boss level
             if window.Math.random() < 0.1:
                 enemy_bullets.append([
                     boss_pos[0] + BOSS_SIZE//2,
