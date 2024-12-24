@@ -59,7 +59,7 @@
       height: 100%;
       width: 0;
       background-color: #00ff00;
-      animation: fill 1.5s linear forwards; /* Reduced to 1.5s */
+      animation: fill 1.5s linear forwards; /* Reduced to 1.5s for faster loading */
     }
     #loading-text {
       font-size: 24px;
@@ -688,7 +688,7 @@
                 level_up()
 
     # -------------------------------------------------
-    # 10) HIGH SCORE: SUBMIT / FETCH / UPDATE
+    # 8) HIGH SCORE: SUBMIT / FETCH / UPDATE
     # -------------------------------------------------
     def initialize_high_score():
         global top_scores
@@ -707,7 +707,7 @@
         top_scores = data
 
     # -------------------------------------------------
-    # 11) HANDLE KEYDOWN EVENT
+    # 9) HANDLE KEYDOWN EVENT
     # -------------------------------------------------
     def handle_keydown(event):
         global game_started, game_over, player_last_shot, showing_level_title
@@ -757,7 +757,7 @@
         flash_text = not flash_text
 
     # -------------------------------------------------
-    # 12) MAIN UPDATE LOOP (movement, collisions)
+    # 10) MAIN UPDATE LOOP (movement, collisions)
     # -------------------------------------------------
     def update():
         global game_over, score, game_started, showing_level_title
@@ -857,7 +857,7 @@
         draw()
 
     # -------------------------------------------------
-    # 13) ENEMY SHOOTING
+    # 11) MAIN GAME LOOP FUNCTIONS
     # -------------------------------------------------
     def enemy_shoot():
         global game_over, game_started, showing_level_title
@@ -902,9 +902,6 @@
                 })
                 boss_last_diagonal_shot = current_time
 
-    # -------------------------------------------------
-    # 14) LEVEL UP
-    # -------------------------------------------------
     def level_up():
         global level, showing_level_title, score
         level += 1
@@ -916,9 +913,6 @@
         showing_level_title = True
         draw_level_title()
 
-    # -------------------------------------------------
-    # 15) START GAME
-    # -------------------------------------------------
     def start_game():
         """Triggered when the player presses Space to start the game."""
         global showing_level_title, game_started, level
@@ -928,7 +922,7 @@
         draw_level_title()  # Display the Level 1 title
 
     # -------------------------------------------------
-    # 16) DRAW FINAL SCORE
+    # 12) DRAW FINAL SCORE
     # -------------------------------------------------
     def show_final_score():
         global high_score_updated, showing_high_score_prompt, showing_final_score
@@ -942,7 +936,7 @@
         draw_final_score()
 
     # -------------------------------------------------
-    # 17) ANIMATION FUNCTIONS
+    # 13) ANIMATION FUNCTIONS
     # -------------------------------------------------
     def animate_title_screen(frame):
         if not game_started:
@@ -950,7 +944,7 @@
             window.requestAnimationFrame(animate_title_screen)
 
     # -------------------------------------------------
-    # 18) LOADING SCREEN
+    # 14) LOADING SCREEN
     # -------------------------------------------------
     def show_loading_screen():
         """Displays the loading screen and starts the loading process."""
@@ -959,10 +953,10 @@
 
         def reveal_press_space():
             press_space_loading.style.display = "block"  # show text after loading bar
-        window.setTimeout(reveal_press_space, 1500)  # Reduced to 1.5 seconds
+        window.setTimeout(reveal_press_space, 1500)  # Reduced to 1.5 seconds for faster prompt
 
     # -------------------------------------------------
-    # 19) INITIALIZATION
+    # 15) INITIALIZATION
     # -------------------------------------------------
     def hide_loading_screen():
         """Hides the loading screen."""
@@ -983,3 +977,4 @@
   </script>
 </body>
 </html>
+
