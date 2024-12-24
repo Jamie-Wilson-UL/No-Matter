@@ -62,7 +62,7 @@
       height: 100%;
       width: 0;
       background-color: #00ff00;
-      animation: fill 1.5s linear forwards;
+      animation: fill 1.5s linear forwards; /* 1.5s fill */
     }
     #loading-text {
       font-size: 24px;
@@ -72,7 +72,7 @@
       margin-bottom: 20px;
     }
     #press-space-loading {
-      display: none; /* shown after fill animation completes */
+      display: none; /* shown after bar finishes */
       font-size: 20px;
       font-family: 'Press Start 2P', monospace;
       color: white;
@@ -189,7 +189,7 @@
     MAX_LEVELS = 3
     BOSS_HITS_REQUIRED = 20
 
-    PLAYER_MAX_DIM = 90   # So the spaceship image is ~90px
+    PLAYER_MAX_DIM = 90
     ENEMY_MAX_DIM  = 80
     BOSS_MAX_DIM   = 250
 
@@ -627,15 +627,15 @@
         move_stars()
         draw_stars()
 
-        # Larger: 800x220, moved down by 50 px
+        # 800×220, moved down by 30 px
         t_w, t_h = 800, 220
-        title_y  = (HEIGHT // 4 - t_h // 2) + 50
+        title_y  = (HEIGHT // 4 - t_h // 2) + 30
 
         if title_img.complete:
             ctx.drawImage(
                 title_img,
-                (WIDTH - t_w)//2,  # X
-                title_y,           # Y
+                (WIDTH - t_w)//2,
+                title_y,
                 t_w, t_h
             )
         else:
