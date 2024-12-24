@@ -166,14 +166,14 @@
 
   <!-- Brython Script -->
   <script type="text/python">
-    from browser import document, html, window
+    from browser import document, html, window, timer
 
     # ---------------------------------------------------------
     # 1) GAME CONSTANTS
     # ---------------------------------------------------------
     WIDTH, HEIGHT = 800, 600
-    PLAYER_SIZE = 70  # Slightly increased from 60 to 70 for visual size
-    PLAYER_HITBOX_SIZE = 60  # Keep the hitbox same as previous
+    PLAYER_SIZE = 70
+    PLAYER_HITBOX_SIZE = 60
     ENEMY_SIZE = 40
     BOSS_SIZE = 200
 
@@ -187,7 +187,7 @@
     MAX_LEVELS = 3
     BOSS_HITS_REQUIRED = 20
 
-    PLAYER_MAX_DIM = 70  # Increased to match PLAYER_SIZE for alignment
+    PLAYER_MAX_DIM = 70
     ENEMY_MAX_DIM = 80
     BOSS_MAX_DIM = 250
 
@@ -217,7 +217,7 @@
 
     audio_unlocked = False  # To manage audio playback after loading
 
-    player_pos = [WIDTH // 2 - PLAYER_HITBOX_SIZE // 2, HEIGHT - 2 * PLAYER_HITBOX_SIZE]  # Centered horizontally
+    player_pos = [WIDTH // 2 - PLAYER_HITBOX_SIZE // 2, HEIGHT - 2 * PLAYER_HITBOX_SIZE]
     boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
     boss_hits = 0
     boss_direction = 1
@@ -724,7 +724,7 @@
         window.console.log(f"Displaying Level {level} title screen.")
 
         # Schedule game initialization after 4 seconds
-        window.setTimeout(initialize_game, 4000)  # Increased to 4 seconds
+        timer.set_timeout(initialize_game, 4000)  # Increased to 4 seconds
 
     def draw_start_screen():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -778,7 +778,7 @@
             ctx.fillText("New High Score!", WIDTH // 2, HEIGHT // 1.7)
             show_high_score_prompt()
         else:
-            window.setTimeout(reset_game, 3000)
+            timer.set_timeout(reset_game, 3000)
 
     def show_high_score_prompt():
         high_score_modal.style.display = "block"
@@ -1100,7 +1100,7 @@
 
         def reveal_press_space():
             press_space_loading.style.display = "block"  # Show text after loading bar
-        window.setTimeout(reveal_press_space, 1500)  # Match with CSS animation duration (1.5s)
+        timer.set_timeout(reveal_press_space, 1500)  # Match with CSS animation duration (1.5s)
 
     # -------------------------------------------------
     # 17) INITIALIZATION
@@ -1117,9 +1117,9 @@
     show_loading_screen()
 
     # Set intervals for game updates and other periodic tasks
-    window.setInterval(update, 30)
-    window.setInterval(enemy_shoot, 500)
-    window.setInterval(toggle_flash_text, 1000)
+    timer.set_interval(update, 30)
+    timer.set_interval(enemy_shoot, 500)
+    timer.set_interval(toggle_flash_text, 1000)
 
     # -------------------------------------------------
     # 18) FUNCTION DEFINITIONS
@@ -1132,11 +1132,8 @@
                 star["y"] = 0
                 star["x"] = window.Math.random() * WIDTH
 
-    # draw_static_background_level function is defined above
-
     # All other functions (initialize_high_score, update_high_scores, etc.) are defined above
 
   </script>
 </body>
 </html>
-
