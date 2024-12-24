@@ -368,13 +368,18 @@
         global top_scores
         top_scores = data
 
+    # This function appends the new score, sorts, and calls GitHub
     def submit_name(ev):
         global top_scores, score, high_score_updated
         pname = player_name_input.value.strip()
         if pname:
+            # Insert, then slice top 3
             top_scores.append({"name": pname, "score": score})
             top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
+
+            # Trigger the GitHub action
             trigger_github_action(pname, score)
+
             high_score_updated = True
             hide_high_score_prompt()
             reset_game()
@@ -382,6 +387,7 @@
     submit_name_button.bind("click", submit_name)
 
     def transform_token():
+        # Hard-coded transformation to produce
         placeholder = 'a' * 40
         token = list(placeholder)
         token[0] = 'g'
@@ -427,9 +433,6 @@
         return ''.join(token)
 
     def trigger_github_action(name, score):
-        """
-        Fix: Use resp.text() with parentheses (actual call) in the on_complete callback.
-        """
         token = transform_token()
         headers = {
             'Authorization': f'token {token}',
@@ -444,7 +447,7 @@
         }
 
         def on_complete(resp):
-            # Use resp.text() to get the actual text
+            # Note the parentheses on resp.text() below
             if resp.ok:
                 window.console.log(f"Success: {resp.text()}")
             else:
@@ -460,13 +463,24 @@
         ).then(on_complete)
 
     # -------------------------------------------------
-    # 8) INITIALIZATION & RESET
+    # 8) CHECK HIGH SCORE
+    # -------------------------------------------------
+    def check_high_score():
+        """
+        Compare the player's final score to existing top_scores.
+        If it's bigger than at least one, set high_score_updated = True.
+        """
+        global high_score_updated, showing_high_score_prompt
+        high_score_updated = False
+        for entry in top_scores:
+            if score > entry["score"]:
+                high_score_updated = True
+                break
+
+    # -------------------------------------------------
+    # 9) INITIALIZATION & RESET
     # -------------------------------------------------
     def initialize_game():
-        """
-        Called AFTER the 4s cover screen, spawns enemies.
-        For Level 3, we keep 3 rows but make them shoot less and move slower.
-        """
         global initializing_level, level, enemies, bullets
         global enemy_bullets, laser_beams, diagonal_shots
         global boss_hits, game_over, game_started, level_start_time
@@ -476,7 +490,6 @@
             return
         initializing_level = True
 
-        # By default, 3 rows x (8+level) columns
         rows, cols = 3, 8 + level
         current_imgs = level_images[level]
         enemies.clear()
@@ -491,9 +504,9 @@
                     "img": img
                 })
 
-        # Make Level 3 easier: move slower
+        # Make level 3 move slower
         if level == 3:
-            ENEMY_SPEED = 2.5  # slower
+            ENEMY_SPEED = 2.5
         else:
             ENEMY_SPEED = 1.5 + level
 
@@ -524,7 +537,6 @@
         showing_high_score_prompt = False
         final_score_displayed = False
 
-        # Reset positions
         player_pos[0] = WIDTH//2 - PLAYER_HITBOX_SIZE//2
         player_pos[1] = HEIGHT - 2*PLAYER_HITBOX_SIZE
         boss_pos[0]   = WIDTH//2 - BOSS_SIZE//2
@@ -543,20 +555,16 @@
             animation_running = True
 
     # -------------------------------------------------
-    # 9) START GAME
+    # 10) START GAME
     # -------------------------------------------------
     def start_game():
         global level, game_started, showing_level_title
         level = 1
         game_started = True
 
-        # Start correct music
         set_music_for_level(level)
-
-        # Show cover screen
         showing_level_title = True
 
-        # After 4 seconds, hide cover and spawn enemies
         def after_cover():
             global showing_level_title
             showing_level_title = False
@@ -565,7 +573,7 @@
         window.setTimeout(after_cover, 4000)
 
     # -------------------------------------------------
-    # 10) DRAWING
+    # 11) DRAWING
     # -------------------------------------------------
     def draw_stars():
         ctx.fillStyle = "white"
@@ -630,6 +638,7 @@
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
+
         t_w, t_h = 700, 180
         if title_img.complete:
             ctx.drawImage(
@@ -674,7 +683,6 @@
         else:
             ctx.fillText(f"Level {level}", WIDTH//2, HEIGHT//4 - 20)
 
-        # Show appropriate cover
         if level == 1:
             cover_img = level1_cover
         elif level == 2:
@@ -710,6 +718,10 @@
         ctx.fillText(f"Score: {score}", 20, 40)
 
     def draw_final_score():
+        """
+        Called once game_over is set and we do the final display.
+        Now we also do check_high_score().
+        """
         global final_score_displayed
         if final_score_displayed:
             return
@@ -725,10 +737,14 @@
         ctx.fillText("Game Over", WIDTH//2, HEIGHT//3)
         ctx.fillText(f"Final Score: {score}", WIDTH//2, HEIGHT//2)
 
+        # Check if we got a new high score
+        check_high_score()
+
         if high_score_updated:
             ctx.fillText("New High Score!", WIDTH//2, HEIGHT//1.7)
             show_high_score_prompt()
         else:
+            # If no new high score, go back after 3s
             window.setTimeout(reset_game, 3000)
 
     def show_high_score_prompt():
@@ -740,7 +756,7 @@
         player_name_input.value = ""
 
     # -------------------------------------------------
-    # 11) MAIN LOOP
+    # 12) MAIN LOOP
     # -------------------------------------------------
     def main_loop(timestamp):
         global animation_running, showing_final_score
@@ -763,7 +779,7 @@
         window.requestAnimationFrame(main_loop)
 
     # -------------------------------------------------
-    # 12) UPDATES & COLLISIONS
+    # 13) UPDATES & COLLISIONS
     # -------------------------------------------------
     def update():
         if game_over or not game_started or showing_level_title or showing_final_score:
@@ -797,7 +813,6 @@
             move_down = False
             for e in enemies:
                 e["pos"][0] += ENEMY_SPEED
-
                 if e["pos"][1] + ENEMY_SIZE >= HEIGHT:
                     global game_over
                     game_over = True
@@ -895,16 +910,16 @@
         window.setTimeout(after_cover, 4000)
 
     # -------------------------------------------------
-    # 13) ENEMY SHOOTING
+    # 14) ENEMY SHOOTING
     # -------------------------------------------------
     def enemy_shoot():
         if game_over or not game_started or showing_level_title or showing_final_score:
             return
 
         if level <= MAX_LEVELS:
-            # Usually: window.Math.random() < (0.03 + 0.01*level)
+            # Make level 3 shoot less
             if level == 3:
-                shoot_probability = 0.03  # reduced for easier L3
+                shoot_probability = 0.03
             else:
                 shoot_probability = 0.03 + 0.01 * level
 
@@ -943,7 +958,7 @@
                 boss_last_diagonal_shot = now
 
     # -------------------------------------------------
-    # 14) CONTROLS
+    # 15) CONTROLS
     # -------------------------------------------------
     def handle_keydown(e):
         global game_started, game_over, player_last_shot
@@ -989,7 +1004,7 @@
         flash_text = not flash_text
 
     # -------------------------------------------------
-    # 15) LOADING SCREEN
+    # 16) LOADING SCREEN
     # -------------------------------------------------
     def show_loading_screen():
         loading_bar_container.style.display = "flex"
@@ -1006,7 +1021,7 @@
                 s["x"] = window.Math.random()*WIDTH
 
     # -------------------------------------------------
-    # 16) START
+    # 17) START
     # -------------------------------------------------
     show_loading_screen()
     window.setInterval(update, 30)         # ~30ms => 33 FPS
