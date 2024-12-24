@@ -832,8 +832,8 @@
 
         for shot in diagonal_shots[:]:
             # Check collision with diagonal shots
-            if (player_pos[0] <= shot[0] <= player_pos[0] + PLAYER_HITBOX_SIZE and
-                player_pos[1] <= shot[1] <= player_pos[1] + PLAYER_HITBOX_SIZE):
+            if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
+                player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_HITBOX_SIZE):
                 game_over = True
 
         # Enemy/player overlap (normal levels)
@@ -1010,7 +1010,7 @@
     # -------------------------------------------------
     # Ensure the draw() function is defined after all helper functions
     # (As defined above)
-
-  </script>
+    </script>
 </body>
 </html>
+
