@@ -115,7 +115,7 @@
       display: none;
     }
     /* Parallax Background Layers */
-    .galaxy-layer, .planet-layer {
+    .galaxy-layer {
       display: none;
     }
   </style>
@@ -156,9 +156,8 @@
   <!-- Placeholder for Boss Cover Art (Optional) -->
   <!-- <img id="boss-cover" src="boss_cover.jpg" class="level-cover"/> -->
 
-  <!-- PARALLAX BACKGROUND LAYERS -->
-  <img id="galaxy-layer" src="galaxy.png" class="galaxy-layer"/> <!-- Add galaxy.png -->
-  <img id="planet-layer" src="planet.png" class="planet-layer"/> <!-- Add planet.png -->
+  <!-- PARALLAX BACKGROUND LAYER -->
+  <!-- Since we're drawing the galaxy procedurally, no need for an image layer -->
 
   <!-- HIGH SCORE MODAL -->
   <div id="high-score-modal">
@@ -176,8 +175,8 @@
     # 1) GAME CONSTANTS
     # ---------------------------------------------------------
     WIDTH, HEIGHT = 800, 600
-    PLAYER_SIZE = 60  # Increased from 50 to 60
-    PLAYER_HITBOX_SIZE = 60  # Keep the hitbox same as visual size
+    PLAYER_SIZE = 70  # Slightly increased from 60 to 70 for visual size
+    PLAYER_HITBOX_SIZE = 60  # Keep the hitbox same as previous
     ENEMY_SIZE = 40
     BOSS_SIZE = 200
 
@@ -191,7 +190,7 @@
     MAX_LEVELS = 3
     BOSS_HITS_REQUIRED = 20
 
-    PLAYER_MAX_DIM = 60  # Increased to match PLAYER_SIZE for alignment
+    PLAYER_MAX_DIM = 70  # Increased to match PLAYER_SIZE for alignment
     ENEMY_MAX_DIM = 80
     BOSS_MAX_DIM = 250
 
@@ -239,10 +238,6 @@
     level3_cover = document["level3-cover"]
     boss_cover = document["boss-cover"] if "boss-cover" in document else None  # Optional
 
-    # Parallax Background Layers
-    galaxy_layer = document["galaxy-layer"] if "galaxy-layer" in document else None
-    planet_layer = document["planet-layer"] if "planet-layer" in document else None
-
     # Load images for levels
     level_image_paths = {
         1: [
@@ -286,29 +281,29 @@
         for _ in range(100)
     ]
 
-    # Parallax Layers
-    galaxy = []
-    planets = []
-    if galaxy_layer:
-        galaxy = [
-            {
-                "x": window.Math.random() * WIDTH,
-                "y": window.Math.random() * HEIGHT,
-                "size": window.Math.random() * 100 + 50,  # Larger sizes for galaxy
-                "speed": 0.2  # Slower speed
-            }
-            for _ in range(5)
-        ]
-    if planet_layer:
-        planets = [
-            {
-                "x": window.Math.random() * WIDTH,
-                "y": window.Math.random() * HEIGHT,
-                "size": window.Math.random() * 50 + 20,
-                "speed": 0.1  # Even slower
-            }
-            for _ in range(3)
-        ]
+    # Galaxy Layer (Procedurally Generated)
+    galaxy_particles = []
+    galaxy_speed = 0.3  # Slower than stars
+
+    def initialize_galaxy():
+        """Initialize galaxy particles forming a spiral pattern."""
+        global galaxy_particles
+        num_particles = 50
+        spiral_radius = 100
+        for i in range(num_particles):
+            angle = i * (360 / num_particles) * (window.Math.PI / 180)
+            radius = spiral_radius * (i / num_particles)
+            x = WIDTH / 2 + radius * window.Math.cos(angle)
+            y = HEIGHT / 2 + radius * window.Math.sin(angle)
+            galaxy_particles.append({
+                "x": x,
+                "y": y,
+                "size": 3,
+                "speed": galaxy_speed,
+                "angle": angle
+            })
+
+    initialize_galaxy()
 
     # -------------------------------------------------
     # 4) AUDIO ELEMENTS
@@ -552,9 +547,9 @@
     def draw_start_screen():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
-        move_parallax_layers()
+        move_galaxy()
         draw_stars()
-        draw_parallax_layers()
+        draw_galaxy()
 
         # Adjusted title dimensions for better centering
         title_width, title_height = 620, 160  # Slightly increased size
@@ -590,9 +585,9 @@
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
-        move_parallax_layers()
+        move_galaxy()
         draw_stars()
-        draw_parallax_layers()
+        draw_galaxy()
 
         ctx.fillStyle = "yellow"
         ctx.font = "bold 48px 'Press Start 2P'"
@@ -600,9 +595,9 @@
 
         # Display Level Title
         if level > MAX_LEVELS:
-            ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 4)
+            ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 4 - 20)  # Moved up by 20 pixels
         else:
-            ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 4)
+            ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 4 - 20)  # Moved up by 20 pixels
 
         # Display Cover Art
         if level == 1:
@@ -639,9 +634,9 @@
     def draw_final_score():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
-        move_parallax_layers()
+        move_galaxy()
         draw_stars()
-        draw_parallax_layers()
+        draw_galaxy()
 
         ctx.fillStyle = "white"
         ctx.font = "48px 'Press Start 2P'"
@@ -667,47 +662,21 @@
         for star in stars:
             ctx.fillRect(star["x"], star["y"], star["size"], star["size"])
 
-    def draw_parallax_layers():
-        # Draw Galaxy Layer
-        if galaxy:
-            ctx.fillStyle = "rgba(255, 255, 255, 0.3)"
-            for gal in galaxy:
-                ctx.beginPath()
-                ctx.arc(gal["x"], gal["y"], gal["size"], 0, 2 * window.Math.PI)
-                ctx.fill()
+    def draw_galaxy():
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
+        for particle in galaxy_particles:
+            ctx.beginPath()
+            ctx.arc(particle["x"], particle["y"], particle["size"], 0, 2 * window.Math.PI)
+            ctx.fill()
 
-        # Draw Planet Layer
-        if planets:
-            for planet in planets:
-                ctx.drawImage(
-                    planet_layer,
-                    planet["x"] - planet["size"] // 2,
-                    planet["y"] - planet["size"] // 2,
-                    planet["size"],
-                    planet["size"]
-                )
-
-    def move_parallax_layers():
-        # Move Galaxy Layer
-        for gal in galaxy:
-            gal["x"] -= gal["speed"]
-            if gal["x"] < -gal["size"]:
-                gal["x"] = WIDTH + gal["size"]
-                gal["y"] = window.Math.random() * HEIGHT
-
-        # Move Planet Layer
-        for planet in planets:
-            planet["x"] -= planet["speed"]
-            if planet["x"] < -planet["size"]:
-                planet["x"] = WIDTH + planet["size"]
-                planet["y"] = window.Math.random() * HEIGHT
-
-    def move_stars():
-        for star in stars:
-            star["y"] += 1
-            if star["y"] > HEIGHT:
-                star["y"] = 0
-                star["x"] = window.Math.random() * WIDTH
+    def move_galaxy():
+        for particle in galaxy_particles:
+            particle["y"] += particle["speed"]
+            if particle["y"] > HEIGHT:
+                # Reset to top with slight randomness
+                particle["y"] = 0
+                particle["x"] = WIDTH / 2 + (particle["x"] - WIDTH / 2)  # Maintain spiral
+                # Optionally, randomize a bit more for variation
 
     def draw():
         global game_over, game_started, showing_level_title
@@ -715,9 +684,9 @@
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
-        move_parallax_layers()
+        move_galaxy()
         draw_stars()
-        draw_parallax_layers()
+        draw_galaxy()
 
         # Slight background tint
         if level > MAX_LEVELS:
@@ -852,8 +821,7 @@
             elif not showing_level_title and not game_over:
                 # Fire bullet if not on cooldown
                 if current_time - player_last_shot > player_shot_cooldown:
-                    # Adjust bullet position based on actual player image dimensions
-                    pw, ph = get_scaled_dims(spaceship_img, PLAYER_MAX_DIM)
+                    # Adjust bullet position based on hitbox
                     bullet_x = player_pos[0] + (PLAYER_HITBOX_SIZE // 2) - (BULLET_WIDTH // 2)
                     bullets.append([
                         bullet_x,
@@ -916,7 +884,7 @@
                 for bullet in bullets[:]:
                     # Check collision based on hitbox
                     if (enemy["pos"][0] <= bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
-                        enemy["pos"][1] <= bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
+                        enemy["pos"][1] <= bullet["y"] <= enemy["pos"][1] + ENEMY_SIZE):
                         enemies.remove(enemy)
                         bullets.remove(bullet)
                         score += 1
