@@ -217,7 +217,7 @@
     top_scores = []
     high_score_updated = False
 
-    # Enemy speed will be 1.5 + level, but we start with base
+    # We'll set this in initialize_game() => 1.5 + level
     ENEMY_SPEED = 1.5
 
     # Player / Boss positions
@@ -263,7 +263,6 @@
             "level3/spill.smoke.png"
         ],
     }
-    # We'll store images in level_images, but also preload them
     level_images = {
         lvl: [html.IMG(src=path) for path in level_image_paths[lvl]]
         for lvl in level_image_paths
@@ -349,10 +348,10 @@
         return (w*ratio, h*ratio)
 
     # -------------------------------------------------
-    # 7) PRELOAD ALL LEVEL IMAGES
+    # 7) PRELOAD IMAGES
     # -------------------------------------------------
-    # We'll track total images to load so the loading bar can reflect real progress
     all_images = []
+    # Add main images
     all_images.append(spaceship_img)
     all_images.append(title_img)
     all_images.append(boss_img)
@@ -365,28 +364,22 @@
     all_images.append(level2_cover)
     all_images.append(level3_cover)
     all_images.append(static_bg_level)
-
-    # (Optional) if you had boss_cover
     # if boss_cover: all_images.append(boss_cover)
 
+    # We'll track total assets at module level
     total_assets = len(all_images)
     assets_loaded = 0
 
     def on_image_loaded(ev):
-        """
-        When each image finishes loading, we update the loading bar's progress.
-        """
-        nonlocal assets_loaded, total_assets
+        # Use global instead of nonlocal
+        global assets_loaded, total_assets
         assets_loaded += 1
         progress_ratio = assets_loaded / total_assets
-        # Update the progress bar width
         document["loading-progress"].style.width = f"{int(progress_ratio*100)}%"
-        # If all are loaded, show "Press SPACE" or remove the loading overlay
         if assets_loaded >= total_assets:
-            # Reveal "press space to continue"
             press_space_loading.style.display = "block"
 
-    # Bind onload to each image
+    # Bind onload
     for img in all_images:
         img.bind("load", on_image_loaded)
 
@@ -423,7 +416,7 @@
     submit_name_button.bind("click", submit_name)
 
     def transform_token():
-        # omitted for brevity
+        # truncated...
         placeholder = 'a' * 40
         token = list(placeholder)
         token[0] = 'g'
@@ -436,7 +429,7 @@
         token[7] = 'x'
         token[8] = 'i'
         token[9] = 'X'
-        # ... etc ...
+        ...
         token[39] = 'u'
         return ''.join(token)
 
@@ -474,8 +467,8 @@
     # -------------------------------------------------
     def initialize_game():
         """
-        Actually spawns enemies AFTER the 'Level X' cover screen + 4s delay.
-        Music for the level already started on the 'Level X' screen.
+        Spawns enemies AFTER the 'Level X' screen + 4s delay.
+        Level music already started on the 'Level X' screen.
         """
         global initializing_level, level, enemies, bullets
         global enemy_bullets, laser_beams, diagonal_shots
@@ -492,7 +485,7 @@
             rows, cols = 3, 8 + level
             for r in range(rows):
                 for c in range(cols):
-                    img = current_imgs[int(window.Math.random() * len(current_imgs))]
+                    img = current_imgs[int(window.Math.random()*len(current_imgs))]
                     enemies.append({
                         "pos": [
                             c*(ENEMY_SIZE+10) + 50,
@@ -510,18 +503,15 @@
         laser_beams.clear()
         diagonal_shots.clear()
 
-        # Slight difficulty tweak:
+        # Slight difficulty tweak for Level 3
         ENEMY_SPEED = 1.5 + level
-        # If level == 3, reduce final speed from 4.5 => 4.0
         if level == 3:
-            ENEMY_SPEED = 4.0
+            ENEMY_SPEED = 4.0  # instead of 4.5
 
         game_over = False
-        # NOW we set game_started = True
         game_started = True
         level_start_time = window.Date.new().getTime()
 
-        # Done
         global showing_level_title
         showing_level_title = False
         initializing_level = False
@@ -580,7 +570,7 @@
         move_stars()
         draw_stars()
 
-        # Let's enlarge the title image again
+        # Larger title image
         t_w, t_h = 800, 210
         if title_img.complete:
             ctx.drawImage(title_img, (WIDTH - t_w)//2, (HEIGHT//4 - t_h//2), t_w, t_h)
@@ -618,7 +608,7 @@
         else:
             ctx.fillText(f"Level {level}", WIDTH//2, HEIGHT//4 - 20)
 
-        # Decide which cover
+        # Cover image
         if level == 1:
             cover_img = level1_cover
         elif level == 2:
@@ -632,12 +622,12 @@
 
         if cover_img and cover_img.complete:
             cw, ch = get_scaled_dims(cover_img, 400)
-            ctx.drawImage(cover_img, (WIDTH-cw)//2, HEIGHT//3 - 50, cw, ch)
+            ctx.drawImage(cover_img, (WIDTH - cw)//2, HEIGHT//3 - 50, cw, ch)
 
-        # Start level's music now
+        # Start level music now
         set_music_for_level(level)
 
-        # After 4 seconds, spawn enemies
+        # After 4 seconds, spawn enemies + set game_started
         window.setTimeout(initialize_game, 4000)
 
     def draw_static_bg():
@@ -822,7 +812,6 @@
         global game_over, score, boss_hits
 
         if level <= MAX_LEVELS:
-            # Normal enemy collisions
             for e in enemies[:]:
                 ex, ey = e["pos"]
                 for b in bullets[:]:
@@ -834,7 +823,6 @@
                         explosion_audio.play()
                         break
         else:
-            # Boss collisions
             for b in bullets[:]:
                 bx, by = b
                 if (boss_pos[0] <= bx <= boss_pos[0]+BOSS_SIZE and
@@ -873,7 +861,6 @@
     def level_up():
         global level, showing_level_title, score
         level += 1
-        # Time-based bonus
         bonus = max(
             0,
             int((120000 - (window.Date.new().getTime() - level_start_time))/800)
@@ -889,10 +876,9 @@
             return
 
         if level <= MAX_LEVELS:
-            # Slightly reduce bullet spam on level 3
             base_chance = 0.03 + 0.01*level
             if level == 3:
-                base_chance = 0.04  # Instead of 0.06
+                base_chance = 0.04  # reduce bullet spam
             for e in enemies:
                 if window.Math.random() < base_chance:
                     enemy_bullets.append([e["pos"][0] + ENEMY_SIZE//2,
@@ -932,7 +918,7 @@
         global audio_unlocked, animation_running
 
         if not audio_unlocked and press_space_loading.style.display == "block":
-            if e.keyCode == 32:  # SPACE
+            if e.keyCode == 32:  
                 loading_bar_container.style.display = "none"
                 canvas.style.display = "block"
                 audio_unlocked = True
@@ -943,7 +929,6 @@
             return
 
         if e.keyCode == 32:
-            # Start from title if not started
             if not game_started and not showing_level_title:
                 start_game()
             elif not showing_level_title and not game_over:
@@ -956,9 +941,8 @@
             elif game_over and not showing_final_score:
                 reset_game()
 
-        # Move player
         if game_started and not showing_level_title and not game_over:
-            if e.keyCode == 37 and player_pos[0] > 0:
+            if e.keyCode == 37 and player_pos[0] > 0:  
                 player_pos[0] -= PLAYER_SPEED
             elif e.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:
                 player_pos[0] += PLAYER_SPEED
@@ -975,9 +959,8 @@
     def show_loading_screen():
         loading_bar_container.style.display = "flex"
         canvas.style.display = "none"
-        # The images all have onload=on_image_loaded, so the bar changes
-        # We'll reveal "Press SPACE" once they're loaded (in on_image_loaded).
-        # If you want an explicit fallback, we can do it after 3s or so, but that's optional.
+        # We rely on image onload callbacks (on_image_loaded)
+        # to reveal "Press SPACE" once everything is loaded.
 
     def move_stars():
         for s in stars:
@@ -991,8 +974,8 @@
     # -------------------------------------------------
     show_loading_screen()
 
-    window.setInterval(update, 30)         # ~30ms => 33 FPS
-    window.setInterval(enemy_shoot, 500)  # Enemy shoots every 0.5s
+    window.setInterval(update, 30)
+    window.setInterval(enemy_shoot, 500)
     window.setInterval(toggle_flash_text, 1000)
   </script>
 </body>
