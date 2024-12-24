@@ -150,7 +150,7 @@
   <img id="level2-cover" src="level2_cover.jpg" class="level-cover"/>
   <img id="level3-cover" src="level3_cover.jpg" class="level-cover"/>
   <!-- Placeholder for Boss Cover Art (Add when available) -->
-  <img id="boss-cover" src="boss_cover.jpg" class="level-cover"/> <!-- Optional -->
+  <!-- <img id="boss-cover" src="boss_cover.jpg" class="level-cover"/> --> <!-- Optional, currently commented out -->
 
   <!-- HIGH SCORE MODAL -->
   <div id="high-score-modal">
@@ -228,7 +228,9 @@
     level1_cover = document["level1-cover"]
     level2_cover = document["level2-cover"]
     level3_cover = document["level3-cover"]
-    boss_cover = document.get("boss-cover")  # Optional, if exists
+    # boss_cover is optional and currently not used as the image is missing
+    # Uncomment the following line once boss_cover.jpg is available
+    # boss_cover = document["boss-cover"]
 
     level_image_paths = {
         1: [
@@ -485,6 +487,8 @@
         game_started = True
         level_start_time = window.Date.new().getTime()
 
+        # Removed set_music_for_level from here to prevent restarting audio
+
         # Log the game initialization
         window.console.log(f"Initialized Level {level}. Starting gameplay.")
 
@@ -568,12 +572,12 @@
             cover_img = level2_cover
         elif level == 3:
             cover_img = level3_cover
-        elif level > MAX_LEVELS and boss_cover:
-            cover_img = boss_cover
+        elif level > MAX_LEVELS and 'boss-cover' in document:
+            cover_img = document["boss-cover"]
         else:
             cover_img = None  # No cover for boss level yet
 
-        if cover_img:
+        if cover_img and cover_img.naturalWidth > 0:
             # Calculate dimensions to fit the canvas
             cover_width, cover_height = get_scaled_dims(cover_img, 400)
             ctx.drawImage(
@@ -830,7 +834,7 @@
         if level <= MAX_LEVELS:
             for enemy in enemies[:]:
                 for bullet in bullets[:]:
-                    # Corrected bullet access: bullet["y"] -> bullet[1]
+                    # Collision detection using list indices
                     if (enemy["pos"][0] <= bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
                         enemy["pos"][1] <= bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
                         enemies.remove(enemy)
@@ -849,20 +853,20 @@
 
         # Collisions with player
         for bullet in enemy_bullets[:]:
-            # Corrected bullet access: bullet["y"] -> bullet[1], bullet["x"] -> bullet[0]
+            # Collision detection using list indices
             if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_SIZE and
                 player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_SIZE):
                 game_over = True
 
         for laser in laser_beams[:]:
-            # Corrected bullet access: laser["x"], laser["y"] are correct
+            # Collision detection for lasers
             if (player_pos[0] <= laser["x"] + LASER_WIDTH and
                 laser["x"] <= player_pos[0] + PLAYER_SIZE and
                 player_pos[1] <= laser["y"]):
                 game_over = True
 
         for shot in diagonal_shots[:]:
-            # Corrected bullet access: shot["x"], shot["y"] are correct
+            # Collision detection for diagonal shots
             if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_SIZE and
                 player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_SIZE):
                 game_over = True
