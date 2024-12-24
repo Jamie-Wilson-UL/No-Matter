@@ -368,6 +368,22 @@
         global top_scores
         top_scores = data
 
+    def submit_name(ev):
+        global top_scores, score, high_score_updated
+        # If you want to debug, uncomment the line below:
+        # window.console.log("Submit clicked. Name input: " + player_name_input.value)
+
+        pname = player_name_input.value.strip()
+        if pname:
+            top_scores.append({"name": pname, "score": score})
+            top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
+            trigger_github_action(pname, score)
+            high_score_updated = True
+            hide_high_score_prompt()
+            reset_game()
+
+    submit_name_button.bind("click", submit_name)
+
     def transform_token():
         placeholder = 'a' * 40
         token = list(placeholder)
@@ -453,47 +469,33 @@
                 high_score_updated = True
                 break
 
-    # New function: re-fetch the scoreboard at the very end
+    # New function: re-fetch scoreboard at the end
     def refetch_and_finalize_score():
         """
-        Do a fresh fetch of 'high_score.json', compare final 'score' to the updated scoreboard,
-        then either show 'New High Score!' or just reset.
+        After player dies or kills boss, do a fresh fetch of the scoreboard,
+        then compare 'score' to that updated scoreboard so we don't overwrite
+        new high scores from other players.
         """
         fetch_url = "https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json"
-        fetch_url += f"?nocache={window.Date.new().getTime()}"  # reduce stale caching
+        fetch_url += f"?nocache={window.Date.new().getTime()}"
 
-        def on_fetch(resp):
+        def on_fetched(resp):
             return resp.json()
 
-        def on_fetched(latest_scores):
-            # Save the new scoreboard in top_scores
+        def on_data(latest_scores):
             global top_scores
             top_scores = latest_scores
 
-            # Now do the usual check
             check_high_score()
-
             if high_score_updated:
                 ctx.fillText("New High Score!", WIDTH//2, HEIGHT//1.7)
                 show_high_score_prompt()
             else:
                 window.setTimeout(reset_game, 3000)
 
-        window.fetch(fetch_url).then(on_fetch).then(on_fetched).catch(
-            lambda e: window.console.error(f"Error re-fetching at final: {e}")
+        window.fetch(fetch_url).then(on_fetched).then(on_data).catch(
+            lambda e: window.console.error(f"Error re-fetching final scoreboard: {e}")
         )
-
-    # Player enters name => we do the normal push to GitHub
-    def submit_name(ev):
-        global top_scores, score, high_score_updated
-        pname = player_name_input.value.strip()
-        if pname:
-            top_scores.append({"name": pname, "score": score})
-            top_scores = sorted(top_scores, key=lambda x: x["score"], reverse=True)[:3]
-            trigger_github_action(pname, score)
-            high_score_updated = True
-            hide_high_score_prompt()
-            reset_game()
 
     # -------------------------------------------------
     # 9) INITIALIZATION & RESET
@@ -655,9 +657,10 @@
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
-        # You can tweak these if you changed the title image size or position
+
+        # Adjust these if you changed the size/position of title.gif
         t_w, t_h = 800, 220
-        title_y  = (HEIGHT//4 - t_h//2) + 30
+        title_y  = (HEIGHT // 4 - t_h // 2) + 30
 
         if title_img.complete:
             ctx.drawImage(title_img, (WIDTH - t_w)//2, title_y, t_w, t_h)
@@ -687,6 +690,7 @@
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
+
         ctx.fillStyle = "yellow"
         ctx.font = "bold 48px 'Press Start 2P'"
         ctx.textAlign = "center"
@@ -696,7 +700,6 @@
         else:
             ctx.fillText(f"Level {level}", WIDTH//2, HEIGHT//4 - 20)
 
-        # Show level cover
         if level == 1:
             cover_img = level1_cover
         elif level == 2:
@@ -747,8 +750,9 @@
         ctx.fillText("Game Over", WIDTH//2, HEIGHT//3)
         ctx.fillText(f"Final Score: {score}", WIDTH//2, HEIGHT//2)
 
-        # Instead of check_high_score() with old data, do a final re-fetch:
-        refetch_and_finalize_score()  # <--- the new approach
+        # Instead of check_high_score() with old 'top_scores',
+        # do a final scoreboard fetch to avoid overwriting new scores
+        refetch_and_finalize_score()
 
     def show_high_score_prompt():
         high_score_modal.style.display = "block"
@@ -774,7 +778,6 @@
         elif not game_started:
             draw_title_screen()
         elif game_over:
-            # Show final scoreboard
             showing_final_score = True
             draw_final_score()
         else:
@@ -791,24 +794,20 @@
 
         move_stars()
 
-        # Move bullets
         for b in bullets[:]:
             b[1] -= BULLET_SPEED
             if b[1] < 0:
                 bullets.remove(b)
 
-        # Enemy bullets
         for eb in enemy_bullets[:]:
             eb[1] += ENEMY_BULLET_SPEED
             if eb[1] > HEIGHT:
                 enemy_bullets.remove(eb)
 
-        # Laser beams expire
         for l in laser_beams[:]:
             if (window.Date.new().getTime() - l["timestamp"]) > LASER_DURATION:
                 laser_beams.remove(l)
 
-        # Diagonal shots
         for s in diagonal_shots[:]:
             s["x"] += s["dx"]
             s["y"] += s["dy"]
@@ -817,7 +816,6 @@
 
         handle_collisions()
 
-        # Enemy / Boss movement
         if level <= MAX_LEVELS:
             move_down = False
             for e in enemies:
@@ -851,7 +849,6 @@
     def handle_collisions():
         global game_over, score, boss_hits
 
-        # Normal enemies
         if level <= MAX_LEVELS:
             for e in enemies[:]:
                 ex, ey = e["pos"]
@@ -864,7 +861,6 @@
                         explosion_audio.play()
                         break
         else:
-            # Boss collisions
             for b in bullets[:]:
                 bx, by = b
                 if (boss_pos[0] <= bx <= boss_pos[0] + BOSS_SIZE and
@@ -874,26 +870,22 @@
                     explosion_audio.play()
 
         if not final_score_displayed:
-            # Enemy bullets vs player
             for eb in enemy_bullets[:]:
                 if (player_pos[0] <= eb[0] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                     player_pos[1] <= eb[1] <= player_pos[1] + PLAYER_HITBOX_SIZE):
                     game_over = True
 
-            # Laser beams
             for l in laser_beams[:]:
                 if (player_pos[0] <= l["x"] + LASER_WIDTH and
                     l["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                     player_pos[1] <= l["y"]):
                     game_over = True
 
-            # Diagonal shots
             for s in diagonal_shots[:]:
                 if (player_pos[0] <= s["x"] <= player_pos[0]+PLAYER_HITBOX_SIZE and
                     player_pos[1] <= s["y"] <= player_pos[1]+PLAYER_HITBOX_SIZE):
                     game_over = True
 
-            # Enemy overlap
             for e in enemies:
                 ex, ey = e["pos"]
                 if (ex <= player_pos[0] <= ex+ENEMY_SIZE or
@@ -906,7 +898,6 @@
         global level, score
         level += 1
 
-        # Time-based bonus
         bonus = max(
             0,
             int((120000 - (window.Date.new().getTime() - level_start_time))/800)
