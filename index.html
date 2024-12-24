@@ -149,6 +149,7 @@
   <img id="level1-cover" src="level1_cover.jpg" class="level-cover"/>
   <img id="level2-cover" src="level2_cover.jpg" class="level-cover"/>
   <img id="level3-cover" src="level3_cover.jpg" class="level-cover"/>
+  <img id="static-bg" src="1265740.png" style="display:none;"/> <!-- New Static Background -->
   <!-- Placeholder for Boss Cover Art (Optional) -->
   <!-- <img id="boss-cover" src="boss_cover.jpg" class="level-cover"/> -->
 
@@ -229,6 +230,7 @@
     level1_cover = document["level1-cover"]
     level2_cover = document["level2-cover"]
     level3_cover = document["level3-cover"]
+    static_bg_img = document["static-bg"]  # New Static Background
     boss_cover = document["boss-cover"] if "boss-cover" in document else None  # Optional
 
     # Load images for levels
@@ -377,6 +379,24 @@
     # -------------------------------------------------
     # 7) HIGH SCORE: SUBMIT / FETCH / UPDATE
     # -------------------------------------------------
+    def initialize_high_score():
+        """Fetches the high scores from a JSON file on GitHub."""
+        global top_scores
+        timestamp = window.Date.new().getTime()
+        url = f'https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json?nocache={timestamp}'
+        window.fetch(url).then(
+            lambda response: response.json()
+        ).then(
+            lambda data: update_high_scores(data)
+        ).catch(
+            lambda error: window.console.error(f"Error fetching high scores: {error}")
+        )
+
+    def update_high_scores(data):
+        """Updates the top_scores list with fetched data."""
+        global top_scores
+        top_scores = data
+
     def submit_name(event):
         global top_scores, score
         player_name = player_name_input.value.strip()
@@ -657,10 +677,22 @@
 
     def draw_galaxy():
         for particle in galaxy_particles:
-            ctx.fillStyle = f"rgba(255, 255, 255, 0.5)"
+            ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
             ctx.beginPath()
             ctx.arc(particle["x"], particle["y"], particle["size"], 0, 2 * window.Math.PI)
             ctx.fill()
+
+    def draw_static_background():
+        """Draws the static background image during gameplay levels."""
+        if static_bg_img:
+            bw, bh = get_scaled_dims(static_bg_img, WIDTH)  # Scale to fit canvas width
+            ctx.drawImage(
+                static_bg_img,
+                0,
+                0,
+                bw,
+                bh
+            )
 
     # -------------------------------------------------
     # 10) GALAXY MOVEMENT
@@ -961,6 +993,12 @@
             if star["y"] > HEIGHT:
                 star["y"] = 0
                 star["x"] = window.Math.random() * WIDTH
+
+    # Ensure move_galaxy is defined above and works correctly
+
+    # draw_static_background function is defined above
+
+    # All other functions (initialize_high_score, update_high_scores, etc.) are defined above
 
     </script>
 </body>
