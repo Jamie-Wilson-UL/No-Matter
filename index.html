@@ -149,7 +149,6 @@
   <img id="level1-cover" src="level1_cover.jpg" class="level-cover"/>
   <img id="level2-cover" src="level2_cover.jpg" class="level-cover"/>
   <img id="level3-cover" src="level3_cover.jpg" class="level-cover"/>
-  <img id="static-bg" src="1265740.png" style="display:none;"/> <!-- New Static Background -->
   <!-- Placeholder for Boss Cover Art (Optional) -->
   <!-- <img id="boss-cover" src="boss_cover.jpg" class="level-cover"/> -->
 
@@ -169,8 +168,7 @@
     # 1) GAME CONSTANTS
     # ---------------------------------------------------------
     WIDTH, HEIGHT = 800, 600
-    PLAYER_SIZE = 70  # Slightly increased from 60 to 70 for visual size
-    PLAYER_HITBOX_SIZE = 60  # Keep the hitbox same as previous
+    PLAYER_SIZE = 60  # Increased from 50 to 60
     ENEMY_SIZE = 40
     BOSS_SIZE = 200
 
@@ -184,7 +182,7 @@
     MAX_LEVELS = 3
     BOSS_HITS_REQUIRED = 20
 
-    PLAYER_MAX_DIM = 70  # Increased to match PLAYER_SIZE for alignment
+    PLAYER_MAX_DIM = 60  # Increased to match PLAYER_SIZE for alignment
     ENEMY_MAX_DIM = 80
     BOSS_MAX_DIM = 250
 
@@ -214,7 +212,7 @@
 
     audio_unlocked = False  # To manage audio playback after loading
 
-    player_pos = [WIDTH // 2 - PLAYER_HITBOX_SIZE // 2, HEIGHT - 2 * PLAYER_HITBOX_SIZE]  # Centered horizontally
+    player_pos = [WIDTH // 2 - PLAYER_SIZE // 2, HEIGHT - 2 * PLAYER_SIZE]  # Centered horizontally
     boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
     boss_hits = 0
     boss_direction = 1
@@ -230,10 +228,8 @@
     level1_cover = document["level1-cover"]
     level2_cover = document["level2-cover"]
     level3_cover = document["level3-cover"]
-    static_bg_img = document["static-bg"]  # New Static Background
     boss_cover = document["boss-cover"] if "boss-cover" in document else None  # Optional
 
-    # Load images for levels
     level_image_paths = {
         1: [
             "level1/dog.png",
@@ -275,30 +271,6 @@
         }
         for _ in range(100)
     ]
-
-    # Galaxy Layer (Procedurally Generated)
-    galaxy_particles = []
-    galaxy_speed = 0.3  # Slower than stars
-
-    def initialize_galaxy():
-        """Initialize galaxy particles forming a spiral pattern."""
-        global galaxy_particles
-        num_particles = 50
-        spiral_radius = 100
-        for i in range(num_particles):
-            angle = i * (360 / num_particles) * (window.Math.PI / 180)
-            radius = spiral_radius * (i / num_particles)
-            x = WIDTH / 2 + radius * window.Math.cos(angle)
-            y = HEIGHT / 2 + radius * window.Math.sin(angle)
-            galaxy_particles.append({
-                "x": x,
-                "y": y,
-                "size": 3,
-                "speed": galaxy_speed,
-                "angle": angle
-            })
-
-    initialize_galaxy()
 
     # -------------------------------------------------
     # 4) AUDIO ELEMENTS
@@ -379,24 +351,6 @@
     # -------------------------------------------------
     # 7) HIGH SCORE: SUBMIT / FETCH / UPDATE
     # -------------------------------------------------
-    def initialize_high_score():
-        """Fetches the high scores from a JSON file on GitHub."""
-        global top_scores
-        timestamp = window.Date.new().getTime()
-        url = f'https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json?nocache={timestamp}'
-        window.fetch(url).then(
-            lambda response: response.json()
-        ).then(
-            lambda data: update_high_scores(data)
-        ).catch(
-            lambda error: window.console.error(f"Error fetching high scores: {error}")
-        )
-
-    def update_high_scores(data):
-        """Updates the top_scores list with fetched data."""
-        global top_scores
-        top_scores = data
-
     def submit_name(event):
         global top_scores, score
         player_name = player_name_input.value.strip()
@@ -560,12 +514,10 @@
     def draw_start_screen():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
-        move_galaxy()
         draw_stars()
-        draw_galaxy()
 
         # Adjusted title dimensions for better centering
-        title_width, title_height = 620, 160  # Slightly increased size
+        title_width, title_height = 600, 150  # Adjust as per your title image
         ctx.drawImage(
             title_img,
             (WIDTH - title_width) // 2,
@@ -598,19 +550,16 @@
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
-        move_galaxy()
         draw_stars()
-        draw_galaxy()
-
         ctx.fillStyle = "yellow"
         ctx.font = "bold 48px 'Press Start 2P'"
         ctx.textAlign = "center"
 
         # Display Level Title
         if level > MAX_LEVELS:
-            ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 4 - 20)  # Moved up by 20 pixels
+            ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 4)
         else:
-            ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 4 - 20)  # Moved up by 20 pixels
+            ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 4)
 
         # Display Cover Art
         if level == 1:
@@ -647,10 +596,7 @@
     def draw_final_score():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
-        move_galaxy()
         draw_stars()
-        draw_galaxy()
-
         ctx.fillStyle = "white"
         ctx.font = "48px 'Press Start 2P'"
         ctx.textAlign = "center"
@@ -675,39 +621,124 @@
         for star in stars:
             ctx.fillRect(star["x"], star["y"], star["size"], star["size"])
 
-    def draw_galaxy():
-        for particle in galaxy_particles:
-            ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
-            ctx.beginPath()
-            ctx.arc(particle["x"], particle["y"], particle["size"], 0, 2 * window.Math.PI)
-            ctx.fill()
+    def move_stars():
+        for star in stars:
+            star["y"] += 1
+            if star["y"] > HEIGHT:
+                star["y"] = 0
+                star["x"] = window.Math.random() * WIDTH
 
-    def draw_static_background():
-        """Draws the static background image during gameplay levels."""
-        if static_bg_img:
-            bw, bh = get_scaled_dims(static_bg_img, WIDTH)  # Scale to fit canvas width
-            ctx.drawImage(
-                static_bg_img,
-                0,
-                0,
-                bw,
-                bh
-            )
+    def draw():
+        global game_over, game_started, showing_level_title
+        global showing_high_score_prompt, showing_final_score, final_score_scheduled
+
+        ctx.clearRect(0, 0, WIDTH, HEIGHT)
+        move_stars()
+        draw_stars()
+
+        # Slight background tint
+        if level > MAX_LEVELS:
+            ctx.fillStyle = "rgba(255, 0, 0, 0.1)"
+        else:
+            ctx.fillStyle = "rgba(0, 0, 255, 0.1)"
+        ctx.fillRect(0, 0, WIDTH, HEIGHT)
+
+        if not game_started:
+            draw_start_screen()
+        elif showing_level_title:
+            draw_level_title()
+        elif showing_final_score:
+            draw_final_score()
+        else:
+            # Draw player (car)
+            if not game_over:
+                pw, ph = get_scaled_dims(spaceship_img, PLAYER_MAX_DIM)
+                ctx.drawImage(spaceship_img, player_pos[0], player_pos[1], pw, ph)
+
+            # Draw boss or normal enemies
+            if level > MAX_LEVELS:
+                bw, bh = get_scaled_dims(boss_img, BOSS_MAX_DIM)
+                ctx.drawImage(boss_img, boss_pos[0], boss_pos[1], bw, bh)
+            else:
+                for enemy in enemies:
+                    ew, eh = get_scaled_dims(enemy["img"], ENEMY_MAX_DIM)
+                    ctx.drawImage(enemy["img"], enemy["pos"][0], enemy["pos"][1], ew, eh)
+
+            # Bullets
+            ctx.fillStyle = "yellow"
+            ctx.shadowBlur = 15
+            ctx.shadowColor = "yellow"
+            for bullet in bullets:
+                ctx.fillRect(bullet[0], bullet[1], BULLET_WIDTH, BULLET_HEIGHT)
+
+            # Enemy bullets
+            ctx.fillStyle = "red"
+            ctx.shadowBlur = 15
+            ctx.shadowColor = "red"
+            for bullet in enemy_bullets:
+                ctx.fillRect(bullet[0], bullet[1], ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT)
+
+            # Laser beams
+            ctx.fillStyle = "blue"
+            ctx.shadowBlur = 20
+            ctx.shadowColor = "blue"
+            for laser in laser_beams:
+                ctx.fillRect(laser["x"], laser["y"], LASER_WIDTH, HEIGHT - laser["y"])
+
+            # Diagonal shots
+            ctx.shadowBlur = 0
+            ctx.fillStyle = "purple"
+            for shot in diagonal_shots:
+                ctx.fillRect(shot["x"], shot["y"], BULLET_WIDTH, BULLET_HEIGHT)
+
+            # Score
+            ctx.fillStyle = "white"
+            ctx.font = "24px 'Press Start 2P'"
+            ctx.textAlign = "right"
+            ctx.fillText(f"Score: {score}", WIDTH - 20, 40)
+
+            # GAME OVER
+            if game_over and not final_score_scheduled:
+                final_score_scheduled = True
+                ctx.fillStyle = "red"
+                ctx.font = "48px 'Press Start 2P'"
+                ctx.textAlign = "center"
+                ctx.fillText("GAME OVER", WIDTH // 2, HEIGHT // 2)
+                window.setTimeout(show_final_score, 3000)
+
+            # If boss is beaten
+            if boss_hits >= BOSS_HITS_REQUIRED and not game_over:
+                game_over = True
+                if not final_score_scheduled:
+                    final_score_scheduled = True
+                    ctx.fillStyle = "green"
+                    ctx.font = "48px 'Press Start 2P'"
+                    ctx.textAlign = "center"
+                    ctx.fillText("YOU WIN!", WIDTH // 2, HEIGHT // 2)
+                    window.setTimeout(show_final_score, 3000)
+
+            # Level up if no enemies remain
+            if len(enemies) == 0 and level <= MAX_LEVELS and not game_over:
+                level_up()
 
     # -------------------------------------------------
-    # 10) GALAXY MOVEMENT
+    # 10) HIGH SCORE: SUBMIT / FETCH / UPDATE
     # -------------------------------------------------
-    def move_galaxy():
-        for particle in galaxy_particles:
-            particle["y"] += particle["speed"]
-            if particle["y"] > HEIGHT:
-                # Reset to top with a new angle to maintain the spiral
-                particle["y"] = 0
-                # Slightly adjust the angle to keep the spiral pattern
-                particle["angle"] += window.Math.PI / 180 * 5  # Rotate by 5 degrees
-                # Update x based on the new angle
-                radius = (WIDTH / 2) - 100  # Keep within bounds
-                particle["x"] = WIDTH / 2 + radius * window.Math.cos(particle["angle"])
+    def initialize_high_score():
+        global top_scores
+        timestamp = window.Date.new().getTime()
+        url = f'https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json?nocache={timestamp}'
+        window.fetch(url).then(
+            lambda response: response.json()
+        ).then(
+            lambda data: update_high_scores(data)
+        ).catch(
+            lambda error: window.console.error(f"Error fetching high scores: {error}")
+        )
+
+    def update_high_scores(data):
+        global top_scores
+        top_scores = data
 
     # -------------------------------------------------
     # 11) HANDLE KEYDOWN EVENT
@@ -738,10 +769,10 @@
             elif not showing_level_title and not game_over:
                 # Fire bullet if not on cooldown
                 if current_time - player_last_shot > player_shot_cooldown:
-                    # Adjust bullet position based on hitbox
-                    bullet_x = player_pos[0] + (PLAYER_HITBOX_SIZE // 2) - (BULLET_WIDTH // 2)
+                    # Adjust bullet position based on actual player image dimensions
+                    pw, ph = get_scaled_dims(spaceship_img, PLAYER_MAX_DIM)
                     bullets.append([
-                        bullet_x,
+                        player_pos[0] + pw // 2 - BULLET_WIDTH // 2,
                         player_pos[1]
                     ])
                     laser_audio.play()
@@ -799,9 +830,9 @@
         if level <= MAX_LEVELS:
             for enemy in enemies[:]:
                 for bullet in bullets[:]:
-                    # Check collision based on hitbox
+                    # Corrected bullet access: bullet["y"] -> bullet[1]
                     if (enemy["pos"][0] <= bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
-                        enemy["pos"][1] <= bullet["y"] <= enemy["pos"][1] + ENEMY_SIZE):
+                        enemy["pos"][1] <= bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
                         enemies.remove(enemy)
                         bullets.remove(bullet)
                         score += 1
@@ -811,38 +842,38 @@
             # Collisions with boss
             for bullet in bullets[:]:
                 if (boss_pos[0] <= bullet[0] <= boss_pos[0] + BOSS_SIZE and
-                    boss_pos[1] <= bullet["y"] <= boss_pos[1] + BOSS_SIZE):
+                    boss_pos[1] <= bullet[1] <= boss_pos[1] + BOSS_SIZE):
                     bullets.remove(bullet)
                     boss_hits += 1
                     explosion_audio.play()
 
         # Collisions with player
         for bullet in enemy_bullets[:]:
-            # Check collision based on hitbox
-            if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_HITBOX_SIZE and
-                player_pos[1] <= bullet["y"] <= player_pos[1] + PLAYER_HITBOX_SIZE):
+            # Corrected bullet access: bullet["y"] -> bullet[1], bullet["x"] -> bullet[0]
+            if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_SIZE and
+                player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_SIZE):
                 game_over = True
 
         for laser in laser_beams[:]:
-            # Check collision with laser beam
+            # Corrected bullet access: laser["x"], laser["y"] are correct
             if (player_pos[0] <= laser["x"] + LASER_WIDTH and
-                laser["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
+                laser["x"] <= player_pos[0] + PLAYER_SIZE and
                 player_pos[1] <= laser["y"]):
                 game_over = True
 
         for shot in diagonal_shots[:]:
-            # Check collision with diagonal shots
-            if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
-                player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_HITBOX_SIZE):
+            # Corrected bullet access: shot["x"], shot["y"] are correct
+            if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_SIZE and
+                player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_SIZE):
                 game_over = True
 
         # Enemy/player overlap (normal levels)
         if level <= MAX_LEVELS:
             for enemy in enemies:
                 if (enemy["pos"][0] <= player_pos[0] <= enemy["pos"][0] + ENEMY_SIZE or
-                    enemy["pos"][0] <= player_pos[0] + PLAYER_HITBOX_SIZE <= enemy["pos"][0] + ENEMY_SIZE):
+                    enemy["pos"][0] <= player_pos[0] + PLAYER_SIZE <= enemy["pos"][0] + ENEMY_SIZE):
                     if (enemy["pos"][1] <= player_pos[1] <= enemy["pos"][1] + ENEMY_SIZE or
-                        enemy["pos"][1] <= player_pos[1] + PLAYER_HITBOX_SIZE <= enemy["pos"][1] + ENEMY_SIZE):
+                        enemy["pos"][1] <= player_pos[1] + PLAYER_SIZE <= enemy["pos"][1] + ENEMY_SIZE):
                         game_over = True
 
             # Enemy movement
@@ -983,23 +1014,6 @@
     window.setInterval(enemy_shoot, 500)
     window.setInterval(toggle_flash_text, 1000)
 
-    # -------------------------------------------------
-    # 18) FUNCTION DEFINITIONS
-    # -------------------------------------------------
-    # Define move_stars function to prevent NameError
-    def move_stars():
-        for star in stars:
-            star["y"] += 1
-            if star["y"] > HEIGHT:
-                star["y"] = 0
-                star["x"] = window.Math.random() * WIDTH
-
-    # Ensure move_galaxy is defined above and works correctly
-
-    # draw_static_background function is defined above
-
-    # All other functions (initialize_high_score, update_high_scores, etc.) are defined above
-
-    </script>
+  </script>
 </body>
 </html>
