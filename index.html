@@ -59,7 +59,7 @@
       height: 100%;
       width: 0;
       background-color: #00ff00;
-      animation: fill 1.5s linear forwards; /* Reduced to 1.5s for faster loading */
+      animation: fill 1.5s linear forwards; /* Animation duration: 1.5s */
     }
     #loading-text {
       font-size: 24px;
@@ -149,7 +149,8 @@
   <img id="level1-cover" src="level1_cover.jpg" class="level-cover"/>
   <img id="level2-cover" src="level2_cover.jpg" class="level-cover"/>
   <img id="level3-cover" src="level3_cover.jpg" class="level-cover"/>
-  <!-- You can add a placeholder for the boss cover later if needed -->
+  <!-- Placeholder for Boss Cover Art (Add when available) -->
+  <img id="boss-cover" src="boss_cover.jpg" class="level-cover"/> <!-- Optional -->
 
   <!-- HIGH SCORE MODAL -->
   <div id="high-score-modal">
@@ -181,7 +182,7 @@
     MAX_LEVELS = 3
     BOSS_HITS_REQUIRED = 20
 
-    PLAYER_MAX_DIM = 110
+    PLAYER_MAX_DIM = 50  # Adjusted to match PLAYER_SIZE for alignment
     ENEMY_MAX_DIM = 80
     BOSS_MAX_DIM = 250
 
@@ -211,7 +212,7 @@
 
     audio_unlocked = False  # To manage audio playback after loading
 
-    player_pos = [WIDTH // 2, HEIGHT - 2 * PLAYER_SIZE]
+    player_pos = [WIDTH // 2 - PLAYER_SIZE // 2, HEIGHT - 2 * PLAYER_SIZE]  # Centered horizontally
     boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
     boss_hits = 0
     boss_direction = 1
@@ -227,6 +228,7 @@
     level1_cover = document["level1-cover"]
     level2_cover = document["level2-cover"]
     level3_cover = document["level3-cover"]
+    boss_cover = document.get("boss-cover")  # Optional, if exists
 
     level_image_paths = {
         1: [
@@ -483,8 +485,6 @@
         game_started = True
         level_start_time = window.Date.new().getTime()
 
-        # Removed set_music_for_level from here to prevent restarting audio
-
         # Log the game initialization
         window.console.log(f"Initialized Level {level}. Starting gameplay.")
 
@@ -521,7 +521,7 @@
         ctx.drawImage(
             title_img,
             (WIDTH - title_width) // 2,
-            (HEIGHT // 3 - title_height // 2),
+            (HEIGHT // 4 - title_height // 2),
             title_width,
             title_height
         )
@@ -530,10 +530,10 @@
             ctx.fillStyle = "white"
             ctx.font = "bold 28px 'Press Start 2P'"
             ctx.textAlign = "center"
-            ctx.fillText("Press SPACE to Play", WIDTH // 2, HEIGHT // 1.7)
+            ctx.fillText("Press SPACE to Play", WIDTH // 2, HEIGHT // 1.5)
 
         ctx.font = "bold 28px 'Press Start 2P'"
-        ctx.fillText("Leaderboard", WIDTH // 2, HEIGHT // 1.3 - 40)
+        ctx.fillText("Leaderboard", WIDTH // 2, HEIGHT // 1.2 - 40)
 
         if top_scores:
             ctx.font = "24px 'Press Start 2P'"
@@ -541,7 +541,7 @@
                 ctx.fillText(
                     f"{i+1}. {score_data['name']} - {score_data['score']}",
                     WIDTH // 2,
-                    HEIGHT // 1.3 + 30 * i
+                    HEIGHT // 1.2 + 30 * i
                 )
 
     def draw_level_title():
@@ -568,6 +568,8 @@
             cover_img = level2_cover
         elif level == 3:
             cover_img = level3_cover
+        elif level > MAX_LEVELS and boss_cover:
+            cover_img = boss_cover
         else:
             cover_img = None  # No cover for boss level yet
 
@@ -582,14 +584,14 @@
                 cover_height
             )
 
-        # Play level-specific audio
+        # Play level-specific audio (only once during title screen)
         set_music_for_level(level)
 
         # Log the transition
         window.console.log(f"Displaying Level {level} title screen.")
 
-        # Schedule game initialization after 3 seconds
-        window.setTimeout(initialize_game, 3000)
+        # Schedule game initialization after 4 seconds
+        window.setTimeout(initialize_game, 4000)  # Increased to 4 seconds
 
     def draw_final_score():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -767,8 +769,10 @@
             elif not showing_level_title and not game_over:
                 # Fire bullet if not on cooldown
                 if current_time - player_last_shot > player_shot_cooldown:
+                    # Adjust bullet position based on actual player image dimensions
+                    pw, ph = get_scaled_dims(spaceship_img, PLAYER_MAX_DIM)
                     bullets.append([
-                        player_pos[0] + PLAYER_SIZE // 2 - BULLET_WIDTH // 2,
+                        player_pos[0] + pw // 2 - BULLET_WIDTH // 2,
                         player_pos[1]
                     ])
                     laser_audio.play()
@@ -989,7 +993,7 @@
 
         def reveal_press_space():
             press_space_loading.style.display = "block"  # show text after loading bar
-        window.setTimeout(reveal_press_space, 1500)  # Reduced to 1.5 seconds for faster prompt
+        window.setTimeout(reveal_press_space, 1500)  # Match with CSS animation duration (1.5s)
 
     # -------------------------------------------------
     # 17) INITIALIZATION
@@ -1013,3 +1017,4 @@
   </script>
 </body>
 </html>
+
