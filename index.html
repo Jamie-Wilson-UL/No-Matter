@@ -223,6 +223,7 @@
 
     audio_unlocked = False  # To manage audio playback after loading
     animation_running = False  # Prevent multiple animation loops
+    initializing_level = False  # Flag to indicate level initialization
 
     player_pos = [WIDTH // 2 - PLAYER_HITBOX_SIZE // 2, HEIGHT - 2 * PLAYER_HITBOX_SIZE]
     boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
@@ -509,9 +510,10 @@
         global enemies, bullets, enemy_bullets, laser_beams, diagonal_shots
         global showing_level_title, ENEMY_SPEED, game_over, level
         global game_started, score, boss_hits, level_start_time
-        global final_score_scheduled
+        global final_score_scheduled, initializing_level
 
         final_score_scheduled = False
+        initializing_level = True  # Start initializing
 
         rows = 3
         cols = 8 + level
@@ -540,7 +542,6 @@
         laser_beams.clear()
         diagonal_shots.clear()
 
-        showing_level_title = False
         ENEMY_SPEED = 1.5 + level
         game_over = False
         game_started = True
@@ -551,6 +552,8 @@
 
         # Log the game initialization and number of enemies
         window.console.log(f"Initialized Level {level}. Number of enemies: {len(enemies)}. Starting gameplay.")
+
+        initializing_level = False  # Finished initializing
 
     def reset_game():
         """
@@ -646,7 +649,7 @@
         Draws all diagonal shots on the canvas.
         """
         ctx.strokeStyle = "magenta"
-        ctx.lineWidth = 2
+        ctx.lineWidth = 4  # Increased from 2 to 4 for better visibility
         for shot in diagonal_shots:
             ctx.beginPath()
             ctx.moveTo(shot["x"], shot["y"])
@@ -673,10 +676,10 @@
         
         # Draw boss health bar
         ctx.fillStyle = "red"
-        ctx.fillRect(boss_pos[0], boss_pos[1] - 20, BOSS_SIZE, 10)  # Background
+        ctx.fillRect(boss_pos[0], boss_pos[1] - 25, BOSS_SIZE, 15)  # Adjusted position
         ctx.fillStyle = "green"
         health_ratio = max(boss_hits, 0) / BOSS_HITS_REQUIRED
-        ctx.fillRect(boss_pos[0], boss_pos[1] - 20, BOSS_SIZE * health_ratio, 10)
+        ctx.fillRect(boss_pos[0], boss_pos[1] - 25, BOSS_SIZE * health_ratio, 15)
 
     def draw_stars():
         ctx.fillStyle = "white"
@@ -875,7 +878,7 @@
     def handle_keydown(event):
         global game_started, game_over, player_last_shot, showing_level_title
         global showing_final_score, showing_high_score_prompt, final_score_scheduled
-        global audio_unlocked, animation_running
+        global audio_unlocked, animation_running, initializing_level
 
         current_time = window.Date.new().getTime()
 
@@ -927,7 +930,7 @@
     # -------------------------------------------------
     def update():
         global game_over, score, game_started, showing_level_title
-        global ENEMY_SPEED, boss_hits, boss_direction
+        global ENEMY_SPEED, boss_hits, boss_direction, initializing_level
 
         if game_over or not game_started or showing_level_title or showing_final_score:
             return
@@ -1038,7 +1041,7 @@
             boss_pos[1] = max(0, min(HEIGHT // 4, boss_pos[1]))
 
         # Check for level completion or boss defeat
-        if level <= MAX_LEVELS and not enemies:
+        if level <= MAX_LEVELS and not enemies and not initializing_level:
             window.console.log(f"Level {level} completed!")
             level_up()
         elif level > MAX_LEVELS and boss_hits >= BOSS_HITS_REQUIRED:
@@ -1087,14 +1090,14 @@
                 diagonal_shots.append({
                     "x": boss_pos[0] + BOSS_SIZE // 2,
                     "y": boss_pos[1] + BOSS_SIZE,
-                    "dx": 5,
-                    "dy": 5
+                    "dx": 15,  # Increased from 5 to 15 for longer shots
+                    "dy": 15   # Increased from 5 to 15 for longer shots
                 })
                 diagonal_shots.append({
                     "x": boss_pos[0] + BOSS_SIZE // 2,
                     "y": boss_pos[1] + BOSS_SIZE,
-                    "dx": -5,
-                    "dy": 5
+                    "dx": -15,  # Increased from -5 to -15 for longer shots
+                    "dy": 15    # Increased from 5 to 15 for longer shots
                 })
                 boss_last_diagonal_shot = current_time
                 window.console.log("Boss firing diagonal shots.")
