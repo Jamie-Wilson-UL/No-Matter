@@ -676,6 +676,118 @@
                 bh
             )
 
+    def draw_level_title():
+        """Displays the level title screen and schedules game initialization."""
+        global level
+
+        ctx.clearRect(0, 0, WIDTH, HEIGHT)
+        move_stars()
+        draw_stars()
+
+        ctx.fillStyle = "yellow"
+        ctx.font = "bold 48px 'Press Start 2P'"
+        ctx.textAlign = "center"
+
+        # Display Level Title
+        if level > MAX_LEVELS:
+            ctx.fillText("Final Boss!", WIDTH // 2, HEIGHT // 4 - 20)  # Moved up by 20 pixels
+        else:
+            ctx.fillText(f"Level {level}", WIDTH // 2, HEIGHT // 4 - 20)  # Moved up by 20 pixels
+
+        # Display Cover Art
+        if level == 1:
+            cover_img = level1_cover
+        elif level == 2:
+            cover_img = level2_cover
+        elif level == 3:
+            cover_img = level3_cover
+        elif level > MAX_LEVELS and boss_cover:
+            cover_img = boss_cover
+        else:
+            cover_img = None  # No cover for boss level yet
+
+        if cover_img and cover_img.complete:
+            # Calculate dimensions to fit the canvas
+            cover_width, cover_height = get_scaled_dims(cover_img, 400)
+            ctx.drawImage(
+                cover_img,
+                (WIDTH - cover_width) // 2,
+                HEIGHT // 3 - 50,  # Moved up by 50 pixels for better centering
+                cover_width,
+                cover_height
+            )
+
+        # Play level-specific audio (only once during title screen)
+        set_music_for_level(level)
+
+        # Log the transition
+        window.console.log(f"Displaying Level {level} title screen.")
+
+        # Schedule game initialization after 4 seconds
+        window.setTimeout(initialize_game, 4000)  # Increased to 4 seconds
+
+    def draw_start_screen():
+        ctx.clearRect(0, 0, WIDTH, HEIGHT)
+        move_stars()
+        draw_stars()
+
+        # Adjusted title dimensions for better centering
+        title_width, title_height = 620, 160  # Slightly increased size
+        if title_img.complete:
+            ctx.drawImage(
+                title_img,
+                (WIDTH - title_width) // 2,
+                (HEIGHT // 4 - title_height // 2),
+                title_width,
+                title_height
+            )
+        else:
+            # Fallback: Draw a rectangle if image is not loaded
+            ctx.fillStyle = "yellow"
+            ctx.fillRect((WIDTH - title_width) // 2, (HEIGHT // 4 - title_height // 2), title_width, title_height)
+
+        if flash_text:
+            ctx.fillStyle = "white"
+            ctx.font = "bold 28px 'Press Start 2P'"
+            ctx.textAlign = "center"
+            ctx.fillText("Press SPACE to Play", WIDTH // 2, HEIGHT // 1.5)
+
+        ctx.font = "bold 28px 'Press Start 2P'"
+        ctx.fillText("Leaderboard", WIDTH // 2, HEIGHT // 1.2 - 40)
+
+        if top_scores:
+            ctx.font = "24px 'Press Start 2P'"
+            for i, score_data in enumerate(top_scores):
+                ctx.fillText(
+                    f"{i+1}. {score_data['name']} - {score_data['score']}",
+                    WIDTH // 2,
+                    HEIGHT // 1.2 + 30 * i
+                )
+
+    def draw_final_score():
+        ctx.clearRect(0, 0, WIDTH, HEIGHT)
+        move_stars()
+        draw_stars()
+
+        ctx.fillStyle = "white"
+        ctx.font = "48px 'Press Start 2P'"
+        ctx.textAlign = "center"
+        ctx.fillText(f"Final Score: {score}", WIDTH // 2, HEIGHT // 2)
+
+        if high_score_updated:
+            ctx.fillText("New High Score!", WIDTH // 2, HEIGHT // 1.7)
+            show_high_score_prompt()
+        else:
+            window.setTimeout(reset_game, 3000)
+
+    def show_high_score_prompt():
+        high_score_modal.style.display = "block"
+        player_name_input.focus()
+
+    def hide_high_score_prompt():
+        high_score_modal.style.display = "none"
+        player_name_input.value = ""
+
     def draw():
         """
         Renders all game elements on the canvas.
@@ -871,8 +983,8 @@
                     move_down = True
             if move_down:
                 for enemy in enemies:
-                    enemy["pos"][1"] += ENEMY_SIZE
-                ENEMY_SPEED = -ENEMY_SPEED
+                    enemy["pos"][1] += ENEMY_SIZE
+                ENEMY_SPEED = -ENEMY_SPEED  # Reverse direction
         else:
             # Boss movement
             boss_pos[0] += boss_direction * 10
@@ -959,31 +1071,16 @@
     # -------------------------------------------------
     # 14) DRAW FINAL SCORE
     # -------------------------------------------------
-    def draw_final_score():
-        ctx.clearRect(0, 0, WIDTH, HEIGHT)
-        move_stars()
-        # draw_galaxy()      # Swirly background removed
-        draw_stars()
-        # draw_galaxy()      # Swirly background removed
-
-        ctx.fillStyle = "white"
-        ctx.font = "48px 'Press Start 2P'"
-        ctx.textAlign = "center"
-        ctx.fillText(f"Final Score: {score}", WIDTH // 2, HEIGHT // 2)
-
-        if high_score_updated:
-            ctx.fillText("New High Score!", WIDTH // 2, HEIGHT // 1.7)
-            show_high_score_prompt()
-        else:
-            window.setTimeout(reset_game, 3000)
-
-    def show_high_score_prompt():
-        high_score_modal.style.display = "block"
-        player_name_input.focus()
-
-    def hide_high_score_prompt():
-        high_score_modal.style.display = "none"
-        player_name_input.value = ""
+    def show_final_score():
+        global high_score_updated, showing_high_score_prompt, showing_final_score
+        high_score_updated = False
+        for i in range(len(top_scores)):
+            if score > top_scores[i]["score"]:
+                high_score_updated = True
+                showing_high_score_prompt = True
+                break
+        showing_final_score = True
+        draw_final_score()
 
     # -------------------------------------------------
     # 15) ANIMATION FUNCTIONS
