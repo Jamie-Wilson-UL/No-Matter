@@ -35,6 +35,7 @@
     }
     #title-img {
       animation: breathing 3s infinite;
+      display: none; /* Hidden as it's drawn on the canvas */
     }
     /* LOADING OVERLAY */
     #loading-bar-container {
@@ -46,6 +47,7 @@
       justify-content: center;
       align-items: center;
       background-color: black;
+      z-index: 10;
     }
     #loading-bar {
       width: 50%;
@@ -79,9 +81,11 @@
     #high-score-modal {
       display: none;
       position: fixed;
-      z-index: 1;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
+      z-index: 20;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
       overflow: auto;
       background-color: rgba(0,0,0,0.9);
       color: white;
@@ -92,7 +96,8 @@
       margin: 15% auto;
       padding: 20px;
       border: 3px solid #00ff00;
-      width: 80%; max-width: 400px;
+      width: 80%;
+      max-width: 400px;
       text-align: center;
     }
     #player-name {
@@ -145,7 +150,7 @@
   <audio id="explosion-audio" src="explosion.mp3"></audio>
 
   <!-- TITLE IMAGE -->
-  <img id="title-img" src="title.gif" style="display:none"/>
+  <img id="title-img" src="title.gif"/>
 
   <!-- LEVEL COVER IMAGES -->
   <img id="level1-cover" src="level1_cover.jpg" class="level-cover"/>
@@ -173,11 +178,13 @@
     # 1) GAME CONSTANTS
     # ---------------------------------------------------------
     WIDTH, HEIGHT = 800, 600
-    PLAYER_SIZE = 60  # As per correction
+    PLAYER_SIZE = 60  # Adjusted size
     PLAYER_MAX_DIM = 110  # Increased from 60 to match old code
     PLAYER_HITBOX_SIZE = PLAYER_MAX_DIM  # Defined hitbox size
     ENEMY_SIZE = 40
+    ENEMY_MAX_DIM = 80  # Added to fix NameError
     BOSS_SIZE = 200
+    BOSS_MAX_DIM = 250  # Ensure this is defined if used
 
     BULLET_WIDTH, BULLET_HEIGHT = 5, 20
     PLAYER_SPEED = 10
@@ -345,10 +352,14 @@
     # 6) SCALING UTILITY: CAP DIMENSIONS PRESERVING RATIO
     # -------------------------------------------------
     def get_scaled_dims(img, max_dim):
+        if not img.complete:
+            window.console.error(f"Image not loaded: {img.src}")
+            return (max_dim, max_dim)  # Fallback dimensions
         w = img.naturalWidth
         h = img.naturalHeight
         if w == 0 or h == 0:
-            return (max_dim, max_dim)  # fallback if not loaded
+            window.console.error(f"Invalid image dimensions for {img.src}")
+            return (max_dim, max_dim)  # Fallback dimensions
         ratio = min(max_dim / w, max_dim / h)
         return (w * ratio, h * ratio)
 
@@ -476,7 +487,7 @@
         final_score_scheduled = False
 
         rows = 3
-        cols = 8 + level
+        cols = 8 + level  # Adjust number of columns based on level
 
         if level <= MAX_LEVELS:
             current_level_images = level_images[level]
@@ -511,7 +522,13 @@
         game_started = True
         level_start_time = window.Date.new().getTime()
 
-        # Log the game initialization
+        # Set music for the new level
+        if level <= MAX_LEVELS:
+            set_music_for_level(level)
+        else:
+            # Boss music
+            set_music_for_level(MAX_LEVELS + 1)
+
         window.console.log(f"Initialized Level {level}. Starting gameplay.")
 
     def reset_game():
@@ -534,16 +551,16 @@
         set_music_for_title_screen()  # Play title audio on loop
         window.requestAnimationFrame(animate_title_screen)  # Initiate animation loop
 
-    # -------------------------------------------------
-    # 9) DRAWING / RENDERING
-    # -------------------------------------------------
+    # ----------------------
+    # DRAWING / RENDERING
+    # ----------------------
     def draw_start_screen():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
 
-        # Adjusted title dimensions for better centering
-        title_width, title_height = 600, 150  # Adjust as per your title image
+        # Adjusted title dimensions for better centering and increased size
+        title_width, title_height = 700, 175  # Increased from 600x150
         if title_img.complete:
             ctx.drawImage(
                 title_img,
@@ -757,28 +774,7 @@
                 level_up()
 
     # -------------------------------------------------
-    # 10) HIGH SCORE: SUBMIT / FETCH / UPDATE
-    # -------------------------------------------------
-    def initialize_high_score():
-        """Fetches the high scores from a JSON file on GitHub."""
-        global top_scores
-        timestamp = window.Date.new().getTime()
-        url = f'https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json?nocache={timestamp}'
-        window.fetch(url).then(
-            lambda response: response.json()
-        ).then(
-            lambda data: update_high_scores(data)
-        ).catch(
-            lambda error: window.console.error(f"Error fetching high scores: {error}")
-        )
-
-    def update_high_scores(data):
-        """Updates the top_scores list with fetched data."""
-        global top_scores
-        top_scores = data
-
-    # -------------------------------------------------
-    # 11) HANDLE KEYDOWN EVENT
+    # 9) HANDLE KEYDOWN EVENT
     # -------------------------------------------------
     def handle_keydown(event):
         global game_started, game_over, player_last_shot, showing_level_title
@@ -814,23 +810,27 @@
                     ])
                     laser_audio.play()
                     player_last_shot = current_time
+                    window.console.log("Player fired a bullet.")
             elif game_over:
                 # Reset to title screen
                 reset_game()
+                window.console.log("Player reset the game.")
         elif game_started and not showing_level_title and not game_over:
             # Left arrow
             if event.keyCode == 37 and player_pos[0] > 0:
                 player_pos[0] -= PLAYER_SPEED
+                window.console.log(f"Player moved left to {player_pos[0]}")
             # Right arrow
             elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:
                 player_pos[0] += PLAYER_SPEED
+                window.console.log(f"Player moved right to {player_pos[0]}")
 
     def toggle_flash_text():
         global flash_text
         flash_text = not flash_text
 
     # -------------------------------------------------
-    # 12) MAIN UPDATE LOOP (movement, collisions)
+    # 10) MAIN UPDATE LOOP (movement, collisions)
     # -------------------------------------------------
     def update():
         global game_over, score, game_started, showing_level_title
@@ -884,21 +884,21 @@
                     boss_hits += 1
                     explosion_audio.play()
                     window.console.log(f"Boss hit! Total hits: {boss_hits}")
-    
+
         # Collisions with player
         for bullet in enemy_bullets[:]:
             if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_SIZE and
                 player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_SIZE):
                 game_over = True
                 window.console.log("Player hit by enemy bullet! Game Over.")
-    
+
         for laser in laser_beams[:]:
             if (laser["x"] <= player_pos[0] + PLAYER_SIZE and
                 laser["x"] + LASER_WIDTH >= player_pos[0] and
                 laser["y"] >= player_pos[1]):
                 game_over = True
                 window.console.log("Player hit by laser beam! Game Over.")
-    
+
         for shot in diagonal_shots[:]:
             if (shot["x"] <= player_pos[0] + PLAYER_SIZE and
                 shot["x"] + BULLET_WIDTH >= player_pos[0] and
@@ -906,7 +906,7 @@
                 shot["y"] + BULLET_HEIGHT >= player_pos[1]):
                 game_over = True
                 window.console.log("Player hit by diagonal shot! Game Over.")
-    
+
         # Enemy/player overlap (normal levels)
         if level <= MAX_LEVELS:
             for enemy in enemies:
@@ -916,7 +916,7 @@
                      enemy["pos"][1] <= player_pos[1] + PLAYER_SIZE <= enemy["pos"][1] + ENEMY_SIZE)):
                     game_over = True
                     window.console.log("Player collided with enemy! Game Over.")
-    
+
             # Enemy movement
             move_down = False
             for enemy in enemies:
@@ -936,7 +936,7 @@
                 window.console.log(f"Boss direction changed to {boss_direction}")
             boss_pos[1] += window.Math.random() * 10 - 5
             boss_pos[1] = max(0, min(HEIGHT // 4, boss_pos[1]))
-    
+
         # Check for level completion or boss defeat
         if level <= MAX_LEVELS and not enemies:
             window.console.log(f"Level {level} completed!")
@@ -945,12 +945,12 @@
             game_over = True
             show_final_score()
             window.console.log("Boss defeated! Game Over.")
-    
+
         # Render the frame
         draw()
 
     # -------------------------------------------------
-    # 13) MAIN GAME LOOP FUNCTIONS
+    # 11) ENEMY SHOOTING
     # -------------------------------------------------
     def enemy_shoot():
         global game_over, game_started, showing_level_title
@@ -999,6 +999,9 @@
                 boss_last_diagonal_shot = current_time
                 window.console.log("Boss firing diagonal shots.")
 
+    # -------------------------------------------------
+    # 12) LEVEL UP
+    # -------------------------------------------------
     def level_up():
         global level, showing_level_title, score
         level += 1
@@ -1011,6 +1014,9 @@
         window.console.log(f"Level up! Now at Level {level}")
         draw_level_title()
 
+    # -------------------------------------------------
+    # 13) START GAME
+    # -------------------------------------------------
     def start_game():
         """Triggered when the player presses Space to start the game."""
         global showing_level_title, game_started, level
@@ -1020,41 +1026,18 @@
         window.console.log("Starting game. Displaying Level 1 title screen.")
         draw_level_title()  # Display the Level 1 title
 
-    def move_player(event):
-        global game_started, game_over, player_last_shot
-        current_time = window.Date.new().getTime()
+    def show_final_score():
+        global high_score_updated, showing_high_score_prompt, showing_final_score
+        high_score_updated = False
 
-        if event.keyCode == 32:  # SPACE
-            if not game_started:
-                # Start the game from the title screen
-                start_game()
-            elif not showing_level_title and not game_over:
-                # Fire bullet if not on cooldown
-                if current_time - player_last_shot > player_shot_cooldown:
-                    bullets.append([
-                        player_pos[0] + (PLAYER_HITBOX_SIZE // 2) - (BULLET_WIDTH // 2),
-                        player_pos[1]
-                    ])
-                    laser_audio.play()
-                    player_last_shot = current_time
-                    window.console.log("Player fired a bullet.")
-            elif game_over:
-                # Reset to title screen
-                reset_game()
-                window.console.log("Player reset the game.")
-        elif game_started and not showing_level_title and not game_over:
-            # Left arrow
-            if event.keyCode == 37 and player_pos[0] > 0:
-                player_pos[0] -= PLAYER_SPEED
-                window.console.log(f"Player moved left to {player_pos[0]}")
-            # Right arrow
-            elif event.keyCode == 39 and player_pos[0] < WIDTH - PLAYER_SIZE:
-                player_pos[0] += PLAYER_SPEED
-                window.console.log(f"Player moved right to {player_pos[0]}")
+        for i in range(len(top_scores)):
+            if score > top_scores[i]["score"]:
+                high_score_updated = True
+                showing_high_score_prompt = True
+                break
 
-    def toggle_flash_text():
-        global flash_text
-        flash_text = not flash_text
+        showing_final_score = True
+        draw_final_score()
 
     # -------------------------------------------------
     # 14) ANIMATION FUNCTIONS
@@ -1100,18 +1083,6 @@
     window.setInterval(update, 30)        # 30ms interval for update loop
     window.setInterval(enemy_shoot, 500)  # 500ms interval for enemy shooting
     window.setInterval(toggle_flash_text, 1000)  # 1000ms interval for flashing text
-
-    # -------------------------------------------------
-    # 17) FUNCTION DEFINITIONS
-    # -------------------------------------------------
-    def move_stars():
-        for star in stars:
-            star["y"] += 1
-            if star["y"] > HEIGHT:
-                star["y"] = 0
-                star["x"] = window.Math.random() * WIDTH
-
-    # All other functions (initialize_high_score, update_high_scores, etc.) are defined above
 
   </script>
 </body>
