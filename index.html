@@ -688,7 +688,7 @@
                 level_up()
 
     # -------------------------------------------------
-    # 8) HIGH SCORE: SUBMIT / FETCH / UPDATE
+    # 10) HIGH SCORE: SUBMIT / FETCH / UPDATE
     # -------------------------------------------------
     def initialize_high_score():
         global top_scores
@@ -707,7 +707,7 @@
         top_scores = data
 
     # -------------------------------------------------
-    # 9) HANDLE KEYDOWN EVENT
+    # 11) HANDLE KEYDOWN EVENT
     # -------------------------------------------------
     def handle_keydown(event):
         global game_started, game_over, player_last_shot, showing_level_title
@@ -757,7 +757,7 @@
         flash_text = not flash_text
 
     # -------------------------------------------------
-    # 10) MAIN UPDATE LOOP (movement, collisions)
+    # 12) MAIN UPDATE LOOP (movement, collisions)
     # -------------------------------------------------
     def update():
         global game_over, score, game_started, showing_level_title
@@ -794,8 +794,9 @@
         if level <= MAX_LEVELS:
             for enemy in enemies[:]:
                 for bullet in bullets[:]:
+                    # Corrected bullet access: bullet["y"] -> bullet[1]
                     if (enemy["pos"][0] <= bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
-                        enemy["pos"][1] <= bullet["y"] <= enemy["pos"][1] + ENEMY_SIZE):
+                        enemy["pos"][1] <= bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
                         enemies.remove(enemy)
                         bullets.remove(bullet)
                         score += 1
@@ -805,24 +806,27 @@
             # Collisions with boss
             for bullet in bullets[:]:
                 if (boss_pos[0] <= bullet[0] <= boss_pos[0] + BOSS_SIZE and
-                    boss_pos[1] <= bullet["y"] <= boss_pos[1] + BOSS_SIZE):
+                    boss_pos[1] <= bullet[1] <= boss_pos[1] + BOSS_SIZE):
                     bullets.remove(bullet)
                     boss_hits += 1
                     explosion_audio.play()
 
         # Collisions with player
         for bullet in enemy_bullets[:]:
+            # Corrected bullet access: bullet["y"] -> bullet[1], bullet["x"] -> bullet[0]
             if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_SIZE and
-                player_pos[1] <= bullet["y"] <= player_pos[1] + PLAYER_SIZE):
+                player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_SIZE):
                 game_over = True
 
         for laser in laser_beams[:]:
+            # Corrected bullet access: bullet["x"] -> laser["x"], bullet["y"] -> laser["y"]
             if (player_pos[0] <= laser["x"] + LASER_WIDTH and
                 laser["x"] <= player_pos[0] + PLAYER_SIZE and
                 player_pos[1] <= laser["y"]):
                 game_over = True
 
         for shot in diagonal_shots[:]:
+            # Corrected bullet access: bullet["x"] -> shot["x"], bullet["y"] -> shot["y"]
             if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_SIZE and
                 player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_SIZE):
                 game_over = True
@@ -857,7 +861,7 @@
         draw()
 
     # -------------------------------------------------
-    # 11) MAIN GAME LOOP FUNCTIONS
+    # 13) MAIN GAME LOOP FUNCTIONS
     # -------------------------------------------------
     def enemy_shoot():
         global game_over, game_started, showing_level_title
@@ -922,7 +926,7 @@
         draw_level_title()  # Display the Level 1 title
 
     # -------------------------------------------------
-    # 12) DRAW FINAL SCORE
+    # 14) DRAW FINAL SCORE
     # -------------------------------------------------
     def show_final_score():
         global high_score_updated, showing_high_score_prompt, showing_final_score
@@ -936,7 +940,7 @@
         draw_final_score()
 
     # -------------------------------------------------
-    # 13) ANIMATION FUNCTIONS
+    # 15) ANIMATION FUNCTIONS
     # -------------------------------------------------
     def animate_title_screen(frame):
         if not game_started:
@@ -944,7 +948,7 @@
             window.requestAnimationFrame(animate_title_screen)
 
     # -------------------------------------------------
-    # 14) LOADING SCREEN
+    # 16) LOADING SCREEN
     # -------------------------------------------------
     def show_loading_screen():
         """Displays the loading screen and starts the loading process."""
@@ -956,7 +960,7 @@
         window.setTimeout(reveal_press_space, 1500)  # Reduced to 1.5 seconds for faster prompt
 
     # -------------------------------------------------
-    # 15) INITIALIZATION
+    # 17) INITIALIZATION
     # -------------------------------------------------
     def hide_loading_screen():
         """Hides the loading screen."""
@@ -977,4 +981,3 @@
   </script>
 </body>
 </html>
-
