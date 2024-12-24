@@ -564,6 +564,7 @@
         global level, game_started, game_over, score
         global showing_level_title, showing_final_score, showing_high_score_prompt
         global final_score_scheduled, animation_running, final_score_displayed
+        global player_pos, boss_pos
 
         level = 1
         game_over = False
@@ -574,6 +575,19 @@
         showing_high_score_prompt = False
         final_score_scheduled = False
         final_score_displayed = False
+
+        # Reset player position
+        player_pos = [WIDTH // 2 - PLAYER_HITBOX_SIZE // 2, HEIGHT - 2 * PLAYER_HITBOX_SIZE]
+
+        # Reset boss position
+        boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
+
+        # Clear all game entities
+        enemies.clear()
+        bullets.clear()
+        enemy_bullets.clear()
+        laser_beams.clear()
+        diagonal_shots.clear()
 
         set_music_for_title_screen()  # Play title audio on loop
 
@@ -652,7 +666,7 @@
         Draws all diagonal shots on the canvas.
         """
         ctx.strokeStyle = "magenta"
-        ctx.lineWidth = 6  # Increased from 4 to 6 for better visibility
+        ctx.lineWidth = 8  # Increased from 6 to 8 for even better visibility
         for shot in diagonal_shots:
             ctx.beginPath()
             ctx.moveTo(shot["x"], shot["y"])
@@ -945,6 +959,10 @@
         if game_over or not game_started or showing_level_title or showing_final_score:
             return
 
+        # Ensure diagonal_shots are cleared during normal levels
+        if level <= MAX_LEVELS:
+            diagonal_shots.clear()
+
         # Move stars
         move_stars()
 
@@ -1046,7 +1064,6 @@
                     enemy["pos"][1] += ENEMY_SIZE
                 ENEMY_SPEED = -ENEMY_SPEED  # Reverse direction
                 window.console.log(f"Enemies moving down. New ENEMY_SPEED: {ENEMY_SPEED}")
-
         else:
             # Boss movement
             boss_pos[0] += boss_direction * 10
@@ -1106,14 +1123,14 @@
                 diagonal_shots.append({
                     "x": boss_pos[0] + BOSS_SIZE // 2,
                     "y": boss_pos[1] + BOSS_SIZE,
-                    "dx": 5,  # Further reduced from 8 to 5 for slower shots
-                    "dy": 5   # Further reduced from 8 to 5 for slower shots
+                    "dx": 3,  # Further reduced to 3 for even slower shots
+                    "dy": 3   # Further reduced to 3 for even slower shots
                 })
                 diagonal_shots.append({
                     "x": boss_pos[0] + BOSS_SIZE // 2,
                     "y": boss_pos[1] + BOSS_SIZE,
-                    "dx": -5,  # Further reduced from -8 to -5 for slower shots
-                    "dy": 5    # Further reduced from 8 to 5 for slower shots
+                    "dx": -3,  # Further reduced to -3 for even slower shots
+                    "dy": 3    # Further reduced to 3 for even slower shots
                 })
                 boss_last_diagonal_shot = current_time
                 window.console.log("Boss firing diagonal shots.")
@@ -1156,6 +1173,7 @@
                 showing_high_score_prompt = True
                 break
         showing_final_score = True
+        final_score_displayed = True
         window.console.log("Showing final score.")
         # The animation loop will handle drawing the final score
 
