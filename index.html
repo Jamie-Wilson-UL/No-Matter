@@ -863,6 +863,13 @@
             boss_pos[1] += window.Math.random() * 10 - 5
             boss_pos[1] = max(0, min(HEIGHT // 4, boss_pos[1]))
 
+        # Check for level completion or boss defeat
+        if level <= MAX_LEVELS and not enemies:
+            level_up()
+        elif level > MAX_LEVELS and boss_hits >= BOSS_HITS_REQUIRED:
+            game_over = True
+            show_final_score()
+
         draw()
 
     # -------------------------------------------------
@@ -997,6 +1004,12 @@
     # draw_static_background_level function is defined above
 
     # All other functions (initialize_high_score, update_high_scores, etc.) are defined above
+
+    # -------------------------------------------------
+    # 19) DRAW() FUNCTION
+    # -------------------------------------------------
+    # Ensure the draw() function is defined after all helper functions
+    # (As defined above)
 
   </script>
 </body>
