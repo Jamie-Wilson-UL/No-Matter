@@ -254,7 +254,7 @@
             "level1/redtshirt.png"
         ],
         2: [
-            "level2/broken guitar.png",
+            "level2/broken%20guitar.png",  # URL-encoded space
             "level2/brokenbtl.png",
             "level2/greentshirt.png",
             "level2/sticker.png",
@@ -523,9 +523,7 @@
             enemies.clear()
             for r in range(rows):
                 for c in range(cols):
-                    img = current_level_images[
-                        int(window.Math.random() * len(current_level_images))
-                    ]
+                    img = current_level_images[int(window.Math.random() * len(current_level_images))]
                     enemies.append({
                         "pos": [c * (ENEMY_SIZE + 10) + 50,
                                 r * (ENEMY_SIZE + 10) + 50],
@@ -674,12 +672,12 @@
             ctx.fillStyle = "purple"
             ctx.fillRect(boss_pos[0], boss_pos[1], BOSS_SIZE, BOSS_SIZE)
         
-        # Draw boss health bar
-        ctx.fillStyle = "red"
-        ctx.fillRect(boss_pos[0], boss_pos[1] - 25, BOSS_SIZE, 15)  # Adjusted position
-        ctx.fillStyle = "green"
-        health_ratio = max(boss_hits, 0) / BOSS_HITS_REQUIRED
-        ctx.fillRect(boss_pos[0], boss_pos[1] - 25, BOSS_SIZE * health_ratio, 15)
+        # Removed boss health bar as per request
+        # ctx.fillStyle = "red"
+        # ctx.fillRect(boss_pos[0], boss_pos[1] - 25, BOSS_SIZE, 15)  # Adjusted position
+        # ctx.fillStyle = "green"
+        # health_ratio = max(boss_hits, 0) / BOSS_HITS_REQUIRED
+        # ctx.fillRect(boss_pos[0], boss_pos[1] - 25, BOSS_SIZE * health_ratio, 15)
 
     def draw_stars():
         ctx.fillStyle = "white"
@@ -992,6 +990,7 @@
             if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                 player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_HITBOX_SIZE):
                 game_over = True
+                show_final_score()  # Call to display Game Over screen
                 window.console.log("Player hit by enemy bullet! Game Over.")
 
         for laser in laser_beams[:]:
@@ -1000,6 +999,7 @@
                 laser["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                 player_pos[1] <= laser["y"]):
                 game_over = True
+                show_final_score()  # Call to display Game Over screen
                 window.console.log("Player hit by laser beam! Game Over.")
 
         for shot in diagonal_shots[:]:
@@ -1007,6 +1007,7 @@
             if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                 player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_HITBOX_SIZE):
                 game_over = True
+                show_final_score()  # Call to display Game Over screen
                 window.console.log("Player hit by diagonal shot! Game Over.")
 
         # Enemy/player overlap (normal levels)
@@ -1017,6 +1018,7 @@
                     if (enemy["pos"][1] <= player_pos[1] <= enemy["pos"][1] + ENEMY_SIZE or
                         enemy["pos"][1] <= player_pos[1] + PLAYER_HITBOX_SIZE <= enemy["pos"][1] + ENEMY_SIZE):
                         game_over = True
+                        show_final_score()  # Call to display Game Over screen
                         window.console.log("Player collided with enemy! Game Over.")
 
             # Enemy movement
@@ -1090,14 +1092,14 @@
                 diagonal_shots.append({
                     "x": boss_pos[0] + BOSS_SIZE // 2,
                     "y": boss_pos[1] + BOSS_SIZE,
-                    "dx": 15,  # Increased from 5 to 15 for longer shots
-                    "dy": 15   # Increased from 5 to 15 for longer shots
+                    "dx": 8,  # Reduced from 15 to 8 for slower shots
+                    "dy": 8   # Reduced from 15 to 8 for slower shots
                 })
                 diagonal_shots.append({
                     "x": boss_pos[0] + BOSS_SIZE // 2,
                     "y": boss_pos[1] + BOSS_SIZE,
-                    "dx": -15,  # Increased from -5 to -15 for longer shots
-                    "dy": 15    # Increased from 5 to 15 for longer shots
+                    "dx": -8,  # Reduced from -15 to -8 for slower shots
+                    "dy": 8    # Reduced from 15 to 8 for slower shots
                 })
                 boss_last_diagonal_shot = current_time
                 window.console.log("Boss firing diagonal shots.")
