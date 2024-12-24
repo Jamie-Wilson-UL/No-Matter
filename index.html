@@ -62,7 +62,7 @@
       height: 100%;
       width: 0;
       background-color: #00ff00;
-      animation: fill 1.5s linear forwards; /* 1.5s fill */
+      animation: fill 1.5s linear forwards;
     }
     #loading-text {
       font-size: 24px;
@@ -72,7 +72,7 @@
       margin-bottom: 20px;
     }
     #press-space-loading {
-      display: none; /* shown after bar finishes */
+      display: none; /* shown after fill animation completes */
       font-size: 20px;
       font-family: 'Press Start 2P', monospace;
       color: white;
@@ -189,7 +189,7 @@
     MAX_LEVELS = 3
     BOSS_HITS_REQUIRED = 20
 
-    PLAYER_MAX_DIM = 90   # spaceship image ~90px
+    PLAYER_MAX_DIM = 90   # So the spaceship image is ~90px
     ENEMY_MAX_DIM  = 80
     BOSS_MAX_DIM   = 250
 
@@ -456,7 +456,7 @@
         ).then(on_complete)
 
     # -------------------------------------------------
-    # 8) CHECK HIGH SCORE
+    # 8) CHECK HIGH_SCORE
     # -------------------------------------------------
     def check_high_score():
         global high_score_updated
@@ -627,18 +627,20 @@
         move_stars()
         draw_stars()
 
-        # Increased the size of the title.gif from 700x180 to 750x200
-        t_w, t_h = 750, 200
+        # Larger: 800x220, moved down by 50 px
+        t_w, t_h = 800, 220
+        title_y  = (HEIGHT // 4 - t_h // 2) + 50
+
         if title_img.complete:
             ctx.drawImage(
                 title_img,
-                (WIDTH - t_w)//2,
-                (HEIGHT//4 - t_h//2),
+                (WIDTH - t_w)//2,  # X
+                title_y,           # Y
                 t_w, t_h
             )
         else:
             ctx.fillStyle = "yellow"
-            ctx.fillRect((WIDTH - t_w)//2, (HEIGHT//4 - t_h//2), t_w, t_h)
+            ctx.fillRect((WIDTH - t_w)//2, title_y, t_w, t_h)
 
         if flash_text:
             ctx.fillStyle = "white"
