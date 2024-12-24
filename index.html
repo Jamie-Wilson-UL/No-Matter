@@ -114,6 +114,10 @@
     .level-cover {
       display: none;
     }
+    /* Parallax Background Layers */
+    .galaxy-layer, .planet-layer {
+      display: none;
+    }
   </style>
 </head>
 <body onload="brython()">
@@ -152,6 +156,10 @@
   <!-- Placeholder for Boss Cover Art (Optional) -->
   <!-- <img id="boss-cover" src="boss_cover.jpg" class="level-cover"/> -->
 
+  <!-- PARALLAX BACKGROUND LAYERS -->
+  <img id="galaxy-layer" src="galaxy.png" class="galaxy-layer"/> <!-- Add galaxy.png -->
+  <img id="planet-layer" src="planet.png" class="planet-layer"/> <!-- Add planet.png -->
+
   <!-- HIGH SCORE MODAL -->
   <div id="high-score-modal">
     <div id="high-score-modal-content">
@@ -169,6 +177,7 @@
     # ---------------------------------------------------------
     WIDTH, HEIGHT = 800, 600
     PLAYER_SIZE = 60  # Increased from 50 to 60
+    PLAYER_HITBOX_SIZE = 60  # Keep the hitbox same as visual size
     ENEMY_SIZE = 40
     BOSS_SIZE = 200
 
@@ -212,7 +221,7 @@
 
     audio_unlocked = False  # To manage audio playback after loading
 
-    player_pos = [WIDTH // 2 - PLAYER_SIZE // 2, HEIGHT - 2 * PLAYER_SIZE]  # Centered horizontally
+    player_pos = [WIDTH // 2 - PLAYER_HITBOX_SIZE // 2, HEIGHT - 2 * PLAYER_HITBOX_SIZE]  # Centered horizontally
     boss_pos = [WIDTH // 2 - BOSS_SIZE // 2, 50]
     boss_hits = 0
     boss_direction = 1
@@ -230,6 +239,11 @@
     level3_cover = document["level3-cover"]
     boss_cover = document["boss-cover"] if "boss-cover" in document else None  # Optional
 
+    # Parallax Background Layers
+    galaxy_layer = document["galaxy-layer"] if "galaxy-layer" in document else None
+    planet_layer = document["planet-layer"] if "planet-layer" in document else None
+
+    # Load images for levels
     level_image_paths = {
         1: [
             "level1/dog.png",
@@ -271,6 +285,30 @@
         }
         for _ in range(100)
     ]
+
+    # Parallax Layers
+    galaxy = []
+    planets = []
+    if galaxy_layer:
+        galaxy = [
+            {
+                "x": window.Math.random() * WIDTH,
+                "y": window.Math.random() * HEIGHT,
+                "size": window.Math.random() * 100 + 50,  # Larger sizes for galaxy
+                "speed": 0.2  # Slower speed
+            }
+            for _ in range(5)
+        ]
+    if planet_layer:
+        planets = [
+            {
+                "x": window.Math.random() * WIDTH,
+                "y": window.Math.random() * HEIGHT,
+                "size": window.Math.random() * 50 + 20,
+                "speed": 0.1  # Even slower
+            }
+            for _ in range(3)
+        ]
 
     # -------------------------------------------------
     # 4) AUDIO ELEMENTS
@@ -514,10 +552,12 @@
     def draw_start_screen():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
+        move_parallax_layers()
         draw_stars()
+        draw_parallax_layers()
 
         # Adjusted title dimensions for better centering
-        title_width, title_height = 600, 150  # Adjust as per your title image
+        title_width, title_height = 620, 160  # Slightly increased size
         ctx.drawImage(
             title_img,
             (WIDTH - title_width) // 2,
@@ -550,7 +590,10 @@
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
+        move_parallax_layers()
         draw_stars()
+        draw_parallax_layers()
+
         ctx.fillStyle = "yellow"
         ctx.font = "bold 48px 'Press Start 2P'"
         ctx.textAlign = "center"
@@ -596,7 +639,10 @@
     def draw_final_score():
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
+        move_parallax_layers()
         draw_stars()
+        draw_parallax_layers()
+
         ctx.fillStyle = "white"
         ctx.font = "48px 'Press Start 2P'"
         ctx.textAlign = "center"
@@ -621,6 +667,41 @@
         for star in stars:
             ctx.fillRect(star["x"], star["y"], star["size"], star["size"])
 
+    def draw_parallax_layers():
+        # Draw Galaxy Layer
+        if galaxy:
+            ctx.fillStyle = "rgba(255, 255, 255, 0.3)"
+            for gal in galaxy:
+                ctx.beginPath()
+                ctx.arc(gal["x"], gal["y"], gal["size"], 0, 2 * window.Math.PI)
+                ctx.fill()
+
+        # Draw Planet Layer
+        if planets:
+            for planet in planets:
+                ctx.drawImage(
+                    planet_layer,
+                    planet["x"] - planet["size"] // 2,
+                    planet["y"] - planet["size"] // 2,
+                    planet["size"],
+                    planet["size"]
+                )
+
+    def move_parallax_layers():
+        # Move Galaxy Layer
+        for gal in galaxy:
+            gal["x"] -= gal["speed"]
+            if gal["x"] < -gal["size"]:
+                gal["x"] = WIDTH + gal["size"]
+                gal["y"] = window.Math.random() * HEIGHT
+
+        # Move Planet Layer
+        for planet in planets:
+            planet["x"] -= planet["speed"]
+            if planet["x"] < -planet["size"]:
+                planet["x"] = WIDTH + planet["size"]
+                planet["y"] = window.Math.random() * HEIGHT
+
     def move_stars():
         for star in stars:
             star["y"] += 1
@@ -634,7 +715,9 @@
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
+        move_parallax_layers()
         draw_stars()
+        draw_parallax_layers()
 
         # Slight background tint
         if level > MAX_LEVELS:
@@ -771,8 +854,9 @@
                 if current_time - player_last_shot > player_shot_cooldown:
                     # Adjust bullet position based on actual player image dimensions
                     pw, ph = get_scaled_dims(spaceship_img, PLAYER_MAX_DIM)
+                    bullet_x = player_pos[0] + (PLAYER_HITBOX_SIZE // 2) - (BULLET_WIDTH // 2)
                     bullets.append([
-                        player_pos[0] + pw // 2 - BULLET_WIDTH // 2,
+                        bullet_x,
                         player_pos[1]
                     ])
                     laser_audio.play()
@@ -830,7 +914,7 @@
         if level <= MAX_LEVELS:
             for enemy in enemies[:]:
                 for bullet in bullets[:]:
-                    # Corrected bullet access: bullet["y"] -> bullet[1]
+                    # Check collision based on hitbox
                     if (enemy["pos"][0] <= bullet[0] <= enemy["pos"][0] + ENEMY_SIZE and
                         enemy["pos"][1] <= bullet[1] <= enemy["pos"][1] + ENEMY_SIZE):
                         enemies.remove(enemy)
@@ -849,31 +933,31 @@
 
         # Collisions with player
         for bullet in enemy_bullets[:]:
-            # Corrected bullet access: bullet["y"] -> bullet[1], bullet["x"] -> bullet[0]
-            if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_SIZE and
-                player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_SIZE):
+            # Check collision based on hitbox
+            if (player_pos[0] <= bullet[0] <= player_pos[0] + PLAYER_HITBOX_SIZE and
+                player_pos[1] <= bullet[1] <= player_pos[1] + PLAYER_HITBOX_SIZE):
                 game_over = True
 
         for laser in laser_beams[:]:
-            # Corrected bullet access: laser["x"], laser["y"] are correct
+            # Check collision with laser beam
             if (player_pos[0] <= laser["x"] + LASER_WIDTH and
-                laser["x"] <= player_pos[0] + PLAYER_SIZE and
+                laser["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                 player_pos[1] <= laser["y"]):
                 game_over = True
 
         for shot in diagonal_shots[:]:
-            # Corrected bullet access: shot["x"], shot["y"] are correct
-            if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_SIZE and
-                player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_SIZE):
+            # Check collision with diagonal shots
+            if (player_pos[0] <= shot["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
+                player_pos[1] <= shot["y"] <= player_pos[1] + PLAYER_HITBOX_SIZE):
                 game_over = True
 
         # Enemy/player overlap (normal levels)
         if level <= MAX_LEVELS:
             for enemy in enemies:
                 if (enemy["pos"][0] <= player_pos[0] <= enemy["pos"][0] + ENEMY_SIZE or
-                    enemy["pos"][0] <= player_pos[0] + PLAYER_SIZE <= enemy["pos"][0] + ENEMY_SIZE):
+                    enemy["pos"][0] <= player_pos[0] + PLAYER_HITBOX_SIZE <= enemy["pos"][0] + ENEMY_SIZE):
                     if (enemy["pos"][1] <= player_pos[1] <= enemy["pos"][1] + ENEMY_SIZE or
-                        enemy["pos"][1] <= player_pos[1] + PLAYER_SIZE <= enemy["pos"][1] + ENEMY_SIZE):
+                        enemy["pos"][1] <= player_pos[1] + PLAYER_HITBOX_SIZE <= enemy["pos"][1] + ENEMY_SIZE):
                         game_over = True
 
             # Enemy movement
