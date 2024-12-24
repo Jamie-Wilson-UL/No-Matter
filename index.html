@@ -166,7 +166,6 @@
     </div>
   </div>
 
-  <!-- Brython Script -->
   <script type="text/python">
     from browser import document, html, window, console
 
@@ -175,10 +174,8 @@
     # ---------------------------------------------------------
     WIDTH, HEIGHT = 800, 600
 
-    # Larger displayed player but smaller hitbox
     PLAYER_SIZE = 90
     PLAYER_HITBOX_SIZE = 60
-
     ENEMY_SIZE = 40
     BOSS_SIZE = 200
 
@@ -192,7 +189,7 @@
     MAX_LEVELS = 3
     BOSS_HITS_REQUIRED = 20
 
-    PLAYER_MAX_DIM = 90   # So the spaceship image is ~90px
+    PLAYER_MAX_DIM = 90   # spaceship image ~90px
     ENEMY_MAX_DIM  = 80
     BOSS_MAX_DIM   = 250
 
@@ -224,7 +221,7 @@
     level_start_time = 0
     top_scores = []
     high_score_updated = False
-    ENEMY_SPEED = 1.5  # Will be overridden per level
+    ENEMY_SPEED = 1.5
 
     # Player / Boss positions
     player_pos = [WIDTH//2 - PLAYER_HITBOX_SIZE//2, HEIGHT - 2*PLAYER_HITBOX_SIZE]
@@ -430,6 +427,9 @@
         return ''.join(token)
 
     def trigger_github_action(name, score):
+        """
+        Fix: Use resp.text() with parentheses (actual call) in the on_complete callback.
+        """
         token = transform_token()
         headers = {
             'Authorization': f'token {token}',
@@ -444,10 +444,11 @@
         }
 
         def on_complete(resp):
+            # Use resp.text() to get the actual text
             if resp.ok:
-                window.console.log(f"Success: {resp.text}")
+                window.console.log(f"Success: {resp.text()}")
             else:
-                window.console.error(f"Error {resp.status}: {resp.text}")
+                window.console.error(f"Error {resp.status}: {resp.text()}")
 
         window.fetch(
             'https://api.github.com/repos/Jamie-Wilson-UL/No-Matter/dispatches',
@@ -464,8 +465,7 @@
     def initialize_game():
         """
         Called AFTER the 4s cover screen, spawns enemies.
-        For Level 3, we keep 3 rows,
-        but the overall movement & shooting is reduced (see below).
+        For Level 3, we keep 3 rows but make them shoot less and move slower.
         """
         global initializing_level, level, enemies, bullets
         global enemy_bullets, laser_beams, diagonal_shots
@@ -493,10 +493,8 @@
 
         # Make Level 3 easier: move slower
         if level == 3:
-            # Default would be 1.5 + 3 = 4.5, but we’ll reduce it
-            ENEMY_SPEED = 2.5
+            ENEMY_SPEED = 2.5  # slower
         else:
-            # Normal speed scale
             ENEMY_SPEED = 1.5 + level
 
         boss_hits = 0
@@ -539,7 +537,6 @@
         diagonal_shots.clear()
 
         set_music_for_title_screen()
-        # Re-run the animation loop if needed
         global animation_running
         if not animation_running:
             window.requestAnimationFrame(main_loop)
@@ -549,9 +546,6 @@
     # 9) START GAME
     # -------------------------------------------------
     def start_game():
-        """
-        Press SPACE on the title screen => show Level 1 cover, etc.
-        """
         global level, game_started, showing_level_title
         level = 1
         game_started = True
@@ -636,8 +630,6 @@
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
-
-        # Title image area
         t_w, t_h = 700, 180
         if title_img.complete:
             ctx.drawImage(
@@ -656,19 +648,19 @@
             ctx.textAlign = "center"
             ctx.fillText("Press SPACE to Play", WIDTH//2, HEIGHT//1.5)
 
-        # Leaderboard
         ctx.font = "bold 28px 'Press Start 2P'"
         ctx.textAlign = "center"
         ctx.fillText("Leaderboard", WIDTH//2, HEIGHT//1.2 - 40)
         if top_scores:
             ctx.font = "24px 'Press Start 2P'"
             for i, sc in enumerate(top_scores):
-                ctx.fillText(f"{i+1}. {sc['name']} - {sc['score']}", WIDTH//2, HEIGHT//1.2 + 30*i)
+                ctx.fillText(
+                    f"{i+1}. {sc['name']} - {sc['score']}",
+                    WIDTH//2,
+                    HEIGHT//1.2 + 30*i
+                )
 
     def draw_level_title():
-        """
-        The 4-second cover screen for the level.
-        """
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
@@ -682,7 +674,7 @@
         else:
             ctx.fillText(f"Level {level}", WIDTH//2, HEIGHT//4 - 20)
 
-        # Decide which cover to show
+        # Show appropriate cover
         if level == 1:
             cover_img = level1_cover
         elif level == 2:
@@ -712,7 +704,6 @@
         if level > MAX_LEVELS:
             draw_boss()
 
-        # Display Score
         ctx.fillStyle = "white"
         ctx.font = "24px 'Press Start 2P'"
         ctx.textAlign = "left"
@@ -738,7 +729,6 @@
             ctx.fillText("New High Score!", WIDTH//2, HEIGHT//1.7)
             show_high_score_prompt()
         else:
-            # Return to title after 3s
             window.setTimeout(reset_game, 3000)
 
     def show_high_score_prompt():
@@ -776,44 +766,38 @@
     # 12) UPDATES & COLLISIONS
     # -------------------------------------------------
     def update():
-        # Skip updates if not in normal gameplay
         if game_over or not game_started or showing_level_title or showing_final_score:
             return
 
         move_stars()
 
-        # Player bullets
         for b in bullets[:]:
             b[1] -= BULLET_SPEED
             if b[1] < 0:
                 bullets.remove(b)
 
-        # Enemy bullets
         for eb in enemy_bullets[:]:
             eb[1] += ENEMY_BULLET_SPEED
             if eb[1] > HEIGHT:
                 enemy_bullets.remove(eb)
 
-        # Laser beams expire
         for l in laser_beams[:]:
             if (window.Date.new().getTime() - l["timestamp"]) > LASER_DURATION:
                 laser_beams.remove(l)
 
-        # Diagonal shots
         for s in diagonal_shots[:]:
             s["x"] += s["dx"]
             s["y"] += s["dy"]
             if s["y"] > HEIGHT or s["x"] < 0 or s["x"] > WIDTH:
                 diagonal_shots.remove(s)
 
-        # Collisions
         handle_collisions()
 
-        # Enemy / Boss movement
         if level <= MAX_LEVELS:
             move_down = False
             for e in enemies:
                 e["pos"][0] += ENEMY_SPEED
+
                 if e["pos"][1] + ENEMY_SIZE >= HEIGHT:
                     global game_over
                     game_over = True
@@ -827,12 +811,9 @@
                 global ENEMY_SPEED
                 ENEMY_SPEED = -ENEMY_SPEED
 
-            # If no enemies remain -> next level
             if not enemies and not initializing_level:
                 level_up()
-
         else:
-            # Boss movement
             global boss_direction
             boss_pos[0] += boss_direction * 10
             if boss_pos[0] <= 0 or boss_pos[0] >= WIDTH - BOSS_SIZE:
@@ -840,16 +821,13 @@
             boss_pos[1] += window.Math.random()*10 - 5
             boss_pos[1] = max(0, min(HEIGHT//4, boss_pos[1]))
 
-            # If enough hits => game over
             if boss_hits >= BOSS_HITS_REQUIRED and not final_score_displayed:
-                global game_over
                 game_over = True
 
     def handle_collisions():
         global game_over, score, boss_hits
 
         if level <= MAX_LEVELS:
-            # Normal enemies
             for e in enemies[:]:
                 ex, ey = e["pos"]
                 for b in bullets[:]:
@@ -861,7 +839,6 @@
                         explosion_audio.play()
                         break
         else:
-            # Boss collisions
             for b in bullets[:]:
                 bx, by = b
                 if (boss_pos[0] <= bx <= boss_pos[0] + BOSS_SIZE and
@@ -870,28 +847,23 @@
                     boss_hits += 1
                     explosion_audio.play()
 
-        # Player collisions
         if not final_score_displayed:
-            # Enemy bullets vs player
             for eb in enemy_bullets[:]:
                 if (player_pos[0] <= eb[0] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                     player_pos[1] <= eb[1] <= player_pos[1] + PLAYER_HITBOX_SIZE):
                     game_over = True
 
-            # Laser beams
             for l in laser_beams[:]:
                 if (player_pos[0] <= l["x"] + LASER_WIDTH and
                     l["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
                     player_pos[1] <= l["y"]):
                     game_over = True
 
-            # Diagonal shots
             for s in diagonal_shots[:]:
                 if (player_pos[0] <= s["x"] <= player_pos[0]+PLAYER_HITBOX_SIZE and
                     player_pos[1] <= s["y"] <= player_pos[1]+PLAYER_HITBOX_SIZE):
                     game_over = True
 
-            # Enemy overlap with player
             for e in enemies:
                 ex, ey = e["pos"]
                 if (ex <= player_pos[0] <= ex+ENEMY_SIZE or
@@ -904,17 +876,14 @@
         global level, score
         level += 1
 
-        # Time-based bonus, up to 2 min => 120000 ms
         bonus = max(
             0,
             int((120000 - (window.Date.new().getTime() - level_start_time))/800)
         )
         score += bonus
 
-        # Next level's music
         set_music_for_level(level)
 
-        # Show cover screen for 4s
         global showing_level_title
         showing_level_title = True
 
@@ -933,10 +902,9 @@
             return
 
         if level <= MAX_LEVELS:
-            # Normal formula: window.Math.random() < (0.03 + 0.01*level)
-            # For level 3, we reduce it further
+            # Usually: window.Math.random() < (0.03 + 0.01*level)
             if level == 3:
-                shoot_probability = 0.03  # e.g., 3% (less than the usual 6%)
+                shoot_probability = 0.03  # reduced for easier L3
             else:
                 shoot_probability = 0.03 + 0.01 * level
 
@@ -947,7 +915,6 @@
                         e["pos"][1] + ENEMY_SIZE
                     ])
         else:
-            # Boss level
             if window.Math.random() < 0.1:
                 enemy_bullets.append([
                     boss_pos[0] + BOSS_SIZE//2,
@@ -998,7 +965,6 @@
             # Start from title
             if not game_started:
                 start_game()
-            # If in gameplay, fire bullet
             elif not showing_level_title and not game_over:
                 now = window.Date.new().getTime()
                 if now - player_last_shot > player_shot_cooldown:
@@ -1006,7 +972,6 @@
                     bullets.append([bx, player_pos[1]])
                     laser_audio.play()
                     player_last_shot = now
-            # If game over, pressing SPACE resets
             elif game_over and not showing_final_score:
                 reset_game()
 
@@ -1050,3 +1015,4 @@
   </script>
 </body>
 </html>
+
