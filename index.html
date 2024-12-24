@@ -192,7 +192,7 @@
     MAX_LEVELS = 3
     BOSS_HITS_REQUIRED = 20
 
-    PLAYER_MAX_DIM = 90   # So the spaceship image is drawn ~90px
+    PLAYER_MAX_DIM = 90   # So the spaceship image is ~90px
     ENEMY_MAX_DIM  = 80
     BOSS_MAX_DIM   = 250
 
@@ -207,7 +207,6 @@
     showing_final_score = False
     showing_high_score_prompt = False
 
-    # For collisions & logic
     final_score_displayed = False
     flash_text = True
     audio_unlocked = False
@@ -280,7 +279,6 @@
     laser_beams    = []
     diagonal_shots = []
 
-    # Starfield
     stars = [
         {
             "x": window.Math.random()*WIDTH,
@@ -387,7 +385,6 @@
     submit_name_button.bind("click", submit_name)
 
     def transform_token():
-        # Your original transform code
         placeholder = 'a' * 40
         token = list(placeholder)
         token[0] = 'g'
@@ -609,7 +606,7 @@
         ctx.clearRect(0, 0, WIDTH, HEIGHT)
         move_stars()
         draw_stars()
-        # Increased dimensions from ~620,160 to 700,180
+        # Increased size from ~620,160 => 700,180
         t_w, t_h = 700, 180
         if title_img.complete:
             ctx.drawImage(
@@ -735,7 +732,8 @@
     # 10) MAIN LOOP
     # -------------------------------------------------
     def main_loop(timestamp):
-        global animation_running
+        global animation_running, showing_final_score  # <-- FIX: declare globals
+
         if not animation_running:
             animation_running = True
 
@@ -827,7 +825,6 @@
 
             # If enough boss hits -> game over
             if boss_hits >= BOSS_HITS_REQUIRED and not final_score_displayed:
-                # Trigger game over
                 global game_over
                 game_over = True
 
@@ -881,7 +878,6 @@
             if level <= MAX_LEVELS:
                 for e in enemies:
                     ex, ey = e["pos"]
-                    # Check overlap
                     if (ex <= player_pos[0] <= ex+ENEMY_SIZE or
                         ex <= player_pos[0]+PLAYER_HITBOX_SIZE <= ex+ENEMY_SIZE):
                         if (ey <= player_pos[1] <= ey+ENEMY_SIZE or
@@ -904,7 +900,6 @@
     # 12) ENEMY SHOOTING
     # -------------------------------------------------
     def enemy_shoot():
-        # If on title/final/game-over states => do nothing
         if game_over or not game_started or showing_level_title or showing_final_score:
             return
 
@@ -951,7 +946,6 @@
         global showing_level_title, showing_final_score
         global audio_unlocked, animation_running
 
-        # If still on loading screen:
         if not audio_unlocked and press_space_loading.style.display == "block":
             if e.keyCode == 32:  # SPACE
                 loading_bar_container.style.display = "none"
@@ -963,13 +957,11 @@
                     window.requestAnimationFrame(main_loop)
             return
 
-        # Space
         if e.keyCode == 32:
             # Start from title
             if not game_started:
                 start_game()
             elif not showing_level_title and not game_over:
-                # Shoot
                 now = window.Date.new().getTime()
                 if now - player_last_shot > player_shot_cooldown:
                     bx = player_pos[0] + PLAYER_HITBOX_SIZE//2 - BULLET_WIDTH//2
@@ -977,11 +969,9 @@
                     laser_audio.play()
                     player_last_shot = now
             elif game_over and not showing_final_score:
-                # If game is over but final not displayed yet
-                # (Usually final draws instantly, but if not, we can reset)
                 reset_game()
 
-        # Arrows
+        # Move player left/right
         if game_started and not showing_level_title and not game_over:
             if e.keyCode == 37 and player_pos[0] > 0:
                 player_pos[0] -= PLAYER_SPEED
@@ -1015,11 +1005,9 @@
     # 15) START
     # -------------------------------------------------
     show_loading_screen()
-    # Main "logic" update intervals
     window.setInterval(update, 30)         # ~30ms => 33 FPS
     window.setInterval(enemy_shoot, 500)  # Enemy shoots every 0.5s
     window.setInterval(toggle_flash_text, 1000)
-
   </script>
 </body>
 </html>
