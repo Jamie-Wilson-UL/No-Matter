@@ -832,7 +832,11 @@
             boss_pos[1] += window.Math.random()*10 - 5
             boss_pos[1] = max(0, min(HEIGHT//4, boss_pos[1]))
 
+            # If boss is done -> game over
             if boss_hits >= BOSS_HITS_REQUIRED and not final_score_displayed:
+                # *** Add 5 points for defeating the boss ***
+                global score
+                score += 5
                 game_over = True
 
     def handle_collisions():
@@ -865,6 +869,8 @@
                 bx, by = b
                 if (boss_pos[0] <= bx <= boss_pos[0] + BOSS_SIZE and
                     boss_pos[1] <= by <= boss_pos[1] + BOSS_SIZE):
+                    # *** +1 point for each boss hit ***
+                    score += 1
                     bullets.remove(b)
                     boss_hits += 1
                     explosion_audio.play()
@@ -879,8 +885,6 @@
 
             # Laser beams
             for l in laser_beams[:]:
-                # If the laser covers the player's x-range and starts above player's y
-                # We'll do a simple bounding check for now:
                 if (player_hit_right >= l["x"] and
                     player_hit_left <= l["x"] + LASER_WIDTH and
                     player_hit_top <= l["y"]):
@@ -899,8 +903,6 @@
                     ex, ey = e["pos"]
                     e_right  = ex + ENEMY_SIZE
                     e_bottom = ey + ENEMY_SIZE
-
-                    # bounding box overlap check
                     if not (e_right  < player_hit_left or
                             ex       > player_hit_right or
                             e_bottom < player_hit_top or
