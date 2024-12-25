@@ -370,9 +370,6 @@
 
     def submit_name(ev):
         global top_scores, score, high_score_updated
-        # If you want to debug, uncomment the line below:
-        # window.console.log("Submit clicked. Name input: " + player_name_input.value)
-
         pname = player_name_input.value.strip()
         if pname:
             top_scores.append({"name": pname, "score": score})
@@ -469,13 +466,7 @@
                 high_score_updated = True
                 break
 
-    # New function: re-fetch scoreboard at the end
     def refetch_and_finalize_score():
-        """
-        After player dies or kills boss, do a fresh fetch of the scoreboard,
-        then compare 'score' to that updated scoreboard so we don't overwrite
-        new high scores from other players.
-        """
         fetch_url = "https://raw.githubusercontent.com/Jamie-Wilson-UL/No-Matter/main/high_score.json"
         fetch_url += f"?nocache={window.Date.new().getTime()}"
 
@@ -658,9 +649,8 @@
         move_stars()
         draw_stars()
 
-        # Adjust these if you changed the size/position of title.gif
         t_w, t_h = 800, 220
-        title_y  = (HEIGHT // 4 - t_h // 2) + 30
+        title_y  = (HEIGHT//4 - t_h//2) + 30
 
         if title_img.complete:
             ctx.drawImage(title_img, (WIDTH - t_w)//2, title_y, t_w, t_h)
@@ -750,8 +740,7 @@
         ctx.fillText("Game Over", WIDTH//2, HEIGHT//3)
         ctx.fillText(f"Final Score: {score}", WIDTH//2, HEIGHT//2)
 
-        # Instead of check_high_score() with old 'top_scores',
-        # do a final scoreboard fetch to avoid overwriting new scores
+        # Re-fetch scoreboard so we don't overwrite new scores
         refetch_and_finalize_score()
 
     def show_high_score_prompt():
@@ -849,18 +838,29 @@
     def handle_collisions():
         global game_over, score, boss_hits
 
+        # >>> We add a short offset to center the player's 60×60 hitbox
+        #     within the 90×90 sprite.
+        HITBOX_OFFSET = (PLAYER_SIZE - PLAYER_HITBOX_SIZE) // 2
+        player_hit_left   = player_pos[0] + HITBOX_OFFSET
+        player_hit_right  = player_hit_left + PLAYER_HITBOX_SIZE
+        player_hit_top    = player_pos[1] + HITBOX_OFFSET
+        player_hit_bottom = player_hit_top + PLAYER_HITBOX_SIZE
+
         if level <= MAX_LEVELS:
+            # Normal enemies
             for e in enemies[:]:
                 ex, ey = e["pos"]
                 for b in bullets[:]:
                     bx, by = b
-                    if ex <= bx <= ex + ENEMY_SIZE and ey <= by <= ey + ENEMY_SIZE:
+                    if (ex <= bx <= ex + ENEMY_SIZE and
+                        ey <= by <= ey + ENEMY_SIZE):
                         enemies.remove(e)
                         bullets.remove(b)
                         score += 1
                         explosion_audio.play()
                         break
         else:
+            # Boss collisions
             for b in bullets[:]:
                 bx, by = b
                 if (boss_pos[0] <= bx <= boss_pos[0] + BOSS_SIZE and
@@ -870,28 +870,41 @@
                     explosion_audio.play()
 
         if not final_score_displayed:
+            # Enemy bullets vs (centered) player box
             for eb in enemy_bullets[:]:
-                if (player_pos[0] <= eb[0] <= player_pos[0] + PLAYER_HITBOX_SIZE and
-                    player_pos[1] <= eb[1] <= player_pos[1] + PLAYER_HITBOX_SIZE):
+                ebx, eby = eb
+                if (player_hit_left <= ebx <= player_hit_right and
+                    player_hit_top  <= eby <= player_hit_bottom):
                     game_over = True
 
+            # Laser beams
             for l in laser_beams[:]:
-                if (player_pos[0] <= l["x"] + LASER_WIDTH and
-                    l["x"] <= player_pos[0] + PLAYER_HITBOX_SIZE and
-                    player_pos[1] <= l["y"]):
+                # If the laser covers the player's x-range and starts above player's y
+                # We'll do a simple bounding check for now:
+                if (player_hit_right >= l["x"] and
+                    player_hit_left <= l["x"] + LASER_WIDTH and
+                    player_hit_top <= l["y"]):
                     game_over = True
 
+            # Diagonal shots
             for s in diagonal_shots[:]:
-                if (player_pos[0] <= s["x"] <= player_pos[0]+PLAYER_HITBOX_SIZE and
-                    player_pos[1] <= s["y"] <= player_pos[1]+PLAYER_HITBOX_SIZE):
+                sx, sy = s["x"], s["y"]
+                if (player_hit_left <= sx <= player_hit_right and
+                    player_hit_top  <= sy <= player_hit_bottom):
                     game_over = True
 
-            for e in enemies:
-                ex, ey = e["pos"]
-                if (ex <= player_pos[0] <= ex+ENEMY_SIZE or
-                    ex <= player_pos[0]+PLAYER_HITBOX_SIZE <= ex+ENEMY_SIZE):
-                    if (ey <= player_pos[1] <= ey+ENEMY_SIZE or
-                        ey <= player_pos[1]+PLAYER_HITBOX_SIZE <= ey+ENEMY_SIZE):
+            # Enemy overlap with (centered) player box
+            if level <= MAX_LEVELS:
+                for e in enemies:
+                    ex, ey = e["pos"]
+                    e_right  = ex + ENEMY_SIZE
+                    e_bottom = ey + ENEMY_SIZE
+
+                    # bounding box overlap check
+                    if not (e_right  < player_hit_left or
+                            ex       > player_hit_right or
+                            e_bottom < player_hit_top or
+                            ey       > player_hit_bottom):
                         game_over = True
 
     def level_up():
