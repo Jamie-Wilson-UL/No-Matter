@@ -1,14 +1,14 @@
 [
     {
-        "name": "Cat",
-        "score": 400
-    },
-    {
         "name": "Mr Colin Doo",
         "score": 276
     },
     {
-        "name": "Dan",
+        "name": "Cat",
         "score": 200
+    },
+    {
+        "name": "Dan",
+        "score": 100
     }
 ]
